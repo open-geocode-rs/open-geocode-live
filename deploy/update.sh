@@ -15,6 +15,7 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 curl -fsSL "$URL" -o "$tmp/og.tar.xz"
 tar -xJf "$tmp/og.tar.xz" -C "$tmp"
-sudo install -m 0755 "$(find "$tmp" -name open-geocode -type f | head -n1)" /usr/local/bin/open-geocode
+sudo mkdir -p /opt/open-geocode/bin
+sudo install -m 0755 "$(find "$tmp" -name open-geocode -type f | head -n1)" /opt/open-geocode/bin/open-geocode
 sudo systemctl restart open-geocode
 echo "deployed $VER"

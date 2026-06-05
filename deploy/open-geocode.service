@@ -4,8 +4,8 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/open-geocode serve --pack /var/lib/open-geocode/pack --bind 127.0.0.1:8080
-Restart=on-failure
+ExecStart=/opt/open-geocode/bin/open-geocode serve --pack /var/lib/open-geocode/pack --bind 127.0.0.1:8080
+Restart=always
 User=oguser
 
 [Install]
