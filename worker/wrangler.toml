@@ -1,0 +1,33 @@
+# Cloudflare Worker for the open-geocode demo: serves the static UI and proxies
+# <BASE>/api/* to the runtime.
+name = "open-geocode-demo"
+main = "index.js"
+compatibility_date = "2026-06-01"
+
+# Static UI served from ../public as Workers Static Assets. With no binding, asset
+# matches are served before the Worker runs (off the request budget); the Worker
+# only runs for non-asset paths (<BASE>/api/*).
+assets = { directory = "../public" }
+
+# The basemap is fetched direct from public R2, not the Worker.
+
+# Local dev: proxy <BASE>/api/* to the local runtime. Keep BASE_PATH in sync with
+# index.html's <base>.
+[vars]
+RUNTIME_ORIGIN = "http://127.0.0.1:8080"
+BASE_PATH = "/open-geocode"
+
+# Production. Replace example.com with your domain (route + zone), point
+# RUNTIME_ORIGIN at your tunnel hostname, and store the Access service token as
+# secrets so only this Worker can reach the origin:
+#   wrangler secret put ACCESS_CLIENT_ID --env production
+#   wrangler secret put ACCESS_CLIENT_SECRET --env production
+[env.production]
+routes = [
+  { pattern = "example.com/open-geocode*", zone_name = "example.com" }
+]
+
+[env.production.vars]
+# Proxy /api/* over the cloudflared tunnel with the Access token.
+RUNTIME_ORIGIN = "https://origin.example.com"
+BASE_PATH = "/open-geocode"

@@ -1,0 +1,18 @@
+# Named-tunnel config for the runtime, run by cloudflared on the VM so the origin
+# is reachable only through Cloudflare's edge (no public inbound). The Worker
+# reaches it at `hostname` with a Cloudflare Access service token.
+#
+# Setup:
+#   cloudflared tunnel login
+#   cloudflared tunnel create open-geocode   # writes ~/.cloudflared/<TUNNEL_ID>.json
+#   cloudflared tunnel route dns open-geocode origin.example.com
+# Fill in TUNNEL_ID; copy the credentials json to the VM as credentials.json (a
+# gitignored secret).
+
+tunnel: <TUNNEL_ID>
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: origin.example.com
+    service: http://127.0.0.1:8080
+  - service: http_status:404   # reject everything else

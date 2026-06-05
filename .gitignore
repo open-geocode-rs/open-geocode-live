@@ -1,0 +1,28 @@
+# Node / Worker tooling
+node_modules/
+.wrangler/
+
+# Built runtime binary (build-runtime.sh output) — regenerable, never commit.
+/dist/
+
+# Secrets — never commit (the committed *.example templates are placeholders).
+**/.dev.vars
+deploy/cloudflared/credentials.json
+deploy/cloudflared/*.pem
+
+# R2 S3 credentials for the basemap upload — secret, never commit.
+.r2.env
+
+# Local deploy config with your real tiles URL — copy from config.example.js.
+deploy/web/config.js
+
+# Logs / OS / editor
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Deployed UI — a build artifact (scripts/build-ui.mjs); the engine submodule is
+# its source. Never committed.
+/public/open-geocode/

@@ -1,0 +1,3 @@
+[submodule "open-geocode"]
+	path = open-geocode
+	url = https://github.com/open-geocode-rs/open-geocode.git

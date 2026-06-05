@@ -1,0 +1,9 @@
+# Local Worker vars for `wrangler dev`. Copy to .dev.vars (gitignored); it
+# overrides wrangler.toml [vars] locally.
+
+# Where the Worker proxies /api/*.
+RUNTIME_ORIGIN="http://127.0.0.1:8080"
+
+# Cloudflare Access service token — only needed to exercise the auth gate locally.
+# ACCESS_CLIENT_ID="<token id>"
+# ACCESS_CLIENT_SECRET="<token secret>"

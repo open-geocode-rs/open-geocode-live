@@ -1,0 +1,25 @@
+# Local stand-in for the runtime: the engine as a native Linux container (deploy/
+# runtime/Dockerfile) with the Pack mounted in. Exercises the Linux/mmap path so a
+# Mac/Windows dev box catches platform bugs before deploy. The Worker is NOT here —
+# run it on the host (`cd worker && npm run dev`); the prod tunnel/Access transport
+# is not wired into compose.
+#
+#   docker compose up --build
+#   cd worker && npm run dev
+#   sh scripts/smoke.sh http://127.0.0.1:8787/open-geocode
+
+services:
+  runtime:
+    build:
+      # Build from the engine submodule (open-geocode/, pinned) so the local image
+      # matches the engine version that ships to prod.
+      context: ./open-geocode
+      dockerfile: ../deploy/runtime/Dockerfile
+    volumes:
+      # Pack mounted from the engine working copy. NOT read-only: tantivy locks the
+      # index dir on open, so it must be writable.
+      - ../open-geocode/data/build/pack:/data/pack
+    ports:
+      # Host loopback, so the host-side `wrangler dev` can proxy /api/* to it.
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
