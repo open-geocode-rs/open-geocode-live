@@ -1,0 +1,30 @@
+name: deploy
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production        # required-reviewer approval gate (free on public repos)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true         # the engine submodule provides the UI source
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build UI from the pinned engine submodule
+        run: node scripts/build-ui.mjs
+      - name: Inject prod domain
+        # One substitution fixes route + zone + RUNTIME_ORIGIN + tiles URL, since
+        # every placeholder is example.com / origin.example.com / tiles.example.com.
+        run: sed -i "s/example\.com/${{ vars.PROD_DOMAIN }}/g" worker/wrangler.toml public/open-geocode/config.js
+      - name: Install worker deps
+        run: npm ci
+        working-directory: worker
+      - name: Deploy
+        run: npx wrangler deploy --env production
+        working-directory: worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
