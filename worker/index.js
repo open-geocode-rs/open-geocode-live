@@ -7,6 +7,7 @@
 
 // Route suffix, joined to env.BASE_PATH (the mount prefix) at request time.
 const API_SUFFIX = "/api";
+const DIRECTORY_ROUTES = ["/store-locator"];
 
 export default {
   async fetch(request, env) {
@@ -18,11 +19,20 @@ export default {
       return proxyToRuntime(request, url, env, apiPrefix);
     }
 
+    if (isDirectoryRoute(url.pathname, base)) {
+      url.pathname += "/";
+      return Response.redirect(url, 308);
+    }
+
     // Reaching here means the path matched no static asset (assets are served
     // before the Worker runs) and is not an API route.
     return new Response("Not found", { status: 404 });
   },
 };
+
+function isDirectoryRoute(pathname, base) {
+  return DIRECTORY_ROUTES.some((route) => pathname === base + route);
+}
 
 async function proxyToRuntime(request, url, env, apiPrefix) {
   const origin = env.RUNTIME_ORIGIN;

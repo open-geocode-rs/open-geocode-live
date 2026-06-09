@@ -109,4 +109,16 @@ describe("BASE_PATH mounting (app served at a sub-path)", () => {
     expect(res.status).toBe(404);
     expect(spy).not.toHaveBeenCalled();
   });
+
+  it("redirects slashless static directory routes under the mounted base", async () => {
+    const spy = stubUpstream();
+    const res = await worker.fetch(
+      new Request("https://app.example/open-geocode/store-locator"),
+      { RUNTIME_ORIGIN: RUNTIME, BASE_PATH: BASE },
+      ctx,
+    );
+    expect(res.status).toBe(308);
+    expect(res.headers.get("location")).toBe("https://app.example/open-geocode/store-locator/");
+    expect(spy).not.toHaveBeenCalled();
+  });
 });
