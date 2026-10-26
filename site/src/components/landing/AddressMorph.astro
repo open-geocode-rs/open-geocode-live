@@ -1,0 +1,139 @@
+---
+interface Props {
+  examples: [address: string, coordinates: string][];
+}
+
+const { examples } = Astro.props;
+---
+
+<og-address-morph class="og-morph" data-examples={JSON.stringify(examples)}>
+  <span class="sr-only">{examples.map(([address, coordinates]) => `${address} geocodes to ${coordinates}.`).join(" ")}</span>
+  <span class="og-morph-text" aria-hidden="true">{examples[0][0]}</span>
+  <input
+    class="og-morph-input"
+    type="text"
+    aria-label="Type an address or place, then press Enter"
+    autocomplete="off"
+    spellcheck="false"
+    hidden
+  />
+</og-address-morph>
+
+<script>
+  const HOLD = 2200;
+  const STAGGER = 28;
+  const SETTLE = 380;
+  const GLYPHS = "0123456789.,-/abcdefghijklmnopqrstuvwxyz";
+
+  // Each character scrambles, then settles on its target left to right.
+  function morph(set: (text: string) => void, from: string, to: string): Promise<void> {
+    const length = Math.max(from.length, to.length);
+    const start = performance.now();
+    return new Promise((done) => {
+      const step = (now: number) => {
+        const t = now - start;
+        let out = "";
+        for (let i = 0; i < length; i++) {
+          const settleAt = i * STAGGER + SETTLE;
+          if (t >= settleAt) out += to[i] ?? "";
+          else if (t >= i * STAGGER) out += to[i] === " " ? " " : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+          else out += from[i] ?? "";
+        }
+        set(out.trimEnd());
+        if (t < (length - 1) * STAGGER + SETTLE) requestAnimationFrame(step);
+        else {
+          set(to);
+          done();
+        }
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Cycles address, coordinates, next address... In editing mode the same line becomes
+  // an input in the same type, and Enter morphs what was typed into its coordinates.
+  // No geocoder is connected yet, so only the examples resolve.
+  class AddressMorph extends HTMLElement {
+    #editing = false;
+    #resume?: () => void;
+    // Index into the address/coordinates steps the cycle is on or heading to.
+    #step = 0;
+    #seed = "";
+    #examples: string[][] = [];
+    #text!: HTMLElement;
+    #input!: HTMLInputElement;
+
+    connectedCallback() {
+      this.#text = this.querySelector<HTMLElement>(".og-morph-text")!;
+      this.#input = this.querySelector<HTMLInputElement>(".og-morph-input")!;
+      this.#examples = JSON.parse(this.dataset.examples ?? "[]");
+      const cancel = () => this.dispatchEvent(new CustomEvent("og-cancel", { bubbles: true }));
+      this.#input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") this.geocode();
+        if (event.key === "Escape") cancel();
+      });
+      // Clicking away without having typed anything returns to the examples.
+      this.#input.addEventListener("blur", () => {
+        const value = this.#input.value.trim();
+        if (!value || value === this.#seed) cancel();
+      });
+      this.#cycle();
+    }
+
+    // The current example's address becomes the input's text, selected, so the first
+    // keystroke replaces it like editing selected text. Taken from the data, not the
+    // screen, which may be mid-scramble.
+    startEditing() {
+      this.#editing = true;
+      this.#seed = this.#examples[Math.floor(this.#step / 2) % this.#examples.length][0];
+      this.#text.hidden = true;
+      this.#input.hidden = false;
+      this.#input.value = this.#seed;
+      this.#input.focus();
+      this.#input.select();
+    }
+
+    stopEditing() {
+      this.#editing = false;
+      this.#input.hidden = true;
+      this.#text.hidden = false;
+      this.#resume?.();
+    }
+
+    async geocode() {
+      const query = this.#input.value.trim().toLowerCase();
+      if (!query) {
+        this.#input.focus();
+        return;
+      }
+      const hit = this.#examples.find(([address]) => {
+        const a = address.toLowerCase();
+        return a.includes(query) || query.includes(a);
+      });
+      this.dispatchEvent(new CustomEvent("og-result", { bubbles: true, detail: hit ?? null }));
+      if (!hit) return;
+      const set = (text: string) => (this.#input.value = text);
+      if (still) set(hit[1]);
+      else await morph(set, this.#input.value, hit[1]);
+      this.#input.select();
+    }
+
+    async #cycle() {
+      const steps = this.#examples.flat();
+      for (let i = 0; this.isConnected && steps.length > 1; i = (i + 1) % steps.length) {
+        await wait(HOLD);
+        if (this.#editing) await new Promise<void>((r) => (this.#resume = r));
+        this.#step = (i + 1) % steps.length;
+        const next = steps[this.#step];
+        const set = (text: string) => (this.#text.textContent = text);
+        if (still) set(next);
+        else await morph(set, steps[i], next);
+      }
+    }
+  }
+
+  customElements.define("og-address-morph", AddressMorph);
+</script>
