@@ -1,0 +1,27 @@
+---
+import Default from "@astrojs/starlight/components/PageTitle.astro";
+import { breadcrumbs, markdownPath, operationFor } from "../lib/api";
+import MethodBadge from "./MethodBadge.astro";
+import PageActions from "./PageActions.astro";
+
+const route = Astro.locals.starlightRoute;
+const crumbs = breadcrumbs(route.sidebar) ?? [];
+const markdown = await markdownPath(route.id);
+const operation = operationFor(route.id);
+---
+
+<div class="og-title-bar">
+  <nav aria-label="Breadcrumbs" class="og-crumbs">
+    <ol>
+      {crumbs.map((c) => <li><a href={c.href}>{c.label}</a></li>)}
+    </ol>
+  </nav>
+  {markdown && <PageActions {markdown} />}
+</div>
+<Default />
+{operation && (
+  <p class="og-endpoint">
+    <MethodBadge method={operation.method} />
+    <code>{operation.path}</code>
+  </p>
+)}

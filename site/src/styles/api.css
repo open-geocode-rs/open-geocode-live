@@ -1,0 +1,236 @@
+:root {
+  --og-method-get: #49a782;
+  --og-method-get-bg: rgb(73 167 130 / 0.16);
+  --og-method-get-border: rgb(73 167 130 / 0.24);
+}
+
+:root[data-theme="light"] {
+  --og-method-get: #2f7d5f;
+}
+
+/* Title bar: breadcrumbs left, page actions right; 16px below the content top. */
+.og-title-bar {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-top: 1rem;
+  min-height: 2rem;
+}
+
+.og-crumbs ol {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+  gap: 8px;
+  line-height: 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.og-crumbs li {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.og-crumbs li + li::before {
+  background: currentColor;
+  color: var(--sl-color-gray-3);
+  content: "";
+  height: 16px;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  width: 16px;
+}
+
+.og-crumbs a {
+  color: var(--sl-color-white);
+  line-height: 21px;
+  text-decoration: none;
+}
+
+.og-crumbs a:hover {
+  text-decoration: underline;
+}
+
+/* Copy Markdown: two bordered 32px buttons side by side, not one outlined group. */
+.og-actions {
+  display: flex;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.og-actions svg,
+.og-method svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.og-actions-copy,
+.og-actions-more summary {
+  align-items: center;
+  background: var(--og-control-bg);
+  border: 1px solid var(--og-control-border);
+  color: var(--sl-color-white);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  gap: 8px;
+  height: 2rem;
+  line-height: 14px;
+  padding: 1px 11px;
+}
+
+.og-actions-copy svg,
+.og-actions-more summary svg {
+  height: 16px;
+  width: 16px;
+}
+
+/* Hover only doubles the tint. The divider stays the arrow button's left border in
+   every state: moving it to the hovered half draws the translucent line over the
+   lighter fill and it fades. */
+.og-actions-copy:hover,
+.og-actions-more summary:hover,
+.og-actions-more[open] summary {
+  background: var(--og-control-hover);
+}
+
+.og-actions-copy {
+  border-inline-end: 0;
+  border-radius: 8px 0 0 8px;
+}
+
+.og-actions-more summary {
+  border-radius: 0 8px 8px 0;
+  justify-content: center;
+  list-style: none;
+  width: 40px;
+}
+
+.og-actions-more summary::-webkit-details-marker {
+  display: none;
+}
+
+.og-actions-menu {
+  background: var(--sl-color-bg);
+  border: 1px solid var(--og-control-border);
+  border-radius: 8px;
+  box-shadow: var(--sl-shadow-md);
+  display: flex;
+  flex-direction: column;
+  inset-inline-end: 0;
+  min-width: 12rem;
+  padding: 4px;
+  position: absolute;
+  top: calc(100% + 4px);
+  z-index: 10;
+}
+
+.og-actions-menu a {
+  border-radius: 4px;
+  color: var(--sl-color-white);
+  font-size: 0.875rem;
+  padding: 6px 10px;
+  text-decoration: none;
+}
+
+.og-actions-menu a:hover {
+  background: var(--og-hover);
+}
+
+/* Method badge: 20px, 4px radius, 12px mono at weight 500. */
+.og-method {
+  align-items: center;
+  background: var(--og-method-get-bg);
+  border: 1px solid var(--og-method-get-border);
+  border-radius: 4px;
+  color: var(--og-method-get);
+  display: inline-flex;
+  font-family: var(--sl-font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  gap: 1.5px;
+  height: 20px;
+  letter-spacing: normal;
+  line-height: normal;
+  padding: 0 2px;
+}
+
+.og-method svg {
+  height: 14px;
+  width: 14px;
+}
+
+/* 40px under the breadcrumbs, then the route 12px under the title. */
+h1#_top {
+  margin-top: 2.5rem;
+}
+
+/* The extra 8px below lands the body 56px under the route. */
+.og-endpoint {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 12px 0 8px;
+}
+
+.og-endpoint code {
+  color: var(--sl-color-white);
+  font-family: var(--sl-font-mono);
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+/* Sidebar method badges become a leading 20px icon tile; the text stays for screen readers. */
+.sidebar-content a:has(> .sl-openapi-method-get) {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.sidebar-content .sl-badge.sl-openapi-method-get {
+  background: var(--og-method-get-bg);
+  border: 1px solid var(--og-method-get-border);
+  border-radius: 4px;
+  color: transparent;
+  flex-shrink: 0;
+  font-size: 0;
+  height: 20px;
+  margin: 0.5px 0 0;
+  padding: 0;
+  position: relative;
+  width: 20px;
+}
+
+.sidebar-content .sl-badge.sl-openapi-method-get::before {
+  background: var(--og-method-get);
+  content: "";
+  inset: 2px;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 7 7 17M17 17H7V7'/%3E%3C/svg%3E") center / 14px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 7 7 17M17 17H7V7'/%3E%3C/svg%3E") center / 14px no-repeat;
+  position: absolute;
+}
+
+/* No rule between the title and the body, on every page. */
+.content-panel + .content-panel {
+  border-top: 0;
+}
+
+
+/* Hovering the left half lightens the fill beside the divider; lift the line by the
+   same step so its contrast holds. */
+.og-actions:has(.og-actions-copy:hover) .og-actions-more summary {
+  border-inline-start-color: var(--og-control-border-strong);
+}

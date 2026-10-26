@@ -1,0 +1,46 @@
+---
+interface Props {
+  markdown: string;
+}
+
+const { markdown } = Astro.props;
+const url = new URL(markdown, Astro.site ?? Astro.url).href;
+const prompt = encodeURIComponent(`Read ${url} so I can ask questions about it.`);
+---
+
+<div class="og-actions">
+  <button type="button" class="og-actions-copy" data-markdown={markdown}>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="8" y="8" width="13" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+    </svg>
+    <span>Copy Markdown</span>
+  </button>
+  <details class="og-actions-more">
+    <summary aria-label="More page actions">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></svg>
+    </summary>
+    <div class="og-actions-menu">
+      <a href={markdown}>View as Markdown</a>
+      <a href={`https://claude.ai/new?q=${prompt}`} target="_blank" rel="noopener">Open in Claude</a>
+      <a href={`https://chatgpt.com/?q=${prompt}`} target="_blank" rel="noopener">Open in ChatGPT</a>
+    </div>
+  </details>
+</div>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>(".og-actions-copy")) {
+    const label = button.querySelector("span")!;
+    button.addEventListener("click", async () => {
+      const text = await (await fetch(button.dataset.markdown!)).text();
+      await navigator.clipboard.writeText(text);
+      label.textContent = "Copied";
+      setTimeout(() => (label.textContent = "Copy Markdown"), 2000);
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    for (const menu of document.querySelectorAll<HTMLDetailsElement>(".og-actions-more[open]")) {
+      if (!menu.contains(event.target as Node)) menu.open = false;
+    }
+  });
+</script>

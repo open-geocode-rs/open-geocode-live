@@ -1,0 +1,12 @@
+---
+interface Props {
+  method: string;
+}
+
+const { method } = Astro.props;
+---
+
+<span class:list={["og-method", `og-method--${method}`]}>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 7 7 17M17 17H7V7" /></svg>
+  {method.toUpperCase()}
+</span>

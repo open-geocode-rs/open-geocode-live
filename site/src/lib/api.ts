@@ -1,4 +1,5 @@
 import { getCollection } from "astro:content";
+import type { StarlightRouteData } from "@astrojs/starlight/route-data";
 import openapi from "../../public/openapi.json";
 
 type Parameter = {
@@ -60,5 +61,27 @@ export function operationMarkdown(op: ApiOperation): string {
     lines.push("");
   }
   return lines.join("\n");
+}
+
+type Crumb = { label: string; href: string };
+type Entry = StarlightRouteData["sidebar"][number];
+
+function firstHref(entries: Entry[]): string | undefined {
+  for (const e of entries) {
+    const href = e.type === "link" ? e.href : firstHref(e.entries);
+    if (href) return href;
+  }
+}
+
+// Groups have no page of their own, so a crumb links to the group's first page.
+export function breadcrumbs(sidebar: Entry[], trail: Crumb[] = []): Crumb[] | undefined {
+  for (const e of sidebar) {
+    if (e.type === "link") {
+      if (e.isCurrent) return trail;
+      continue;
+    }
+    const found = breadcrumbs(e.entries, [...trail, { label: e.label, href: firstHref(e.entries) ?? "#" }]);
+    if (found) return found;
+  }
 }
 

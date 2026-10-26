@@ -30,9 +30,10 @@ export default defineConfig({
       ],
       editLink: { baseUrl: "https://github.com/open-geocode-rs/open-geocode-live/edit/main/site/" },
       lastUpdated: true,
-      customCss: ["./src/styles/fonts.css", "./src/styles/starlight.css", "./src/styles/layout.css"],
+      customCss: ["./src/styles/fonts.css", "./src/styles/starlight.css", "./src/styles/layout.css", "./src/styles/api.css"],
       components: {
         Head: "./src/components/DocsHead.astro",
+        PageTitle: "./src/components/PageTitle.astro",
       },
       plugins: [
         starlightOpenAPI([
