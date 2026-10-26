@@ -1,0 +1,238 @@
+/* Page geometry and chrome: content capped at 90rem with the rest as equal side
+   gutters, a 56px header, sidebar on the page background. */
+:root {
+  --og-gutter: max(1.5rem, calc((100vw - 90rem) / 2));
+  --og-control-bg: rgb(255 255 255 / 0.04);
+  --og-control-border: rgb(255 255 255 / 0.16);
+  --og-control-hover: rgb(255 255 255 / 0.08);
+  --og-control-border-strong: rgb(255 255 255 / 0.22);
+  --og-hover: rgb(255 255 255 / 0.04);
+  --og-current: rgb(255 255 255 / 0.08);
+  --og-code-bg: rgb(255 255 255 / 0.16);
+
+  --sl-nav-height: 3.5rem;
+  --sl-line-height: 1.5;
+  --sl-color-text: var(--sl-color-white);
+  --sl-color-bg-sidebar: var(--sl-color-bg);
+  --sl-color-hairline-shade: rgb(255 255 255 / 0.08);
+  --sl-color-hairline-light: rgb(255 255 255 / 0.08);
+}
+
+:root[data-theme="light"] {
+  --og-control-bg: rgb(0 0 0 / 0.03);
+  --og-control-border: rgb(0 0 0 / 0.14);
+  --og-control-hover: rgb(0 0 0 / 0.06);
+  --og-control-border-strong: rgb(0 0 0 / 0.2);
+  --og-hover: rgb(0 0 0 / 0.04);
+  --og-current: rgb(0 0 0 / 0.06);
+  --og-code-bg: rgb(0 0 0 / 0.08);
+
+  --sl-color-hairline-shade: rgb(0 0 0 / 0.08);
+  --sl-color-hairline-light: rgb(0 0 0 / 0.08);
+}
+
+body {
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 50em) {
+  :root {
+    /* Starlight raises the nav to 4rem at this width; this site keeps 56px. */
+    --sl-nav-height: 3.5rem;
+    --sl-nav-pad-x: var(--og-gutter);
+    --sl-sidebar-width: calc(16.5rem + var(--og-gutter));
+  }
+
+  .sidebar-content {
+    padding: 1rem 1rem 2rem calc(var(--og-gutter) - 0.75rem);
+  }
+
+  .content-panel {
+    padding-inline: 4rem 0;
+  }
+
+  .main-frame {
+    padding-inline-end: var(--og-gutter);
+  }
+}
+
+/* Search: a 32px control, 8px radius like the other controls. */
+site-search button[data-open-modal] {
+  background: var(--og-control-bg);
+  border: 1px solid var(--og-control-border);
+  border-radius: 8px;
+  color: var(--sl-color-white);
+  font-weight: 500;
+  height: 2rem;
+  padding: 0 0.625rem;
+}
+
+@media (min-width: 50em) {
+  site-search button[data-open-modal] {
+    max-width: none;
+    width: 30rem;
+  }
+}
+
+/* Sidebar rows: 14/21, 6px 12px, white, rounded hover; nested lists hang off a hairline. */
+.sidebar-content ul {
+  --sl-sidebar-item-padding-inline: 0.75rem;
+}
+
+.sidebar-content :is(a, summary) {
+  color: var(--sl-color-white);
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+  line-height: 21px;
+  padding: 6px 12px;
+}
+
+.sidebar-content summary {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.sidebar-content summary .large {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.sidebar-content a {
+  border-radius: 0;
+}
+
+.sidebar-content :is(a, summary):hover {
+  background: var(--og-hover);
+}
+
+.sidebar-content .top-level > li + li {
+  margin-top: 0.25rem;
+}
+
+.sidebar-content ul ul li {
+  margin-inline-start: 0.75rem;
+  padding-inline-start: 0;
+}
+
+.sidebar-content a[aria-current="page"],
+.sidebar-content a[aria-current="page"]:hover,
+.sidebar-content a[aria-current="page"]:focus {
+  background: var(--og-current);
+  border-inline-start: 2px solid var(--sl-color-accent);
+  color: var(--sl-color-white);
+  font-weight: 500;
+  margin-inline-start: -1px;
+  padding-inline-start: 11px;
+}
+
+/* Group carets sit 4px after the label at 16px, not pushed to the far edge. */
+.sidebar-content summary {
+  justify-content: flex-start;
+}
+
+.sidebar-content summary .caret {
+  font-size: 1rem;
+  margin-inline-start: 4px;
+}
+
+/* Code blocks share the controls' 8px radius. */
+.expressive-code {
+  --ec-brdRad: 8px;
+}
+
+/* "On this page": 14px throughout, links on a hairline, current one in the accent
+   with a 2px bar. */
+starlight-toc h2 {
+  color: var(--sl-color-white);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 21px;
+  margin: 0 0 7px;
+}
+
+starlight-toc nav > ul {
+  border-inline-start: 1px solid var(--og-control-border);
+}
+
+/* Square corners: the current link's bar sits on the hairline and must stay straight. */
+starlight-toc a {
+  border-radius: 0;
+  color: var(--sl-color-white);
+  font-size: 0.875rem;
+  line-height: 17.5px;
+  padding-block: 5.12px;
+  padding-inline: calc(16px + var(--depth) * 16px) 16px;
+}
+
+starlight-toc a:hover {
+  background: var(--og-hover);
+}
+
+starlight-toc a[aria-current="true"] {
+  border-inline-start: 2px solid var(--sl-color-accent);
+  color: var(--sl-color-accent);
+  margin-inline-start: -1px;
+  padding-inline-start: calc(15px + var(--depth) * 16px);
+}
+
+/* Only the left sidebar is separated; "On this page" sits on the page. */
+.right-sidebar {
+  border-inline-start: 0;
+}
+
+/* "On this page" column: 230px ending at the right gutter, beside a 768px text
+   column. Starlight derives both from the sidebar width, which is wider here, so
+   they are set directly. */
+@media (min-width: 72rem) {
+  :root:has(.right-sidebar-container) {
+    --sl-content-width: 48rem;
+  }
+
+  .right-sidebar-container,
+  .right-sidebar {
+    width: 14.375rem;
+  }
+
+  /* The text column is centred between the sidebar and this panel. */
+  [data-has-sidebar][data-has-toc] .main-pane {
+    --sl-content-margin-inline: auto;
+    width: calc(100% - 14.375rem);
+  }
+
+  [data-has-toc] .content-panel {
+    padding-inline: 2rem;
+  }
+
+  /* Pages with a panel sit higher: breadcrumbs under the header, title at 135px. */
+  [data-has-toc] .og-title-bar {
+    margin-top: 0;
+  }
+
+  [data-has-toc] h1#_top {
+    margin-top: 1.5rem;
+  }
+
+  .right-sidebar-panel {
+    padding: 16px 0 0;
+  }
+
+  .right-sidebar-panel .sl-container {
+    max-width: none;
+    width: auto;
+  }
+}
+
+/* Inline code: 0.84em on a light tint, 4px radius. */
+.sl-markdown-content code:not(:where(.not-content *)) {
+  background: var(--og-code-bg);
+  border-radius: 4px;
+  font-size: 0.84em;
+  letter-spacing: normal;
+  line-height: 1.5;
+  padding: 0 4px;
+}
+
+/* Heading anchor icons sit 0.4em clear of the text; Starlight's 0.25em reads cramped. */
+.sl-markdown-content .sl-heading-wrapper {
+  --sl-anchor-icon-gap: 0.4em;
+}
