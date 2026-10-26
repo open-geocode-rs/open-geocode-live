@@ -1,0 +1,87 @@
+---
+import { Icon } from "@astrojs/starlight/components";
+
+// Replaces Starlight's native <select>: a native picker's popup can't take the site's
+// rounded menu styling. Storage key and values match Starlight's, so saved choices carry over.
+const options = [
+  { value: "light", label: "Light", icon: "sun" },
+  { value: "dark", label: "Dark", icon: "moon" },
+  { value: "auto", label: "Auto", icon: "laptop" },
+] as const;
+---
+
+<og-theme-select class="og-theme">
+  <details>
+    <summary aria-label="Select theme">
+      {options.map((o) => <Icon name={o.icon} class={`og-theme-icon og-theme-icon--${o.value}`} size="1rem" />)}
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="og-theme-caret"><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></svg>
+    </summary>
+    <div class="og-theme-menu" role="menu">
+      {options.map((o) => (
+        <button type="button" role="menuitemradio" aria-checked="false" data-value={o.value}>
+          <Icon name={o.icon} size="1rem" />
+          <span>{o.label}</span>
+        </button>
+      ))}
+    </div>
+  </details>
+</og-theme-select>
+
+{/* Inline so the right icon shows before the module script runs. */}
+<script is:inline>
+  try {
+    document.querySelectorAll("og-theme-select").forEach((el) => {
+      el.dataset.choice = localStorage.getItem("starlight-theme") || "auto";
+    });
+  } catch {}
+</script>
+
+<script>
+  type Theme = "auto" | "dark" | "light";
+  const KEY = "starlight-theme";
+
+  const parse = (v: unknown): Theme => (v === "dark" || v === "light" ? v : "auto");
+
+  function load(): Theme {
+    try {
+      return parse(localStorage.getItem(KEY));
+    } catch {
+      return "auto";
+    }
+  }
+
+  function apply(theme: Theme) {
+    const system = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    document.documentElement.dataset.theme = theme === "auto" ? system : theme;
+    try {
+      localStorage.setItem(KEY, theme === "auto" ? "" : theme);
+    } catch {}
+    for (const el of document.querySelectorAll<HTMLElement>("og-theme-select")) {
+      el.dataset.choice = theme;
+      for (const b of el.querySelectorAll<HTMLButtonElement>("[data-value]")) {
+        b.setAttribute("aria-checked", String(b.dataset.value === theme));
+      }
+    }
+  }
+
+  matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+    if (load() === "auto") apply("auto");
+  });
+
+  class ThemeSelect extends HTMLElement {
+    connectedCallback() {
+      apply(load());
+      const details = this.querySelector("details")!;
+      for (const b of this.querySelectorAll<HTMLButtonElement>("[data-value]")) {
+        b.addEventListener("click", () => {
+          apply(parse(b.dataset.value));
+          details.open = false;
+        });
+      }
+      document.addEventListener("click", (e) => {
+        if (!this.contains(e.target as Node)) details.open = false;
+      });
+    }
+  }
+  customElements.define("og-theme-select", ThemeSelect);
+</script>

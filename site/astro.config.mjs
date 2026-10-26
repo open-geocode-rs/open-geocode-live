@@ -35,6 +35,8 @@ export default defineConfig({
         Head: "./src/components/DocsHead.astro",
         PageTitle: "./src/components/PageTitle.astro",
         MarkdownContent: "./src/components/MarkdownContent.astro",
+        ThemeSelect: "./src/components/ThemeSelect.astro",
+        Pagination: "./src/components/Pagination.astro",
       },
       routeMiddleware: "./src/routeData.ts",
       plugins: [

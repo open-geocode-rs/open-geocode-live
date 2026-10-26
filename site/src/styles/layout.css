@@ -140,6 +140,200 @@ site-search button[data-open-modal] {
   --ec-brdRad: 8px;
 }
 
+/* Theme switch: a 56x32 icon control with a rounded menu, like Copy Markdown. */
+.og-theme {
+  position: relative;
+}
+
+.og-theme summary {
+  align-items: center;
+  background: var(--og-control-bg);
+  border: 1px solid var(--og-control-border);
+  border-radius: 8px;
+  color: var(--sl-color-white);
+  cursor: pointer;
+  display: flex;
+  gap: 4px;
+  height: 2rem;
+  justify-content: center;
+  list-style: none;
+  width: 3.5rem;
+}
+
+.og-theme summary::-webkit-details-marker {
+  display: none;
+}
+
+.og-theme summary:hover {
+  border-color: var(--sl-color-gray-3);
+}
+
+.og-theme-icon {
+  display: none;
+}
+
+.og-theme:not([data-choice]) .og-theme-icon--auto,
+.og-theme[data-choice="auto"] .og-theme-icon--auto,
+.og-theme[data-choice="light"] .og-theme-icon--light,
+.og-theme[data-choice="dark"] .og-theme-icon--dark {
+  display: block;
+}
+
+.og-theme-caret {
+  fill: none;
+  height: 14px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 14px;
+}
+
+.og-theme-menu {
+  background: var(--sl-color-bg);
+  border: 1px solid var(--og-control-border);
+  border-radius: 8px;
+  box-shadow: var(--sl-shadow-md);
+  display: flex;
+  flex-direction: column;
+  inset-inline-end: 0;
+  min-width: 9rem;
+  padding: 4px;
+  position: absolute;
+  top: calc(100% + 4px);
+  z-index: 10;
+}
+
+.og-theme-menu button {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  color: var(--sl-color-white);
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 0.875rem;
+  gap: 8px;
+  padding: 6px 10px;
+  text-align: start;
+}
+
+.og-theme-menu button:hover {
+  background: var(--og-hover);
+}
+
+.og-theme-menu button[aria-checked="true"] {
+  background: var(--og-current);
+  font-weight: 500;
+}
+
+/* Prev/next pager: a 16px outer card holding two 48px links, each with a button,
+   a hairline divider and the page title. */
+.og-pager {
+  background: var(--og-control-bg);
+  border: 1px solid var(--og-control-border);
+  border-radius: 16px;
+  display: flex;
+  gap: 8px;
+  margin: 0 -4px;
+  padding: 8px;
+}
+
+.og-pager-link,
+.og-pager-spacer {
+  flex: 1 1 50%;
+  min-width: 0;
+}
+
+.og-pager-link {
+  align-items: center;
+  background: var(--sl-color-bg);
+  border: 1px solid var(--og-control-border);
+  border-radius: 8px;
+  color: var(--sl-color-white);
+  display: flex;
+  font-size: 0.875rem;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 12px;
+  text-decoration: none;
+}
+
+.og-pager-link:hover {
+  border-color: var(--sl-color-gray-3);
+}
+
+.og-pager-link--next {
+  flex-direction: row-reverse;
+}
+
+.og-pager-button {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  font-weight: 500;
+  line-height: 14px;
+  padding: 8px 14px;
+}
+
+.og-pager-button svg {
+  fill: none;
+  height: 16px;
+  margin: -4px 6px -4px -6px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 16px;
+}
+
+.og-pager-link--next .og-pager-button {
+  flex-direction: row-reverse;
+}
+
+.og-pager-link--next .og-pager-button svg {
+  margin: -4px -6px -4px 6px;
+}
+
+.og-pager hr {
+  align-self: stretch;
+  border: 0;
+  border-inline-start: 1px solid var(--og-control-border);
+  margin: 0;
+  max-height: 30px;
+  min-height: 30px;
+  width: 1px;
+}
+
+.og-pager-title {
+  flex: 1 1 50%;
+  font-weight: 500;
+  line-height: 21px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 4px 2px 4px 8px;
+}
+
+.og-pager-link--next .og-pager-title {
+  padding: 4px 8px 4px 2px;
+  text-align: end;
+}
+
+@media (max-width: 40rem) {
+  .og-pager {
+    flex-direction: column;
+  }
+
+  .og-pager-spacer {
+    display: none;
+  }
+}
+
+.content-panel footer {
+  padding: 1rem 0 4rem;
+}
+
 /* "On this page": 14px throughout, links on a hairline, current one in the accent
    with a 2px bar. */
 starlight-toc h2 {

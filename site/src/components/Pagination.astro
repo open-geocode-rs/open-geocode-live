@@ -1,0 +1,27 @@
+---
+const { dir, pagination } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const links = [
+  { link: prev, rel: "prev", label: Astro.locals.t("page.previousLink"), arrow: "m15 18-6-6 6-6" },
+  { link: next, rel: "next", label: Astro.locals.t("page.nextLink"), arrow: "m9 18 6-6-6-6" },
+] as const;
+---
+
+{(prev || next) && (
+  <nav class="og-pager print:hidden" dir={dir} aria-label="Pages">
+    {links.map(({ link, rel, label, arrow }) =>
+      link ? (
+        <a href={link.href} rel={rel} class:list={["og-pager-link", `og-pager-link--${rel}`]}>
+          <span class="og-pager-button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d={arrow} /></svg>
+            <span>{label}</span>
+          </span>
+          <hr />
+          <span class="og-pager-title">{link.label}</span>
+        </a>
+      ) : (
+        <span class="og-pager-spacer" />
+      ),
+    )}
+  </nav>
+)}
