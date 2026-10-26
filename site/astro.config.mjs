@@ -34,7 +34,9 @@ export default defineConfig({
       components: {
         Head: "./src/components/DocsHead.astro",
         PageTitle: "./src/components/PageTitle.astro",
+        MarkdownContent: "./src/components/MarkdownContent.astro",
       },
+      routeMiddleware: "./src/routeData.ts",
       plugins: [
         starlightOpenAPI([
           {

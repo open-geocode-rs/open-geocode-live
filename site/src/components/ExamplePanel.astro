@@ -1,0 +1,92 @@
+---
+import { Code } from "astro:components";
+import { exampleFor, snippetsFor, type ApiOperation } from "../lib/api";
+
+interface Props {
+  operation: ApiOperation;
+}
+
+const { operation } = Astro.props;
+const example = exampleFor(operation);
+const snippets = snippetsFor(example.request);
+const { response } = example;
+// Colours come from CSS per theme.
+const themes = { light: "github-light", dark: "github-dark" } as const;
+---
+
+<aside class="og-example not-content" aria-label="Example request">
+  <div class="og-example-request">
+    <div class="og-example-title">
+      <div class="og-example-method">
+        <span class:list={["og-example-badge", `og-example-badge--${operation.method}`]} aria-label={operation.method.toUpperCase()}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 7 7 17M17 17H7V7" /></svg>
+        </span>
+        <h3>{operation.summary ?? operation.operationId}</h3>
+      </div>
+      <div class="og-example-controls">
+        <label class="og-example-lang">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h.01M4 14.5h.01M10 20 15 4M15 20 20 4" /></svg>
+          <span class="sr-only">Language</span>
+          <select autocomplete="off">
+            {snippets.map((s) => <option value={s.id}>{s.label}</option>)}
+          </select>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></svg>
+        </label>
+        <button type="button" class="og-example-copy" aria-label="Copy code">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="8" y="8" width="13" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    {snippets.map((s, i) => (
+      <div class="og-example-code" data-snippet={s.id} data-code={s.code} hidden={i > 0}>
+        <Code code={s.code} lang={s.lang} {themes} defaultColor={false} />
+      </div>
+    ))}
+  </div>
+  {response && (
+    <div class="og-example-response">
+      <div class="og-example-response-tab">200 example</div>
+      <div class="og-example-code">
+        <Code code={response} lang="json" {themes} defaultColor={false} />
+      </div>
+    </div>
+  )}
+</aside>
+
+<script>
+  const KEY = "og-snippet";
+
+  function show(id: string) {
+    for (const panel of document.querySelectorAll<HTMLElement>(".og-example")) {
+      const panes = panel.querySelectorAll<HTMLElement>(".og-example-request [data-snippet]");
+      if (![...panes].some((p) => p.dataset.snippet === id)) continue;
+      for (const p of panes) p.hidden = p.dataset.snippet !== id;
+      panel.querySelector("select")!.value = id;
+    }
+  }
+
+  for (const panel of document.querySelectorAll<HTMLElement>(".og-example")) {
+    panel.querySelector("select")!.addEventListener("change", (e) => {
+      const id = (e.currentTarget as HTMLSelectElement).value;
+      show(id);
+      try {
+        localStorage.setItem(KEY, id);
+      } catch {}
+    });
+
+    const copy = panel.querySelector<HTMLButtonElement>(".og-example-copy")!;
+    copy.addEventListener("click", async () => {
+      const pane = panel.querySelector<HTMLElement>(".og-example-request [data-snippet]:not([hidden])")!;
+      await navigator.clipboard.writeText(pane.dataset.code!);
+      copy.dataset.copied = "";
+      setTimeout(() => delete copy.dataset.copied, 1500);
+    });
+  }
+
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) show(saved);
+  } catch {}
+</script>

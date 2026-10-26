@@ -1,6 +1,7 @@
 import { getCollection } from "astro:content";
 import type { StarlightRouteData } from "@astrojs/starlight/route-data";
 import openapi from "../../public/openapi.json";
+import examplesJson from "../data/examples.json";
 
 type Parameter = {
   name: string;
@@ -85,3 +86,27 @@ export function breadcrumbs(sidebar: Entry[], trail: Crumb[] = []): Crumb[] | un
   }
 }
 
+export const SERVER = (openapi.servers?.[0]?.url ?? "http://127.0.0.1:8080").replace(/\/$/, "");
+
+type Example = { request: string; response: string };
+const examples = examplesJson as Record<string, Example>;
+
+export function exampleFor(op: ApiOperation): { request: string; response?: string } {
+  return examples[op.operationId] ?? { request: op.path };
+}
+
+export type Snippet = { id: string; label: string; lang: "sh" | "js" | "python"; code: string };
+
+export function snippetsFor(request: string): Snippet[] {
+  const url = SERVER + request;
+  const { pathname, searchParams } = new URL(url);
+  const params = [...searchParams].map(([k, v]) => `"${k}": ${JSON.stringify(v)}`).join(", ");
+  const python = params
+    ? `import requests\n\nanswer = requests.get(\n    "${SERVER}${pathname}",\n    params={${params}},\n).json()`
+    : `import requests\n\nanswer = requests.get("${url}").json()`;
+  return [
+    { id: "curl", label: "cURL", lang: "sh", code: `curl '${url}'` },
+    { id: "javascript", label: "JavaScript", lang: "js", code: `const response = await fetch("${url}");\nconst answer = await response.json();` },
+    { id: "python", label: "Python", lang: "python", code: python },
+  ];
+}

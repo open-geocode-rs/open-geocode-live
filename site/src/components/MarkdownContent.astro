@@ -1,0 +1,12 @@
+---
+import Default from "@astrojs/starlight/components/MarkdownContent.astro";
+import { operationFor } from "../lib/api";
+import ExamplePanel from "./ExamplePanel.astro";
+
+const operation = operationFor(Astro.locals.starlightRoute.id);
+---
+
+<Default>
+  {operation && <ExamplePanel {operation} />}
+  <slot />
+</Default>

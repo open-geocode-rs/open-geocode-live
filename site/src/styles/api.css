@@ -228,6 +228,256 @@ h1#_top {
   border-top: 0;
 }
 
+/* Example panel: 16px outer card, 12px inner card, 8px controls, 4px method tile,
+   Geist Mono 14/21. */
+.og-example {
+  --og-ex-surface: rgb(255 255 255 / 0.04);
+  --og-ex-outline: rgb(255 255 255 / 0.08);
+  --og-ex-border: rgb(255 255 255 / 0.16);
+  --og-ex-card: #181818;
+  --og-ex-muted: rgb(255 255 255 / 0.4);
+  --og-ex-fg: #fff;
+
+  background: var(--og-ex-surface);
+  border: 1px solid var(--og-ex-outline);
+  border-radius: 16px;
+  color: var(--og-ex-fg);
+  /* Long code lines scroll inside the panel; without this they widen the page. */
+  contain: inline-size;
+  font-size: 14px;
+  padding: 4px;
+}
+
+:root[data-theme="light"] .og-example {
+  --og-ex-surface: rgb(0 0 0 / 0.03);
+  --og-ex-outline: rgb(0 0 0 / 0.08);
+  --og-ex-border: rgb(0 0 0 / 0.12);
+  --og-ex-card: #fff;
+  --og-ex-muted: rgb(0 0 0 / 0.45);
+  --og-ex-fg: #161616;
+}
+
+.og-example svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.og-example-request {
+  background: var(--og-ex-card);
+  border: 1px solid var(--og-ex-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.og-example-title {
+  align-items: center;
+  border-bottom: 1px solid var(--og-ex-border);
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  padding: 8px 8px 8px 12px;
+}
+
+.og-example-method,
+.og-example-controls {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.og-example-method h3 {
+  color: var(--og-ex-fg);
+  font-family: var(--sl-font);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.28px;
+  line-height: 14px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.og-example-badge {
+  align-items: center;
+  background: var(--og-method-get-bg);
+  border: 1px solid var(--og-method-get-border);
+  border-radius: 4px;
+  color: var(--og-method-get);
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 24px;
+  justify-content: center;
+  width: 24px;
+}
+
+.og-example-badge svg {
+  height: 14px;
+  width: 14px;
+}
+
+.og-example-lang,
+.og-example-copy {
+  align-items: center;
+  background: var(--og-ex-surface);
+  border: 1px solid var(--og-ex-border);
+  border-radius: 8px;
+  color: var(--og-ex-fg);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--sl-font);
+  font-size: 14px;
+  font-weight: 500;
+  height: 32px;
+}
+
+.og-example-lang {
+  gap: 6px;
+  padding: 1px 11px;
+}
+
+.og-example-lang svg,
+.og-example-copy svg {
+  flex-shrink: 0;
+  height: 16px;
+  width: 16px;
+}
+
+.og-example-lang select {
+  appearance: none;
+  field-sizing: content;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  outline: none;
+  padding: 0;
+}
+
+.og-example-lang:focus-within,
+.og-example-copy:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 1px;
+}
+
+.og-example-copy {
+  justify-content: center;
+  padding: 8px 10px;
+  width: 38px;
+}
+
+.og-example-copy[data-copied] {
+  border-color: var(--sl-color-accent);
+  color: var(--sl-color-accent);
+}
+
+.og-example-lang:hover,
+.og-example-copy:hover {
+  border-color: var(--og-ex-muted);
+}
+
+.og-example-code {
+  overflow-x: auto;
+  padding: 16px;
+}
+
+.og-example-code pre {
+  background: transparent !important;
+  font-family: var(--sl-font-mono);
+  font-size: 14px;
+  line-height: 21px;
+  margin: 0;
+  overflow: visible;
+}
+
+.og-example-code pre,
+.og-example-code pre span {
+  color: var(--shiki-dark);
+}
+
+:root[data-theme="light"] .og-example-code pre,
+:root[data-theme="light"] .og-example-code pre span {
+  color: var(--shiki-light);
+}
+
+.og-example-code code {
+  counter-reset: og-line;
+}
+
+.og-example-code .line::before {
+  color: var(--og-ex-muted);
+  content: counter(og-line);
+  counter-increment: og-line;
+  display: inline-flex;
+  justify-content: flex-end;
+  margin-right: 16px;
+  opacity: 0.5;
+  user-select: none;
+  width: 16px;
+}
+
+.og-example-response-tab {
+  border-bottom: 1px solid var(--og-ex-outline);
+  font-family: var(--sl-font);
+  font-weight: 500;
+  letter-spacing: normal;
+  line-height: 21px;
+  margin: 0 -4px 8px;
+  padding: 9.5px 19px;
+}
+
+.og-example-response .og-example-code {
+  max-height: 24rem;
+  overflow: auto;
+  padding: 0 8px 8px;
+}
+
+/* Operation pages: widen the column, then split it into prose left and the sticky
+   panel right. Only operation pages carry .og-example. */
+:root:has(.og-example) {
+  --sl-content-width: 69.5rem;
+}
+
+.sl-markdown-content:has(> .og-example) > .sl-openapi-operation-description {
+  display: none;
+}
+
+/* Starlight spaces siblings with margin-top; the hidden box above would push the
+   first visible paragraph below the panel's top edge. */
+.sl-markdown-content:has(> .og-example) > :is(.sl-openapi-operation-description, [popover]) + * {
+  margin-top: 0;
+}
+
+.sl-markdown-content > .og-example {
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 72rem) {
+  .sl-markdown-content:has(> .og-example) {
+    align-items: start;
+    column-gap: 2rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 33.75rem);
+  }
+
+  .sl-markdown-content:has(> .og-example) > * {
+    grid-column: 1;
+  }
+
+  .sl-markdown-content > .og-example {
+    grid-column: 2;
+    grid-row: 1 / span 40;
+    margin: 0;
+    position: sticky;
+    top: calc(var(--sl-nav-height) + 1rem);
+  }
+}
+
 
 /* Hovering the left half lightens the fill beside the divider; lift the line by the
    same step so its contrast holds. */
