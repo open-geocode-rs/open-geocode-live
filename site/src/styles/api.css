@@ -478,6 +478,310 @@ h1#_top {
   }
 }
 
+/* starlight-openapi's own markup, restyled into property rows: "name: optional
+   type" on one line, description under it, constraints as chips, nested objects
+   hanging off a hairline. Only CSS; the plugin renders the HTML. */
+/* Sizes go on Starlight's heading wrapper too: the anchor icon and its gap are sized
+   in the wrapper's em, so a smaller heading inside a larger wrapper pulls the icon
+   back over its own text. */
+.sl-heading-wrapper:has(> .sl-openapi-heading:is(h2)),
+.sl-openapi-heading:is(h2) {
+  font-size: 1.5rem;
+}
+
+.sl-heading-wrapper:has(> .sl-openapi-heading:is(h3)),
+.sl-openapi-heading:is(h3) {
+  font-size: 1rem;
+}
+
+.sl-openapi-heading:is(h3) {
+  color: var(--og-label);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.sl-openapi-section-panel {
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.sl-openapi-keys {
+  display: block !important;
+  font-size: 0.875rem;
+  line-height: 21px;
+}
+
+.sl-openapi-key {
+  align-items: baseline;
+  display: flex !important;
+  flex-wrap: wrap;
+  margin: 0 !important;
+  padding: 3.2px 0;
+}
+
+.sl-openapi-key + .sl-openapi-key {
+  margin-top: 0.5rem !important;
+}
+
+.sl-openapi-key-name,
+.sl-openapi-key-description {
+  display: contents;
+}
+
+.sl-openapi-key-name strong {
+  color: var(--sl-color-white);
+  font-weight: 600;
+  order: 0;
+}
+
+/* Optional fields are marked, not required ones. */
+.sl-openapi-key-name strong::after {
+  content: ": ";
+  font-weight: 400;
+  white-space: pre;
+}
+
+.sl-openapi-key-name:not(:has(.sl-openapi-key-required)) strong::after {
+  content: ": optional ";
+}
+
+.sl-openapi-key-required {
+  display: none;
+}
+
+.sl-openapi-key-description > * {
+  flex-basis: 100%;
+  margin: 0;
+  order: 2;
+}
+
+.sl-openapi-key-description > div:has(> .sl-openapi-type) {
+  flex-basis: auto;
+  order: 1;
+}
+
+.sl-openapi-type {
+  color: var(--sl-color-white) !important;
+  font-family: var(--sl-font-mono);
+  font-weight: 400 !important;
+  margin: 0 !important;
+}
+
+.sl-openapi-key-description > .sl-openapi-tags {
+  margin: 4px 0 0;
+  order: 3;
+}
+
+.sl-openapi-key-description > .sl-openapi-examples {
+  order: 4;
+}
+
+.sl-openapi-key-description > details {
+  order: 5;
+}
+
+.sl-openapi-markdown p {
+  color: var(--sl-color-white);
+  margin: 0;
+}
+
+.sl-openapi-tags {
+  align-items: center;
+  color: var(--og-label);
+  font-size: 0.875rem !important;
+  gap: 6px !important;
+}
+
+.sl-openapi-tag {
+  background: var(--og-chip);
+  border: 0 !important;
+  border-radius: 4px;
+  color: var(--sl-color-white);
+  font-family: var(--sl-font-mono);
+  font-size: 0.8125rem !important;
+  padding: 0 6px !important;
+}
+
+.sl-openapi-examples-heading {
+  color: var(--og-label) !important;
+  font-size: 0.875rem !important;
+  font-weight: 400 !important;
+  margin: 4px 0 !important;
+}
+
+/* Nested objects: the plugin's toggle row ("+ object") becomes a 16px +/- marker in
+   the gutter beside the property name; the open list hangs off a hairline. The
+   type is already on the property line, so the toggle's own label is hidden. */
+.sl-openapi-key {
+  position: relative;
+}
+
+/* The plugin's panel scrolls sideways, which would clip markers in the gutter. */
+.sl-openapi-section-panel {
+  overflow: visible !important;
+}
+
+/* 28px indent leaves room for a child's marker between the hairline and its name. */
+.sl-openapi-key-description details {
+  border-inline-start: 1px solid var(--og-control-border) !important;
+  margin-top: 4px;
+  padding-inline-start: 28px !important;
+}
+
+/* Closed, the details holds only the gutter marker, so it takes no space; the
+   plugin's own details spacing is overridden. */
+.sl-openapi-key-description details:not([open]) {
+  border: 0 !important;
+  margin-block: 0 !important;
+  padding: 0 !important;
+}
+
+.sl-openapi-schema-object-root {
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.sl-openapi-key-description details > summary {
+  color: var(--og-label);
+  font-size: 0;
+  height: 16px;
+  inset-inline-start: -24px;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: absolute;
+  top: calc(3.2px + 2.5px);
+  width: 16px;
+}
+
+.sl-openapi-key-description details > summary:hover {
+  color: var(--sl-color-white);
+}
+
+/* An object property has no type line of its own (the plugin names it only in the
+   hidden toggle), so the type slot says "object". */
+.sl-openapi-key:not(:has(> .sl-openapi-key-description > div > .sl-openapi-type)):has(> .sl-openapi-key-description > details) > .sl-openapi-key-name::after {
+  content: "object";
+  font-family: var(--sl-font-mono);
+  order: 0;
+}
+
+.sl-openapi-markdown code {
+  background: var(--og-code-bg);
+  border-radius: 4px;
+  font-size: 0.84em;
+  padding: 0 4px;
+}
+
+.sl-openapi-key-description details > summary::before {
+  --sl-details-marker-size: 16px !important;
+  margin: 0 !important;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M5 12h14M12 5v14'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M5 12h14M12 5v14'/%3E%3C/svg%3E") !important;
+  transform: none !important;
+  vertical-align: top;
+}
+
+.sl-openapi-key-description details[open] > summary::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E") !important;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E") !important;
+}
+
+:root {
+  --og-label: rgb(255 255 255 / 0.4);
+  --og-chip: rgb(255 255 255 / 0.08);
+}
+
+:root[data-theme="light"] {
+  --og-label: rgb(0 0 0 / 0.45);
+  --og-chip: rgb(0 0 0 / 0.06);
+}
+
+:root[data-theme="light"] .sl-openapi-examples .expressive-code pre {
+  background: var(--sl-color-gray-7);
+}
+
+/* Plugin method badges everywhere match the site's 20px tinted tile. */
+.sl-openapi-operation-method-badge {
+  background: var(--og-method-get-bg) !important;
+  border: 1px solid var(--og-method-get-border) !important;
+  border-radius: 4px;
+  color: var(--og-method-get) !important;
+  font-family: var(--sl-font-mono);
+  font-size: 0.75rem;
+  font-weight: 500 !important;
+  height: 20px;
+  padding: 0 4px !important;
+}
+
+/* API overview: the plugin's boxed rows become flat rows on hairlines, no arrows. */
+.sl-openapi-overview-navigation-links {
+  border-top: 1px solid var(--sl-color-hairline);
+  display: block !important;
+}
+
+.sl-openapi-overview-navigation-link {
+  align-items: center !important;
+  background: none !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--sl-color-hairline) !important;
+  box-shadow: none !important;
+  display: flex !important;
+  gap: 8px;
+  padding: 12px 0 !important;
+}
+
+.sl-openapi-overview-navigation-link a {
+  color: var(--sl-color-white) !important;
+  font-size: 0.875rem !important;
+}
+
+.sl-openapi-overview-navigation-link:hover a {
+  text-decoration: underline;
+}
+
+.sl-openapi-overview-navigation-link-icon {
+  display: none !important;
+}
+
+/* API overview meta card and version badge: quiet surfaces like the rest of the site. */
+.sl-openapi-overview-meta .card {
+  background: var(--og-control-bg);
+  border: 1px solid var(--og-control-border);
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 16px 20px !important;
+}
+
+.sl-openapi-overview-meta .card .title {
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 8px;
+}
+
+.sl-openapi-overview-meta .card .title svg {
+  background: none;
+  border: 0;
+  color: var(--og-label);
+  padding: 0;
+}
+
+.sl-openapi-overview-meta .card ul {
+  font-size: 0.875rem;
+}
+
+.sl-openapi-heading .sl-badge {
+  background: var(--og-chip);
+  border: 0;
+  border-radius: 4px;
+  color: var(--sl-color-white);
+  font-family: var(--sl-font-mono);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  padding: 0 6px;
+  vertical-align: middle;
+}
 
 /* Hovering the left half lightens the fill beside the divider; lift the line by the
    same step so its contrast holds. */
