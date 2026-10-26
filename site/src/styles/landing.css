@@ -1,0 +1,392 @@
+:root {
+  --og-bg: #ffffff;
+  --og-fg: #161616;
+  --og-dash: rgb(0 0 0 / 0.12);
+  --og-hover: rgb(0 0 0 / 0.04);
+  --og-pill-border: rgb(0 0 0 / 0.1);
+  /* The logo's own pair: navy letters, green globe. */
+  --og-card: #0e2e54;
+  --og-globe-land: #49a782;
+  --og-globe-land-lit: #a7e3c8;
+  --og-globe-sea: #3a5878;
+  --og-globe-ocean: #0e2e54;
+  --og-gutter: max(1.5rem, calc((100vw - 90rem) / 2));
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--og-bg);
+  color: var(--og-fg);
+  font-family: "Geist Variable", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.sr-only {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+/* Logo, centred links, actions: three columns so the links stay centred whatever
+   the widths of the outer two. */
+.og-header {
+  align-items: center;
+  border-bottom: 1px dashed var(--og-dash);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr auto 1fr;
+  height: 4.5rem;
+  padding-inline: var(--og-gutter);
+}
+
+.og-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.og-menu {
+  position: relative;
+}
+
+.og-menu summary {
+  align-items: center;
+  border-radius: 6px;
+  color: var(--og-fg);
+  cursor: pointer;
+  display: flex;
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 4px;
+  line-height: 24px;
+  list-style: none;
+  padding: 6px 12px;
+}
+
+.og-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.og-menu summary:hover,
+.og-menu[open] summary {
+  background: var(--og-hover);
+}
+
+.og-menu summary svg {
+  fill: none;
+  height: 16px;
+  opacity: 0.5;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 16px;
+}
+
+.og-menu-panel {
+  background: var(--og-bg);
+  border: 1px solid var(--og-pill-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.08);
+  display: flex;
+  flex-direction: column;
+  left: 0;
+  min-width: 13rem;
+  padding: 6px;
+  position: absolute;
+  top: calc(100% + 8px);
+  z-index: 10;
+}
+
+.og-menu-panel a {
+  border-radius: 8px;
+  color: var(--og-fg);
+  font-size: 0.9375rem;
+  padding: 8px 12px;
+  text-decoration: none;
+}
+
+.og-menu-panel a:hover {
+  background: var(--og-hover);
+}
+
+.og-actions {
+  display: flex;
+  gap: 8px;
+  justify-self: end;
+}
+
+.og-pill {
+  align-items: center;
+  border: 1px solid var(--og-pill-border);
+  border-radius: 999px;
+  color: var(--og-fg);
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: 500;
+  gap: 8px;
+  height: 38px;
+  line-height: 24px;
+  padding: 6px 14px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.og-pill:hover {
+  background: var(--og-hover);
+}
+
+.og-pill--primary {
+  background: var(--og-card);
+  border-color: var(--og-card);
+  color: #ffffff;
+}
+
+.og-pill--primary:hover {
+  background: #163d6b;
+  border-color: #163d6b;
+}
+
+@media (max-width: 52rem) {
+  .og-header {
+    grid-template-columns: auto 1fr;
+  }
+
+  .og-nav {
+    display: none;
+  }
+}
+
+.og-logo {
+  display: flex;
+}
+
+.og-logo img {
+  height: 2rem;
+  width: auto;
+}
+
+
+.og-hero {
+  padding: 8px;
+}
+
+/* The card: 16px radius, a faint inner highlight, a fine dot grid over the fill and
+   a soft green glow where the globe rises from the bottom edge. */
+.og-card {
+  background-color: var(--og-card);
+  background-image:
+    radial-gradient(ellipse 50% 45% at 50% 38%, rgb(255 255 255 / 0.1), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 50% 100%, rgb(73 167 130 / 0.2), transparent 72%);
+  border-radius: 16px;
+  isolation: isolate;
+  position: relative;
+  box-shadow:
+    inset 1px 6px 6px rgb(255 255 255 / 0.2),
+    inset 0 0 0 1px rgb(255 255 255 / 0.35);
+  color: #ffffff;
+  display: grid;
+  /* minmax(0, 1fr): the column must not grow to the search box's preferred width. */
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  height: max(42rem, calc(100vh - 4.5rem - 16px));
+  margin-inline: auto;
+  max-width: 92.5rem;
+  overflow: hidden;
+}
+
+/* The dot grid sits behind the content and is masked to shine around the copy and
+   around the globe's horizon, fading out toward the card's edges. The globe's canvas
+   is transparent between its dots, so the grid shines through its ocean too. */
+.og-card::before {
+  background-image: radial-gradient(circle, rgb(255 255 255 / 0.3) 0.8px, transparent 1.1px);
+  background-size: 4px 4px;
+  content: "";
+  inset: 0;
+  -webkit-mask-image:
+    radial-gradient(ellipse 60% 55% at 50% 40%, #000 0%, rgb(0 0 0 / 0.45) 45%, transparent 85%),
+    radial-gradient(ellipse 45% 55% at 50% 100%, #000 0%, rgb(0 0 0 / 0.5) 50%, transparent 85%);
+  mask-image:
+    radial-gradient(ellipse 60% 55% at 50% 40%, #000 0%, rgb(0 0 0 / 0.45) 45%, transparent 85%),
+    radial-gradient(ellipse 45% 55% at 50% 100%, #000 0%, rgb(0 0 0 / 0.5) 50%, transparent 85%);
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+/* Copy centred in the space above the horizon, so the gaps above and below it stay
+   equal at any window height. Inside: 40px to the subtitle, 56px to the button. */
+.og-copy {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+/* The pill above the headline: 42px, fully round, a translucent white border and a
+   white disc holding the arrow. 40px above the headline. */
+.og-try {
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: 999px;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: 1rem;
+  gap: 12px;
+  height: 42px;
+  margin-bottom: 2.5rem;
+  padding: 6px 6px 6px 16px;
+}
+
+.og-try:hover {
+  background: rgb(255 255 255 / 0.08);
+}
+
+.og-try-arrow {
+  align-items: center;
+  background: #ffffff;
+  border-radius: 999px;
+  color: var(--og-card);
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  width: 28px;
+}
+
+.og-try-arrow svg {
+  fill: none;
+  height: 16px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 16px;
+}
+
+.og-result[hidden] {
+  display: none;
+}
+
+/* Typing happens in the headline itself: an input with the headline's type, size and
+   centring, no box, and a green caret. */
+.og-morph-input {
+  background: none;
+  border: 0;
+  caret-color: #49a782;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  outline: none;
+  padding: 0;
+  text-align: center;
+  width: 100%;
+}
+
+.og-morph-input::selection {
+  background: rgb(73 167 130 / 0.45);
+  color: #ffffff;
+}
+
+.og-morph-input[hidden],
+.og-morph-text[hidden] {
+  display: none;
+}
+
+.og-result {
+  font-family: "Geist Mono Variable", ui-monospace, monospace;
+  font-size: 0.9375rem;
+  margin: 1rem 0 0;
+  opacity: 0.8;
+  text-align: center;
+}
+
+/* Two lines reserved on narrow screens so a longer address never shifts the page. */
+.og-morph {
+  display: block;
+  font-family: "Geist Mono Variable", ui-monospace, monospace;
+  font-size: clamp(1.5rem, 3.6vw, 3.5rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  min-height: 1.1em;
+  text-align: center;
+  text-wrap: balance;
+  width: 100%;
+}
+
+@media (max-width: 52rem) {
+  .og-morph {
+    min-height: 2.2em;
+  }
+}
+
+.og-sub {
+  font-size: 1.2rem;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin: 2.5rem 0 0;
+  text-align: center;
+}
+
+.og-cta {
+  background: #ffffff;
+  border-radius: 999px;
+  color: #1f1f1f;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 24px;
+  margin-top: 3.5rem;
+  padding: 12px 24px;
+  text-decoration: none;
+}
+
+.og-cta:hover {
+  background: #e8eef5;
+}
+
+/* The horizon: a fixed slice at the bottom of the card. The globe inside is wider
+   than most screens and runs past the card's bottom edge, which cuts it off. */
+.og-horizon {
+  display: flex;
+  height: clamp(16rem, 42vh, 28rem);
+  justify-content: center;
+}
+
+.og-globe {
+  display: block;
+  flex-shrink: 0;
+  height: fit-content;
+  width: min(70rem, 150vw);
+}
+
+/* The canvas holds one pixel per dither dot; scaling it up unsmoothed is the effect. */
+.og-globe canvas {
+  aspect-ratio: 1;
+  display: block;
+  image-rendering: pixelated;
+  width: 100%;
+}

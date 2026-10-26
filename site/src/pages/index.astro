@@ -1,0 +1,161 @@
+---
+import { Icon } from "@astrojs/starlight/components";
+import "../styles/fonts.css";
+import "../styles/landing.css";
+import logoLight from "../assets/logo-light.png";
+import AddressMorph from "../components/landing/AddressMorph.astro";
+import DitherGlobe from "../components/landing/DitherGlobe.astro";
+
+// Public landmarks only, so no example points at someone's home.
+const examples: [string, string][] = [
+  ["1600 Pennsylvania Ave NW, Washington", "38.89778, -77.03639"],
+  ["5 Av. Anatole France, Paris", "48.85822, 2.29450"],
+  ["Bennelong Point, Sydney", "-33.85694, 151.21528"],
+  ["4-2-8 Shibakoen, Tokyo", "35.65861, 139.74556"],
+  ["Piazza del Colosseo 1, Rome", "41.89028, 12.49222"],
+];
+
+const menus = [
+  {
+    label: "Solutions",
+    items: [
+      { label: "Forward geocoding", href: "/docs/api/operations/search/" },
+      { label: "Autocomplete", href: "/docs/api/operations/autocomplete/" },
+      { label: "Reverse geocoding", href: "/docs/api/operations/reverse/" },
+      { label: "Batch geocoding", href: "/docs/guides/batch-csv/" },
+    ],
+  },
+  {
+    label: "Resources",
+    items: [
+      { label: "Documentation", href: "/docs/" },
+      { label: "API reference", href: "/docs/api/" },
+      { label: "Benchmarks", href: "/docs/benchmarks/" },
+      { label: "Comparisons", href: "/docs/compare/" },
+      { label: "GitHub", href: "https://github.com/open-geocode-rs/open-geocode" },
+    ],
+  },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>open-geocode</title>
+    <meta
+      name="description"
+      content="Self-hosted address geocoding in pure Rust, served from one file built from OpenStreetMap and OpenAddresses."
+    />
+    <link rel="icon" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <header class="og-header">
+      <a href="/" class="og-logo" aria-label="open-geocode home">
+        <img src={logoLight.src} width={logoLight.width} height={logoLight.height} alt="" />
+      </a>
+      <nav class="og-nav" aria-label="Main">
+        {menus.map((menu) => (
+          <details class="og-menu">
+            <summary>
+              {menu.label}
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></svg>
+            </summary>
+            <div class="og-menu-panel">
+              {menu.items.map((item) => <a href={item.href}>{item.label}</a>)}
+            </div>
+          </details>
+        ))}
+      </nav>
+      <div class="og-actions">
+        <a class="og-pill" href="https://github.com/open-geocode-rs/open-geocode">
+          <Icon name="github" size="1rem" />
+          GitHub
+        </a>
+        <a class="og-pill og-pill--primary" href="/docs/quickstart/">Get started</a>
+      </div>
+    </header>
+    <main class="og-hero">
+      <section class="og-card">
+        <h1 class="sr-only">open-geocode</h1>
+        <div class="og-copy" data-mode="examples">
+          <button type="button" class="og-try">
+            <span class="og-try-label">Try it for free</span>
+            <span class="og-try-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </span>
+          </button>
+          <AddressMorph examples={examples} />
+          <p class="og-result" aria-live="polite" hidden></p>
+          <p class="og-sub">
+            Forward, autocomplete, reverse and batch geocoding from one file.<br />
+            Open data on your own hardware, with no per-lookup fees.
+          </p>
+          <a class="og-cta" href="/docs/quickstart/">Get started</a>
+        </div>
+        <div class="og-horizon">
+          <DitherGlobe />
+        </div>
+      </section>
+    </main>
+    <script>
+      // The pill starts typing in the headline; while typing it becomes the Search button.
+      const copy = document.querySelector<HTMLElement>(".og-copy")!;
+      const pill = copy.querySelector<HTMLButtonElement>(".og-try")!;
+      const label = copy.querySelector<HTMLElement>(".og-try-label")!;
+      const result = copy.querySelector<HTMLElement>(".og-result")!;
+      const line = copy.querySelector("og-address-morph") as HTMLElement & {
+        startEditing(): void;
+        stopEditing(): void;
+        geocode(): void;
+      };
+
+      const setEditing = (editing: boolean) => {
+        copy.dataset.mode = editing ? "edit" : "examples";
+        label.textContent = editing ? "Search" : "Try it for free";
+        result.hidden = true;
+        if (editing) line.startEditing();
+        else line.stopEditing();
+      };
+
+      // Keeps focus in the headline when the pill is pressed, so the input's blur
+      // does not end editing before the click can search.
+      pill.addEventListener("mousedown", (event) => {
+        if (copy.dataset.mode === "edit") event.preventDefault();
+      });
+      pill.addEventListener("click", () => {
+        if (copy.dataset.mode === "edit") line.geocode();
+        else setEditing(true);
+      });
+      copy.addEventListener("og-cancel", () => setEditing(false));
+      copy.addEventListener("og-result", (event) => {
+        const hit = (event as CustomEvent<string[] | null>).detail;
+        result.hidden = Boolean(hit);
+        if (!hit) result.textContent = "Live search isn't connected yet. Try one of the example addresses.";
+      });
+    </script>
+    <script>
+      // One menu open at a time; a click elsewhere closes it.
+      // Public landmarks only, so no example points at someone's home.
+const examples: [string, string][] = [
+  ["1600 Pennsylvania Ave NW, Washington", "38.89778, -77.03639"],
+  ["5 Av. Anatole France, Paris", "48.85822, 2.29450"],
+  ["Bennelong Point, Sydney", "-33.85694, 151.21528"],
+  ["4-2-8 Shibakoen, Tokyo", "35.65861, 139.74556"],
+  ["Piazza del Colosseo 1, Rome", "41.89028, 12.49222"],
+];
+
+const menus = [...document.querySelectorAll<HTMLDetailsElement>(".og-menu")];
+      for (const menu of menus) {
+        menu.addEventListener("toggle", () => {
+          if (menu.open) for (const other of menus) if (other !== menu) other.open = false;
+        });
+      }
+      document.addEventListener("click", (event) => {
+        for (const menu of menus) if (!menu.contains(event.target as Node)) menu.open = false;
+      });
+    </script>
+  </body>
+</html>
