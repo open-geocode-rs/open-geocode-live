@@ -1,0 +1,69 @@
+/* Brand: navy #0E2E54 and green #49A782, from the org logo. Dark mode is neutral
+   charcoal, not navy. Green on white fails text contrast (~2.9:1), so light mode
+   links are navy and green only marks highlights. */
+:root {
+  /* Geist, tighter leading, medium-weight headings with negative tracking. */
+  --sl-font: "Geist Variable", system-ui, sans-serif;
+  --sl-font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --sl-text-h1: 1.8125rem;
+  --sl-text-h2: 1.5rem;
+  --sl-text-h3: 1.25rem;
+  --sl-text-h4: 1.125rem;
+  --sl-text-h5: 1rem;
+
+  --sl-color-accent-low: #173a2d;
+  --sl-color-accent: #49a782;
+  --sl-color-accent-high: #a6dcc5;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #e4e4e4;
+  --sl-color-gray-2: #c4c4c4;
+  --sl-color-gray-3: #8e8e8e;
+  --sl-color-gray-4: #5c5c5c;
+  --sl-color-gray-5: #313131;
+  --sl-color-gray-6: #1f1f1f;
+  --sl-color-black: #181818;
+
+  /* Starlight draws dividers in the nav colour; split them out to the lighter rule. */
+  --sl-color-hairline: var(--sl-color-gray-5);
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #dcefe6;
+  --sl-color-accent: #0e2e54;
+  --sl-color-accent-high: #0a213d;
+  --sl-color-white: #161616;
+  --sl-color-gray-1: #262626;
+  --sl-color-gray-2: #3d3d3d;
+  --sl-color-gray-3: #5e5e5e;
+  --sl-color-gray-4: #8c8c8c;
+  --sl-color-gray-5: #d4d4d4;
+  --sl-color-gray-6: #ebebeb;
+  --sl-color-gray-7: #f5f5f5;
+  --sl-color-black: #ffffff;
+
+  --sl-color-hairline: var(--sl-color-gray-6);
+}
+
+@media (min-width: 50em) {
+  :root {
+    --sl-text-h1: 2.625rem;
+    --sl-text-h2: 2.1875rem;
+    --sl-text-h3: 1.8125rem;
+    --sl-text-h4: 1.5rem;
+    --sl-text-h5: 1.25rem;
+  }
+}
+
+h1#_top,
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+h1#_top {
+  letter-spacing: -0.03em;
+}
+
+.sl-markdown-content table {
+  font-variant-numeric: tabular-nums;
+}

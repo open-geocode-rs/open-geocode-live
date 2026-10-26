@@ -15,11 +15,20 @@ export default defineConfig({
     starlight({
       title: "open-geocode",
       description,
+      logo: {
+        light: "./src/assets/logo-light.png",
+        dark: "./src/assets/logo-dark.png",
+        alt: "open-geocode",
+        replacesTitle: true,
+      },
+      favicon: "/favicon.png",
+      head: [{ tag: "link", attrs: { rel: "apple-touch-icon", href: "/apple-touch-icon.png" } }],
       social: [
         { icon: "github", label: "GitHub", href: "https://github.com/open-geocode-rs/open-geocode" },
       ],
       editLink: { baseUrl: "https://github.com/open-geocode-rs/open-geocode-live/edit/main/site/" },
       lastUpdated: true,
+      customCss: ["./src/styles/fonts.css", "./src/styles/starlight.css"],
       sidebar: [
         { label: "Start here", items: ["docs", "docs/quickstart"] },
         {
