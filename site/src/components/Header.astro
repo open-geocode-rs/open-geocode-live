@@ -1,0 +1,94 @@
+---
+import Search from "@astrojs/starlight/components/Search.astro";
+import SiteTitle from "@astrojs/starlight/components/SiteTitle.astro";
+import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
+import ThemeSelect from "./ThemeSelect.astro";
+
+const id = Astro.locals.starlightRoute.id;
+
+// Sections are matched by id prefix; Docs takes whatever no other section claims.
+const sections = [
+  { label: "Guides", href: "/docs/guides/build-a-pack/", match: "docs/guides/" },
+  { label: "API", href: "/docs/api/", match: "docs/api" },
+  { label: "Benchmarks", href: "/docs/benchmarks/", match: "docs/benchmarks" },
+];
+const claimed = sections.find((s) => id.startsWith(s.match));
+const links = [{ label: "Docs", href: "/docs/", current: !claimed }].concat(
+  sections.map((s) => ({ label: s.label, href: s.href, current: s === claimed })),
+);
+---
+
+<div class="og-docs-header">
+  <SiteTitle />
+  <nav class="og-docs-nav" aria-label="Sections">
+    {links.map((l) => <a href={l.href} aria-current={l.current ? "page" : undefined}>{l.label}</a>)}
+  </nav>
+  <div class="og-docs-search print:hidden">
+    <Search />
+  </div>
+  <div class="og-docs-actions sl-hidden md:sl-flex print:hidden">
+    <SocialIcons />
+    <ThemeSelect />
+  </div>
+</div>
+
+<style>
+  .og-docs-header {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    height: 100%;
+  }
+
+  .og-docs-nav {
+    display: none;
+    gap: 2px;
+    margin-inline-start: 1.5rem;
+  }
+
+  .og-docs-nav a {
+    border-radius: 6px;
+    color: var(--sl-color-gray-2);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 21px;
+    padding: 6px 10px;
+    text-decoration: none;
+  }
+
+  .og-docs-nav a:hover {
+    background: var(--og-hover);
+    color: var(--sl-color-white);
+  }
+
+  .og-docs-nav a[aria-current="page"] {
+    color: var(--sl-color-white);
+  }
+
+  .og-docs-search {
+    display: flex;
+    flex: 1;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .og-docs-actions {
+    align-items: center;
+    gap: 1rem;
+  }
+
+  /* SocialIcons styles its links in the accent; the header wants them plain white. */
+  .og-docs-actions :global(a[rel="me"]) {
+    color: var(--sl-color-white);
+  }
+
+  .og-docs-actions :global(a[rel="me"]:hover) {
+    opacity: 0.7;
+  }
+
+  @media (min-width: 50em) {
+    .og-docs-nav {
+      display: flex;
+    }
+  }
+</style>

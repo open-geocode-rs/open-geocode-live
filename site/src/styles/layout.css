@@ -71,7 +71,7 @@ site-search button[data-open-modal] {
 @media (min-width: 50em) {
   site-search button[data-open-modal] {
     max-width: none;
-    width: 30rem;
+    width: 16rem;
   }
 }
 
