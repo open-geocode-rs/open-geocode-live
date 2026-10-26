@@ -89,7 +89,7 @@ export default defineConfig({
           label: "Guides",
           items: ["docs/guides/build-a-pack", "docs/guides/serve", "docs/guides/batch-csv"],
         },
-        { label: "Reference", items: ["docs/responses", "docs/benchmarks", "docs/compare"] },
+        { label: "Reference", items: ["docs/responses", "docs/benchmarks"] },
         ...openAPISidebarGroups,
       ],
     }),

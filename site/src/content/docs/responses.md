@@ -56,12 +56,18 @@ Pass `layer=` to a forward endpoint to only get one kind.
 | `interpolated` | a house number placed along a range or between its neighbours |
 | `street` | a point on a street or address-range line |
 | `centroid` | the centre of a mapped way or relation |
-| `approximate` | a point standing for something larger, such as a place node or a postcode |
+| `approximate` | a point standing for something larger, such as a town or a postcode |
 
 ## Score and confidence
 
-- `score` ranks answers within one response. Compare scores within a response, not across queries.
-- `confidence` is a probability from 0 to 1 that the answer is right. It is only present on a Pack that has been calibrated with `open-geocode geocode calibrate`, which fits it to held-out address points.
+- `score` ranks results within one response, highest first.
+  It is not a probability, and it can't be compared across queries or Packs.
+  To judge a single result, use `confidence`, or `accuracy` and `layer`.
+- `confidence` is the probability, from 0 to 1, that the result is the address the query asks for.
+  Of results at 0.8, about 8 in 10 are correct.
+  It is only present on a Pack calibrated with `open-geocode geocode calibrate`, which fits it to held-out address points.
+- `fallback` is `true` when nothing matched and the result is the most precise area the query names instead, such as its postcode or town.
+  Its `confidence` is 0.
 
 ## Errors
 

@@ -3,36 +3,54 @@ title: What is open-geocode?
 description: open-geocode (og) is a self-hosted address geocoder in pure Rust. It answers forward, autocomplete, reverse and batch queries from one file built from OpenStreetMap and OpenAddresses.
 ---
 
-open-geocode, or og, is a self-hosted geocoding engine written in pure Rust.
-It turns addresses and place names into coordinates, and coordinates back into addresses, using only open data: OpenStreetMap, plus OpenAddresses if you add it.
+open-geocode is a fast, self-hosted geocoder for addresses.
+It ships as a single binary called `og`, and it answers every query from a single file called a **Pack**.
 
-Everything og answers from lives in one file, called a **Pack**.
-You build a Pack for a region once, then serve it. There is no PostgreSQL, Elasticsearch or other service to keep running, and updating means swapping in a new file.
+```sh
+og build --region canada/ontario   # build a Pack from OpenStreetMap
+og serve canada-ontario            # serve its HTTP API on port 8080
+og                                 # or do both from the interactive interface
+```
 
-## What it does
+At its core is the Pack.
+You build one for a region, from city to planet, then serve it.
+There is no PostgreSQL, Elasticsearch or other service to keep running, and an update is a new file swapped in.
 
-- **Forward geocoding**: free-form text (`/search`) or an address already split into fields (`/geocode`).
-- **Autocomplete**: suggestions as someone types (`/autocomplete`).
-- **Reverse geocoding**: the nearest address to a point, with its locality, region and country taken from real admin boundaries (`/reverse`).
-- **Batch geocoding**: a CSV in, the same CSV out with `lat` and `lon` columns (`open-geocode geocode batch`).
+## What's inside
 
-Every forward answer carries an accuracy tier (`rooftop`, `interpolated`, `street`, `centroid` or `approximate`) and a score. A Pack that has been calibrated also returns a `confidence` between 0 and 1.
+- **Forward geocoding**: turn free-form text into coordinates with [`/search`](/docs/api/operations/search/), or an address already split into fields with [`/geocode`](/docs/api/operations/geocode/).
+- **Autocomplete**: suggest addresses as someone types with [`/autocomplete`](/docs/api/operations/autocomplete/).
+- **Reverse geocoding**: find the nearest address to a point, with its locality, region and country, with [`/reverse`](/docs/api/operations/reverse/).
+- **Batch geocoding**: geocode a whole CSV offline with [`open-geocode geocode batch`](/docs/guides/batch-csv/).
+- **Interactive interface**: pick a region, build it, search it and geocode CSV files from the terminal with `og`.
 
-## When to use it
+New to og?
+Start with the [Quickstart](/docs/quickstart/): it builds a Pack for Ontario and sends your first query in a few minutes.
 
-- You geocode enough addresses that per-lookup fees or rate limits from a commercial API matter.
-- The addresses are private and shouldn't be sent to a third party.
-- You want an open-source geocoder without the days-long imports and database servers of Nominatim or Pelias.
+## What is geocoding?
 
-## How it is built
+Geocoding turns an address written as text, such as `10 King Street, Toronto`, into coordinates on a map.
+Reverse geocoding goes the other way: it turns a point, such as one from a phone's GPS, into the address at that spot.
 
-- **Parser**: a semi-Markov CRF that labels the parts of an address. It is trained on every build, from the addresses that Pack serves.
-- **Search**: a Tantivy text index and FST dictionaries, with typo tolerance from Levenshtein automata and Unicode transliteration across scripts.
-- **Reverse**: Hilbert-packed R-trees and point-in-polygon tests on admin boundaries.
-- **Serving**: the Pack is memory-mapped, so a server starts quickly and can run on scale-to-zero platforms such as Cloud Run or Fly Machines.
+A geocoder needs two things: data that says where every address is, and a search engine that can find the right one from messy input.
+Commercial APIs such as Google Maps own both, and charge per lookup.
+Open-source geocoders such as Nominatim and Pelias use open data, but need a database or search cluster to run.
 
-## Next steps
+og uses only open data, OpenStreetMap plus OpenAddresses if you add it, and needs nothing else to run.
+See [Benchmarks](/docs/benchmarks/) for how it measures up against them.
 
-- [Quickstart](/docs/quickstart/): build a Pack and send your first query.
-- [Benchmarks](/docs/benchmarks/): accuracy and speed against other geocoders.
-- [API reference](/docs/api/): every endpoint and parameter.
+## Design goals
+
+- **Speed**. On the same Ontario data and hardware, og answers a forward query in 1.0 ms at the median, against 11.5 ms for Pelias and 40.0 ms for Nominatim. It holds 10x the throughput of Pelias. See [Benchmarks](/docs/benchmarks/).
+- **One file**. A Pack holds the records, their text index and their spatial index. To deploy og, copy the binary and the Pack. Ontario's Pack is 324 MB.
+- **Fast builds**. Ontario's 2 million addresses build in about a minute on a 24-core machine. The whole planet builds in under 3 hours on a 32 GB desktop.
+- **Accuracy**. [MESSY STREETS](https://arxiv.org/abs/2609.01612) is a benchmark of real addresses copied verbatim from the web. og answers all of them, 94.4% with a full answer rather than a fallback area, and its first answer lands within about 20 km of the target 91.5% of the time.
+- **Privacy**. og runs on your own hardware. No address leaves your network, and there is no per-lookup fee.
+- **Scale to zero**. The Pack is memory-mapped, not loaded, so a server starts quickly. og runs on platforms such as Cloud Run or Fly Machines and costs next to nothing between batches.
+
+## How it works
+
+- **Parser**: a semi-Markov CRF labels the parts of an address. og trains it on every build, from the addresses that Pack serves.
+- **Search**: a Tantivy text index and FST dictionaries find candidates. Levenshtein automata tolerate typos, and Unicode transliteration matches across scripts.
+- **Reverse**: Hilbert-packed R-trees find nearby records, and point-in-polygon tests on real admin boundaries name their locality, region and country.
+- **Results**: every forward answer carries an accuracy tier (`rooftop`, `interpolated`, `street`, `centroid` or `approximate`) and a score. A calibrated Pack also returns a `confidence` between 0 and 1. See [Responses](/docs/responses/).
