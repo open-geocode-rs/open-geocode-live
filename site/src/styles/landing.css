@@ -2,7 +2,8 @@
   --og-bg: #ffffff;
   --og-fg: #161616;
   --og-dash: rgb(0 0 0 / 0.12);
-  --og-line: rgb(0 0 0 / 0.1);
+  --og-line: rgb(0 0 0 / 0.07);
+  --og-dots: rgb(0 0 0 / 0.09);
   --og-hover: rgb(0 0 0 / 0.04);
   --og-pill-border: rgb(0 0 0 / 0.1);
   /* The logo's own pair: navy letters, green globe. */
@@ -27,8 +28,11 @@ body {
   margin: 0;
 }
 
+/* A 12px dot grid behind the page; the header and content columns sit on plain
+   white over it, so the dots only show in the margins. */
 body {
-  background: var(--og-bg);
+  background: radial-gradient(circle at 6px 6px, var(--og-dots) 0.75px, transparent 1.25px) 0 0 / 12px 12px,
+    var(--og-bg);
   color: var(--og-fg);
   font-family: var(--type-family-body);
   -webkit-font-smoothing: antialiased;
@@ -53,6 +57,7 @@ body {
    the widths of the outer two. */
 .og-header {
   align-items: center;
+  background: var(--og-bg);
   border-bottom: 1px dashed var(--og-dash);
   display: grid;
   gap: 1rem;
@@ -409,8 +414,11 @@ body {
 
 /* Content height, not window height. A 75rem column framed by dashed lines that end
    at the feature grid, whose solid border has a small square on each corner. */
+/* Edges drawn as 16px dashes; a dashed border's dashes are too short at 1px. */
 .og-features {
-  border-inline: 1px dashed var(--og-dash);
+  --og-edge: linear-gradient(to bottom, var(--og-line) 50%, transparent 50%);
+  background: var(--og-edge) left top / 1px 32px repeat-y, var(--og-edge) right top / 1px 32px repeat-y,
+    var(--og-bg);
   margin: 0 auto 6rem;
   max-width: 75rem;
   padding-top: 6rem;
@@ -443,10 +451,9 @@ body {
   text-wrap: balance;
 }
 
-/* Pulled 1px wider on each side so its solid edge covers the dashed frame. */
 .og-features-box {
+  background: var(--og-bg);
   border-block: 1px solid var(--og-line);
-  margin: 0 -1px;
   position: relative;
 }
 
