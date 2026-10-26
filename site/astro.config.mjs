@@ -20,6 +20,14 @@ export default defineConfig({
       ],
       editLink: { baseUrl: "https://github.com/open-geocode-rs/open-geocode-live/edit/main/site/" },
       lastUpdated: true,
+      sidebar: [
+        { label: "Start here", items: ["docs", "docs/quickstart"] },
+        {
+          label: "Guides",
+          items: ["docs/guides/build-a-pack", "docs/guides/serve", "docs/guides/batch-csv"],
+        },
+        { label: "Reference", items: ["docs/responses", "docs/benchmarks", "docs/compare"] },
+      ],
     }),
   ],
 });
