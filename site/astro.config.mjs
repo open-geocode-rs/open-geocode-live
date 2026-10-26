@@ -1,5 +1,6 @@
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
+import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
 // example.com, like every other placeholder in this repo, until the domain is picked.
 const site = process.env.SITE_URL ?? "https://example.com";
@@ -29,6 +30,15 @@ export default defineConfig({
       editLink: { baseUrl: "https://github.com/open-geocode-rs/open-geocode-live/edit/main/site/" },
       lastUpdated: true,
       customCss: ["./src/styles/fonts.css", "./src/styles/starlight.css"],
+      plugins: [
+        starlightOpenAPI([
+          {
+            base: "docs/api",
+            schema: "./public/openapi.json",
+            sidebar: { label: "API reference", collapsed: false, operations: { badges: true } },
+          },
+        ]),
+      ],
       sidebar: [
         { label: "Start here", items: ["docs", "docs/quickstart"] },
         {
@@ -36,6 +46,7 @@ export default defineConfig({
           items: ["docs/guides/build-a-pack", "docs/guides/serve", "docs/guides/batch-csv"],
         },
         { label: "Reference", items: ["docs/responses", "docs/benchmarks", "docs/compare"] },
+        ...openAPISidebarGroups,
       ],
     }),
   ],
