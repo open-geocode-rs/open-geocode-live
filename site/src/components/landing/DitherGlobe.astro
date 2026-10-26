@@ -1,0 +1,166 @@
+<og-dither-globe class="og-globe">
+  <canvas aria-hidden="true"></canvas>
+</og-dither-globe>
+
+<script>
+  import { geoEquirectangular, geoPath } from "d3-geo";
+  import { feature } from "topojson-client";
+  import type { GeometryCollection, Topology } from "topojson-specification";
+  import land110 from "world-atlas/land-110m.json";
+
+  // 8x8 Bayer matrix: ordered dithering keeps the pattern stable from frame to frame,
+  // so rotation reads as motion instead of noise.
+  const BAYER = [
+    0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44, 4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30,
+    54, 22, 3, 35, 11, 43, 1, 33, 9, 41, 51, 19, 59, 27, 49, 17, 57, 25, 15, 47, 7, 39, 13, 45, 5, 37, 63, 31, 55, 23,
+    61, 29, 53, 21,
+  ].map((v) => (v + 0.5) / 64);
+
+  const MASK_W = 1024;
+  const MASK_H = 512;
+  const CELL = 3; // CSS px per dither dot
+  const TILT = (-22 * Math.PI) / 180;
+  const SPEED = 0.12; // radians per second
+  const LIGHT = normalize([-0.35, 0.7, 0.62]);
+
+  function normalize([x, y, z]: number[]) {
+    const l = Math.hypot(x, y, z);
+    return [x / l, y / l, z / l];
+  }
+
+  // Land as an equirectangular bitmap, rasterised once: per-frame lookups are then a
+  // single array read instead of a point-in-polygon test.
+  function landMask(): Uint8Array {
+    const canvas = new OffscreenCanvas(MASK_W, MASK_H);
+    const ctx = canvas.getContext("2d")!;
+    const topo = land110 as unknown as Topology<{ land: GeometryCollection }>;
+    const projection = geoEquirectangular()
+      .scale(MASK_W / (2 * Math.PI))
+      .translate([MASK_W / 2, MASK_H / 2]);
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    geoPath(projection, ctx)(feature(topo, topo.objects.land));
+    ctx.fill();
+    const rgba = ctx.getImageData(0, 0, MASK_W, MASK_H).data;
+    const mask = new Uint8Array(MASK_W * MASK_H);
+    for (let i = 0; i < mask.length; i++) mask[i] = rgba[i * 4 + 3] > 127 ? 1 : 0;
+    return mask;
+  }
+
+  function rgba(css: string): number {
+    const probe = document.createElement("canvas").getContext("2d")!;
+    probe.fillStyle = css;
+    probe.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = probe.getImageData(0, 0, 1, 1).data;
+    // ImageData is little-endian RGBA when read through a Uint32Array.
+    return ((a << 24) | (b << 16) | (g << 8) | r) >>> 0;
+  }
+
+  class DitherGlobe extends HTMLElement {
+    #frame = 0;
+    #visible = true;
+
+    connectedCallback() {
+      const canvas = this.querySelector("canvas")!;
+      // Sized from the rendered width, so each dither dot stays CELL px at any size.
+      const n = Math.max(32, Math.round(this.getBoundingClientRect().width / CELL));
+      canvas.width = n;
+      canvas.height = n;
+      const ctx = canvas.getContext("2d")!;
+      const image = ctx.createImageData(n, n);
+      const pixels = new Uint32Array(image.data.buffer);
+      const mask = landMask();
+
+      // Tilt and light never change, so each pixel's latitude row, base longitude and
+      // shading are worked out once; a frame only adds the spin to the longitude.
+      const radius = n / 2 - 1;
+      const idx: number[] = [];
+      const row: number[] = [];
+      const lon0: number[] = [];
+      const shade: number[] = [];
+      const glow: number[] = [];
+      const threshold: number[] = [];
+      for (let j = 0; j < n; j++) {
+        for (let i = 0; i < n; i++) {
+          const x = (i + 0.5 - n / 2) / radius;
+          const y = (n / 2 - j - 0.5) / radius;
+          const d = x * x + y * y;
+          if (d > 1) continue;
+          const z = Math.sqrt(1 - d);
+          const ty = y * Math.cos(TILT) - z * Math.sin(TILT);
+          const tz = y * Math.sin(TILT) + z * Math.cos(TILT);
+          const lat = Math.asin(Math.max(-1, Math.min(1, ty)));
+          idx.push(j * n + i);
+          row.push(Math.min(MASK_H - 1, Math.floor(((Math.PI / 2 - lat) / Math.PI) * MASK_H)) * MASK_W);
+          lon0.push(Math.atan2(x, tz));
+          shade.push(Math.max(0, x * LIGHT[0] + y * LIGHT[1] + z * LIGHT[2]));
+          // Screen-space falloff from the upper middle of the disc, the part above the
+          // card's edge: ocean dots shine there and thin out toward the rim.
+          glow.push(Math.max(0, 1 - Math.hypot(x, y - 0.55) / 1.1));
+          threshold.push(BAYER[(j % 8) * 8 + (i % 8)]);
+        }
+      }
+
+      let land = 0;
+      let landLit = 0;
+      let sea = 0;
+      let ocean = 0;
+      const readColours = () => {
+        const style = getComputedStyle(this);
+        land = rgba(style.getPropertyValue("--og-globe-land"));
+        landLit = rgba(style.getPropertyValue("--og-globe-land-lit"));
+        sea = rgba(style.getPropertyValue("--og-globe-sea"));
+        ocean = rgba(style.getPropertyValue("--og-globe-ocean"));
+      };
+      readColours();
+      new MutationObserver(() => {
+        readColours();
+        draw(spin);
+      }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+      const TAU = Math.PI * 2;
+      const draw = (spin: number) => {
+        pixels.fill(0);
+        for (let k = 0; k < idx.length; k++) {
+          let lon = lon0[k] - spin;
+          lon -= Math.floor((lon + Math.PI) / TAU) * TAU;
+          const col = Math.min(MASK_W - 1, Math.floor(((lon + Math.PI) / TAU) * MASK_W));
+          const t = threshold[k];
+          if (mask[row[k] + col] === 1) {
+            // Land is near solid; its brightest part dithers a lighter tint over it.
+            const brightness = 0.32 + 0.68 * shade[k];
+            if (brightness > t) pixels[idx[k]] = brightness - 0.78 > t * 0.3 ? landLit : land;
+          } else {
+            // Unlit ocean is opaque so the card's dot grid stops at the rim: two dot
+            // patterns at different pitches would beat against each other.
+            pixels[idx[k]] = 0.03 + 0.1 * shade[k] + 0.22 * glow[k] > t ? sea : ocean;
+          }
+        }
+        ctx.putImageData(image, 0, 0);
+      };
+
+      let spin = -0.15;
+      draw(spin);
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      new IntersectionObserver(([entry]) => (this.#visible = entry.isIntersecting)).observe(this);
+      let last = performance.now();
+      const tick = (now: number) => {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        if (this.#visible && !document.hidden) {
+          spin += dt * SPEED;
+          draw(spin);
+        }
+        this.#frame = requestAnimationFrame(tick);
+      };
+      this.#frame = requestAnimationFrame(tick);
+    }
+
+    disconnectedCallback() {
+      cancelAnimationFrame(this.#frame);
+    }
+  }
+
+  customElements.define("og-dither-globe", DitherGlobe);
+</script>
