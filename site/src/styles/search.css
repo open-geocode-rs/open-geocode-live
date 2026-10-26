@@ -1,0 +1,186 @@
+/* Search modal in the API page's language: 16px panel, 12px result cards, 8px
+   controls, hairline dividers, 14px type, no accent outlines. Starlight and Pagefind
+   ship their styles in the starlight.core layer, so these unlayered rules win. */
+site-search dialog {
+  background: var(--sl-color-black);
+  border: 1px solid var(--og-control-border);
+  box-shadow: 0 24px 48px rgb(0 0 0 / 0.24);
+  overflow: hidden;
+}
+
+/* The frame scrolls, not the dialog; a thin bar stays inside the 16px corners. */
+site-search .dialog-frame {
+  scrollbar-color: var(--og-control-border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+@media (min-width: 50rem) {
+  site-search dialog {
+    border-radius: 16px;
+    margin-top: 5rem;
+    max-width: 36rem;
+  }
+
+  site-search .dialog-frame {
+    padding: 12px;
+  }
+}
+
+site-search button[data-close-modal] {
+  color: var(--sl-color-white);
+  font-size: 0.875rem;
+  font-weight: 500;
+  height: 40px;
+}
+
+#starlight__search {
+  --pagefind-ui-border-radius: 8px;
+  --pagefind-ui-border: var(--og-control-border);
+  --pagefind-ui-background: var(--og-control-bg);
+  --pagefind-ui-text: var(--sl-color-gray-2);
+  --sl-search-cancel-space: 4.5rem;
+  --sl-search-result-pad-inline-start: 2.75rem;
+  --sl-search-result-pad-inline-end: 1rem;
+  --sl-search-result-pad-block: 0.75rem;
+  --sl-search-result-nested-pad-block: 0.625rem;
+  --sl-search-page-icon-size: 1.125rem;
+  --sl-search-tree-diagram-size: 1.75rem;
+  --sl-search-result-spacing: 8px;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 50rem) {
+  #starlight__search {
+    --sl-search-cancel-space: 0px;
+  }
+}
+
+#starlight__search .pagefind-ui__search-input {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  height: 40px;
+  padding-inline: 36px 40px;
+}
+
+#starlight__search .pagefind-ui__search-input::placeholder {
+  color: var(--sl-color-gray-3);
+  opacity: 1;
+}
+
+#starlight__search input:focus {
+  --pagefind-ui-border: var(--og-control-border-strong);
+  outline: none;
+}
+
+#starlight__search .pagefind-ui__form::before {
+  height: 14px;
+  left: 12px;
+  opacity: 0.6;
+  top: 13px;
+  width: 14px;
+}
+
+#starlight__search .pagefind-ui__search-clear {
+  background: transparent;
+  height: 38px;
+  top: 1px;
+  width: 38px;
+}
+
+#starlight__search .pagefind-ui__search-clear::before {
+  background-color: var(--sl-color-gray-3);
+  mask-size: 14px;
+  -webkit-mask-size: 14px;
+}
+
+#starlight__search .pagefind-ui__search-clear:focus {
+  outline: none;
+}
+
+#starlight__search .pagefind-ui__results-area {
+  margin-top: 4px;
+}
+
+#starlight__search .pagefind-ui__message {
+  color: var(--sl-color-gray-3);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  height: auto;
+  padding: 12px 4px;
+}
+
+#starlight__search .pagefind-ui__result-inner {
+  border: 1px solid var(--og-control-border);
+  border-radius: 12px;
+  gap: 0;
+  overflow: hidden;
+}
+
+#starlight__search .pagefind-ui__result-inner > :is(:first-child, :last-child) {
+  border-radius: 0;
+}
+
+#starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)),
+#starlight__search .pagefind-ui__result-nested {
+  background: var(--og-control-bg);
+}
+
+#starlight__search .pagefind-ui__result-nested {
+  border-top: 1px solid var(--og-control-border);
+}
+
+#starlight__search .pagefind-ui__result-title:not(:where(.pagefind-ui__result-nested *)):is(:hover, :focus-within),
+#starlight__search .pagefind-ui__result-nested:is(:hover, :focus-within) {
+  background: var(--og-control-hover);
+  outline: none;
+}
+
+#starlight__search .pagefind-ui__result-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 21px;
+}
+
+#starlight__search .pagefind-ui__result-link {
+  font-weight: 500;
+}
+
+#starlight__search .pagefind-ui__result-nested .pagefind-ui__result-link {
+  font-size: 0.875rem;
+}
+
+#starlight__search .pagefind-ui__result-inner > .pagefind-ui__result-title::before {
+  background: var(--sl-color-gray-3);
+}
+
+#starlight__search .pagefind-ui__result-nested::before {
+  background: var(--og-control-border-strong);
+}
+
+#starlight__search .pagefind-ui__result-excerpt {
+  color: var(--sl-color-gray-3);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+#starlight__search mark {
+  color: var(--sl-color-white);
+  font-weight: 500;
+}
+
+#starlight__search .pagefind-ui__button {
+  background: var(--og-control-bg);
+  border-radius: 8px;
+  color: var(--sl-color-white);
+  font-size: 0.875rem;
+  font-weight: 500;
+  height: 32px;
+  margin-top: 12px;
+}
+
+#starlight__search .pagefind-ui__button:hover {
+  background: var(--og-control-hover);
+  border-color: var(--og-control-border-strong);
+  color: var(--sl-color-white);
+}
