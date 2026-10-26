@@ -1,6 +1,7 @@
 ---
 import { Icon } from "@astrojs/starlight/components";
-import "../styles/fonts.css";
+import { Font } from "astro:assets";
+import "../styles/type.css";
 import "../styles/landing.css";
 import logoLight from "../assets/logo-light.png";
 import AddressMorph from "../components/landing/AddressMorph.astro";
@@ -50,6 +51,8 @@ const menus = [
     />
     <link rel="icon" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <Font cssVariable="--font-display" preload />
+    <Font cssVariable="--font-body" preload />
   </head>
   <body>
     <header class="og-header">

@@ -1,0 +1,181 @@
+/* Type tokens only: Starlight owns colour, space and grid here. */
+:root {
+  --font-size-1: 0.75rem;
+  --font-size-2: 0.875rem;
+  --font-size-3: 1rem;
+  --font-size-4: 1.125rem;
+  --font-size-5: 1.25rem;
+  --font-size-6: 1.5rem;
+  --font-size-7: 2rem;
+  --font-size-8: 2.5rem;
+  --font-size-9: 3rem;
+
+  /* Article type, read from the reference's authored CSS. The suffix is the
+   * breakpoint band: -sm applies at <=1024px, -xl at >=1920px. */
+  --font-size-display: 5.625rem;
+  --font-size-display-sm: 3.625rem;
+  --font-size-article-h2: 4rem;
+  --font-size-article-h2-sm: 2.875rem;
+  --font-size-article-h3: 2.875rem;
+  --font-size-article-h3-sm: 2.25rem;
+  --font-size-article-lede: 2rem;
+  --font-size-article-lede-sm: 1.75rem;
+  --font-size-article-body: 1.125rem;
+  --font-size-article-body-xl: 1.25rem;
+  --font-size-article-label: 0.875rem;
+  --font-size-article-label-xl: 1rem;
+  /* The reference sets the aside heading as a fraction of body size. */
+  --font-size-article-aside-heading: 0.67em;
+
+  --line-height-display: 0.95;
+  --line-height-display-sm: 1.05;
+  --line-height-article-h2: 1.05;
+  --line-height-article-h2-sm: 1.1;
+  --line-height-article-h3: 1.15;
+  --line-height-article-h3-sm: 1.2;
+  --line-height-article-lede: 1.15;
+  --line-height-article-body: 1.4;
+  --line-height-article-label: 1;
+
+  --letter-spacing-display: -0.1125rem;
+  --letter-spacing-display-sm: -0.0725rem;
+  --letter-spacing-article-h2: -0.08rem;
+  --letter-spacing-article-h2-sm: -0.0575rem;
+  --letter-spacing-article-h3: -0.0431rem;
+  --letter-spacing-article-h3-sm: -0.0338rem;
+  --letter-spacing-article-lede: -0.02rem;
+  --letter-spacing-article-lede-sm: -0.0088rem;
+  --letter-spacing-article-label: 0.035rem;
+  --letter-spacing-article-label-lg: 0.03rem;
+  --letter-spacing-article-label-xl: 0.04rem;
+
+  --font-family-sans:
+    var(--font-body), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Matched to the reference by width/cap ratio 7.48 and stem weight. */
+  --font-family-display:
+    var(--font-display), 'Archivo Narrow', ui-sans-serif, system-ui, sans-serif;
+  --font-family-serif: ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+  --font-family-mono:
+    ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+  /* 550: stems match the reference; 700 is too heavy. */
+  --weight-display: 550;
+
+  --line-height-body: 1.6;
+  --line-height-flush: 1.1;
+  --line-height-tight: 1.15;
+  --line-height-snug: 1.35;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+
+  --letter-spacing-tighter: -0.01em;
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0em;
+  --letter-spacing-wide: 0.04em;
+
+  --type-family-heading: var(--font-family-display);
+  --type-family-body: var(--font-family-sans);
+  --type-family-code: var(--font-family-mono);
+
+  --type-display-size: var(--font-size-display);
+  --type-display-weight: var(--weight-display);
+  --type-display-leading: var(--line-height-display);
+  --type-display-tracking: var(--letter-spacing-display);
+
+  --type-heading-1-size: var(--font-size-8);
+  --type-heading-1-weight: var(--weight-bold);
+  --type-heading-1-leading: var(--line-height-tight);
+  --type-heading-1-tracking: var(--letter-spacing-tight);
+
+  --type-heading-2-size: var(--font-size-article-h2);
+  --type-heading-2-weight: var(--weight-display);
+  --type-heading-2-leading: var(--line-height-article-h2);
+  --type-heading-2-tracking: var(--letter-spacing-article-h2);
+
+  --type-heading-3-size: var(--font-size-article-h3);
+  --type-heading-3-weight: var(--weight-display);
+  --type-heading-3-leading: var(--line-height-article-h3);
+  --type-heading-3-tracking: var(--letter-spacing-article-h3);
+
+  --type-meta-size: var(--font-size-article-label);
+  --type-meta-weight: var(--weight-regular);
+  --type-meta-leading: var(--line-height-article-label);
+  --type-meta-tracking: var(--letter-spacing-article-label);
+
+  --type-byline-size: var(--font-size-article-body);
+  --type-byline-weight: var(--weight-semibold);
+  --type-byline-leading: var(--line-height-article-body);
+  --type-byline-tracking: var(--letter-spacing-normal);
+
+  --type-lede-size: var(--font-size-article-lede);
+  --type-lede-weight: var(--weight-display);
+  --type-lede-leading: var(--line-height-article-lede);
+  --type-lede-tracking: var(--letter-spacing-article-lede);
+
+  --type-article-body-size: var(--font-size-article-body);
+  --type-article-body-weight: var(--weight-regular);
+  --type-article-body-leading: var(--line-height-article-body);
+  --type-article-body-tracking: var(--letter-spacing-normal);
+  --type-article-strong-weight: var(--weight-semibold);
+  --type-article-aside-heading-size: var(--font-size-article-aside-heading);
+  --type-article-aside-heading-weight: var(--weight-semibold);
+
+  --type-body-size: var(--font-size-3);
+  --type-body-weight: var(--weight-regular);
+  --type-body-leading: var(--line-height-relaxed);
+  --type-body-tracking: var(--letter-spacing-normal);
+
+  --type-body-sm-size: var(--font-size-2);
+  --type-body-sm-weight: var(--weight-regular);
+  --type-body-sm-leading: var(--line-height-normal);
+  --type-body-sm-tracking: var(--letter-spacing-normal);
+
+  --type-label-size: var(--font-size-2);
+  --type-label-weight: var(--weight-medium);
+  --type-label-leading: var(--line-height-normal);
+  --type-label-tracking: var(--letter-spacing-wide);
+
+  --type-code-size: var(--font-size-2);
+  --type-code-weight: var(--weight-regular);
+  --type-code-leading: var(--line-height-normal);
+  --type-code-tracking: var(--letter-spacing-normal);
+}
+
+@media (width >= 1440px) {
+  :root {
+    --type-meta-tracking: var(--letter-spacing-article-label-lg);
+  }
+}
+
+@media (width >= 1920px) {
+  :root {
+    --type-article-body-size: var(--font-size-article-body-xl);
+    --type-byline-size: var(--font-size-article-body-xl);
+    --type-meta-size: var(--font-size-article-label-xl);
+    --type-meta-tracking: var(--letter-spacing-article-label-xl);
+  }
+}
+
+@media (width <= 1024px) {
+  :root {
+    --type-display-size: var(--font-size-display-sm);
+    --type-display-leading: var(--line-height-display-sm);
+    --type-display-tracking: var(--letter-spacing-display-sm);
+
+    --type-heading-2-size: var(--font-size-article-h2-sm);
+    --type-heading-2-leading: var(--line-height-article-h2-sm);
+    --type-heading-2-tracking: var(--letter-spacing-article-h2-sm);
+
+    --type-heading-3-size: var(--font-size-article-h3-sm);
+    --type-heading-3-leading: var(--line-height-article-h3-sm);
+    --type-heading-3-tracking: var(--letter-spacing-article-h3-sm);
+
+    --type-lede-size: var(--font-size-article-lede-sm);
+    --type-lede-tracking: var(--letter-spacing-article-lede-sm);
+  }
+}

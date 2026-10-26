@@ -1,5 +1,5 @@
 import starlight from "@astrojs/starlight";
-import { defineConfig } from "astro/config";
+import { defineConfig, fontProviders } from "astro/config";
 import starlightLlmsTxt from "starlight-llms-txt";
 import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
@@ -13,6 +13,27 @@ const description =
 export default defineConfig({
   site,
   trailingSlash: "ignore",
+  fonts: [
+    {
+      provider: fontProviders.google(),
+      name: "Archivo Narrow",
+      cssVariable: "--font-display",
+      // Variable axis, so weight can be tuned continuously (display uses 550).
+      weights: ["400 700"],
+      styles: ["normal"],
+      subsets: ["latin"],
+      fallbacks: ["system-ui", "sans-serif"],
+    },
+    {
+      provider: fontProviders.google(),
+      name: "Inter",
+      cssVariable: "--font-body",
+      weights: ["100 900"],
+      styles: ["normal"],
+      subsets: ["latin"],
+      fallbacks: ["system-ui", "sans-serif"],
+    },
+  ],
   integrations: [
     starlight({
       title: "open-geocode",
@@ -30,7 +51,7 @@ export default defineConfig({
       ],
       editLink: { baseUrl: "https://github.com/open-geocode-rs/open-geocode-live/edit/main/site/" },
       lastUpdated: true,
-      customCss: ["./src/styles/fonts.css", "./src/styles/starlight.css", "./src/styles/layout.css", "./src/styles/api.css"],
+      customCss: ["./src/styles/type.css", "./src/styles/starlight.css", "./src/styles/layout.css", "./src/styles/api.css"],
       components: {
         Head: "./src/components/DocsHead.astro",
         PageTitle: "./src/components/PageTitle.astro",

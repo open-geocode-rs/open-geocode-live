@@ -2,9 +2,8 @@
    charcoal, not navy. Green on white fails text contrast (~2.9:1), so light mode
    links are navy and green only marks highlights. */
 :root {
-  /* Geist, tighter leading, medium-weight headings with negative tracking. */
-  --sl-font: "Geist Variable", system-ui, sans-serif;
-  --sl-font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --sl-font: var(--type-family-body);
+  --sl-font-mono: var(--type-family-code);
   --sl-text-h1: 1.8125rem;
   --sl-text-h2: 1.5rem;
   --sl-text-h3: 1.25rem;
@@ -54,14 +53,34 @@
   }
 }
 
+/* Tracking is in em: rem tracking tuned for display sizes over-tightens the smaller
+   docs headings. Archivo Narrow only at display sizes; a condensed face at body size
+   reads cramped. */
 h1#_top,
-.sl-markdown-content :is(h1, h2, h3, h4, h5, h6):not(:where(.not-content *)) {
-  font-weight: 500;
-  letter-spacing: -0.02em;
+.sl-markdown-content :is(h1, h2, h3):not(:where(.not-content *)) {
+  font-family: var(--type-family-heading);
+  font-weight: var(--type-display-weight);
 }
 
 h1#_top {
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
+  line-height: var(--line-height-display-sm);
+}
+
+.sl-markdown-content :is(h1, h2):not(:where(.not-content *)) {
+  letter-spacing: -0.02em;
+  line-height: var(--line-height-article-h2-sm);
+}
+
+.sl-markdown-content h3:not(:where(.not-content *)) {
+  letter-spacing: -0.015em;
+  line-height: var(--line-height-article-h3-sm);
+}
+
+.sl-markdown-content :is(h4, h5, h6):not(:where(.not-content *)) {
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--letter-spacing-tighter);
+  line-height: var(--line-height-snug);
 }
 
 .sl-markdown-content table {

@@ -11,7 +11,7 @@
   --og-code-bg: rgb(255 255 255 / 0.16);
 
   --sl-nav-height: 3.5rem;
-  --sl-line-height: 1.5;
+  --sl-line-height: var(--type-body-leading);
   --sl-color-text: var(--sl-color-white);
   --sl-color-bg-sidebar: var(--sl-color-bg);
   --sl-color-hairline-shade: rgb(255 255 255 / 0.08);
@@ -32,7 +32,8 @@
 }
 
 body {
-  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: var(--type-body-tracking);
 }
 
 @media (min-width: 50em) {
@@ -82,7 +83,7 @@ site-search button[data-open-modal] {
 .sidebar-content :is(a, summary) {
   color: var(--sl-color-white);
   font-size: 0.875rem;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--type-body-tracking);
   line-height: 21px;
   padding: 6px 12px;
 }
@@ -416,13 +417,14 @@ starlight-toc a[aria-current="true"] {
   }
 }
 
-/* Inline code: 0.84em on a light tint, 4px radius. */
+/* Inline code on a light tint, 4px radius. System mono sets small beside Inter's tall
+   x-height, so it runs at 0.875em. */
 .sl-markdown-content code:not(:where(.not-content *)) {
   background: var(--og-code-bg);
   border-radius: 4px;
-  font-size: 0.84em;
+  font-size: 0.875em;
   letter-spacing: normal;
-  line-height: 1.5;
+  line-height: var(--type-code-leading);
   padding: 0 4px;
 }
 
@@ -430,3 +432,4 @@ starlight-toc a[aria-current="true"] {
 .sl-markdown-content .sl-heading-wrapper {
   --sl-anchor-icon-gap: 0.4em;
 }
+

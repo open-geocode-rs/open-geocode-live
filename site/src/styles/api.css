@@ -229,7 +229,7 @@ h1#_top {
 }
 
 /* Example panel: 16px outer card, 12px inner card, 8px controls, 4px method tile,
-   Geist Mono 14/21. */
+   mono 14/21. */
 .og-example {
   --og-ex-surface: rgb(255 255 255 / 0.04);
   --og-ex-outline: rgb(255 255 255 / 0.08);
@@ -496,8 +496,9 @@ h1#_top {
 
 .sl-openapi-heading:is(h3) {
   color: var(--og-label);
+  font-family: var(--type-family-body);
   font-weight: 400;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--type-body-tracking);
   line-height: 1.2;
 }
 

@@ -29,9 +29,10 @@ body {
 body {
   background: var(--og-bg);
   color: var(--og-fg);
-  font-family: "Geist Variable", system-ui, sans-serif;
-  letter-spacing: -0.01em;
-  line-height: 1.5;
+  font-family: var(--type-family-body);
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: var(--type-body-tracking);
+  line-height: var(--type-body-sm-leading);
   min-height: 100vh;
 }
 
@@ -317,7 +318,7 @@ body {
 }
 
 .og-result {
-  font-family: "Geist Mono Variable", ui-monospace, monospace;
+  font-family: var(--type-family-code);
   font-size: 0.9375rem;
   margin: 1rem 0 0;
   opacity: 0.8;
@@ -327,7 +328,7 @@ body {
 /* Two lines reserved on narrow screens so a longer address never shifts the page. */
 .og-morph {
   display: block;
-  font-family: "Geist Mono Variable", ui-monospace, monospace;
+  font-family: var(--type-family-code);
   font-size: clamp(1.5rem, 3.6vw, 3.5rem);
   font-weight: 500;
   letter-spacing: -0.025em;
@@ -346,7 +347,7 @@ body {
 
 .og-sub {
   font-size: 1.2rem;
-  letter-spacing: -0.025em;
+  letter-spacing: var(--letter-spacing-tighter);
   line-height: 1.2;
   margin: 2.5rem 0 0;
   text-align: center;
