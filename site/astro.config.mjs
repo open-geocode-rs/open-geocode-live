@@ -1,5 +1,6 @@
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
+import starlightLlmsTxt from "starlight-llms-txt";
 import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
 // example.com, like every other placeholder in this repo, until the domain is picked.
@@ -30,6 +31,9 @@ export default defineConfig({
       editLink: { baseUrl: "https://github.com/open-geocode-rs/open-geocode-live/edit/main/site/" },
       lastUpdated: true,
       customCss: ["./src/styles/fonts.css", "./src/styles/starlight.css"],
+      components: {
+        Head: "./src/components/DocsHead.astro",
+      },
       plugins: [
         starlightOpenAPI([
           {
@@ -38,6 +42,19 @@ export default defineConfig({
             sidebar: { label: "API reference", collapsed: false, operations: { badges: true } },
           },
         ]),
+        starlightLlmsTxt({
+          projectName: "open-geocode",
+          description,
+          details: [
+            "- Two binaries: `og` builds a Pack for a region and serves it; `open-geocode` adds batch CSV geocoding, benchmarks and lower-level Pack tools.",
+            "- A Pack is one file. The HTTP API is GET-only and answers GeoJSON FeatureCollections; errors are RFC 9457 problem documents.",
+            "- The machine-readable contract is the OpenAPI 3.1 document at /openapi.json.",
+          ].join("\n"),
+          optionalLinks: [
+            { label: "OpenAPI document", url: `${site}/openapi.json`, description: "The HTTP API contract." },
+            { label: "Source", url: "https://github.com/open-geocode-rs/open-geocode" },
+          ],
+        }),
       ],
       sidebar: [
         { label: "Start here", items: ["docs", "docs/quickstart"] },
