@@ -209,10 +209,18 @@ body {
   /* minmax(0, 1fr): the column must not grow to the search box's preferred width. */
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: 1fr auto;
-  height: max(42rem, calc(100vh - 4.5rem - 16px));
   margin-inline: auto;
   max-width: 92.5rem;
+  min-height: 600px;
   overflow: hidden;
+}
+
+/* Sized to its content, not the window: a tall screen shows what follows the hero
+   instead of stretching the card. */
+@media (min-width: 48rem) {
+  .og-card {
+    min-height: 720px;
+  }
 }
 
 /* The dot grid sits behind the content and is masked to shine around the copy and
@@ -235,7 +243,7 @@ body {
 }
 
 /* Copy centred in the space above the horizon, so the gaps above and below it stay
-   equal at any window height. Inside: 40px to the subtitle, 56px to the button. */
+   equal. Inside: 40px to the subtitle, 56px to the button. */
 .og-copy {
   align-items: center;
   display: flex;
@@ -373,8 +381,14 @@ body {
    than most screens and runs past the card's bottom edge, which cuts it off. */
 .og-horizon {
   display: flex;
-  height: clamp(16rem, 42vh, 28rem);
+  height: 12rem;
   justify-content: center;
+}
+
+@media (min-width: 48rem) {
+  .og-horizon {
+    height: 18rem;
+  }
 }
 
 .og-globe {
@@ -390,4 +404,103 @@ body {
   display: block;
   image-rendering: pixelated;
   width: 100%;
+}
+
+/* Content height, not window height: heading block, then three columns between
+   hairlines, all inside the dashed frame the header starts. One sans family and a
+   tight scale, so the section reads as part of the hero, not as an article. */
+.og-features {
+  border-inline: 1px dashed var(--og-dash);
+  margin: 8px auto 0;
+  max-width: 92.5rem;
+}
+
+.og-features-head {
+  padding: 6rem 1.5rem 4rem;
+  text-align: center;
+}
+
+.og-features-head h2 {
+  font-size: 3rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.og-features-head p {
+  color: rgb(22 22 22 / 0.7);
+  font-size: 1.2rem;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin: 2rem auto 0;
+  max-width: 40rem;
+  text-wrap: balance;
+}
+
+.og-features-grid {
+  border-block: 1px solid var(--og-dash);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.og-features-grid li {
+  padding: 3rem;
+}
+
+.og-features-grid li + li {
+  border-inline-start: 1px solid var(--og-dash);
+}
+
+.og-features-grid svg {
+  fill: none;
+  height: 32px;
+  stroke: var(--og-fg);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  width: 32px;
+}
+
+.og-features-grid h3 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  margin: 1.5rem 0 0.5rem;
+}
+
+.og-features-grid p {
+  color: rgb(22 22 22 / 0.7);
+  font-size: 1rem;
+  line-height: 1.4;
+  margin: 0;
+  max-width: 24rem;
+}
+
+@media (max-width: 52rem) {
+  .og-features-head {
+    padding: 4rem 1.5rem 3rem;
+  }
+
+  .og-features-head h2 {
+    font-size: 2rem;
+  }
+
+  .og-features-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .og-features-grid li {
+    padding: 2rem 1.5rem;
+  }
+
+  .og-features-grid li + li {
+    border-block-start: 1px solid var(--og-dash);
+    border-inline-start: 0;
+  }
 }
