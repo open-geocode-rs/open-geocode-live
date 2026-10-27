@@ -9,6 +9,7 @@ import DitherGlobe from "../components/landing/DitherGlobe.astro";
 import HalftoneField from "../components/landing/HalftoneField.astro";
 import Benchmarks from "../components/landing/Benchmarks.astro";
 import Compare from "../components/landing/Compare.astro";
+import Footer from "../components/landing/Footer.astro";
 import Walkthrough from "../components/landing/Walkthrough.astro";
 
 // Public landmarks only, so no example points at someone's home.
@@ -146,6 +147,7 @@ const menus = [
       <Walkthrough />
       <Compare />
     </main>
+    <Footer />
     <script>
       // The pill starts typing in the headline; while typing it becomes the Search button.
       const copy = document.querySelector<HTMLElement>(".og-copy")!;

@@ -1,0 +1,60 @@
+---
+import { Icon } from "@astrojs/starlight/components";
+import logo from "../../assets/logo-light.png";
+import HalftoneField from "./HalftoneField.astro";
+
+const REPO = "https://github.com/open-geocode-rs/open-geocode";
+const columns = [
+  {
+    title: "Product",
+    links: [
+      { label: "Documentation", href: "/docs/" },
+      { label: "Quickstart", href: "/docs/quickstart/" },
+      { label: "API reference", href: "/docs/api/" },
+      { label: "Benchmarks", href: "/docs/benchmarks/" },
+    ],
+  },
+  {
+    title: "Guides",
+    links: [
+      { label: "Build a Pack", href: "/docs/guides/build-a-pack/" },
+      { label: "Serve the API", href: "/docs/guides/serve/" },
+      { label: "Batch geocode a CSV", href: "/docs/guides/batch-csv/" },
+      { label: "Responses", href: "/docs/responses/" },
+    ],
+  },
+  {
+    title: "Project",
+    links: [
+      { label: "GitHub", href: REPO },
+      { label: "crates.io", href: "https://crates.io/crates/open-geocode" },
+      { label: "Releases", href: `${REPO}/releases` },
+      { label: "License", href: `${REPO}/blob/main/LICENSE` },
+    ],
+  },
+];
+---
+
+<footer class="og-footer">
+  <div class="og-footer-card">
+    <HalftoneField />
+    <div class="og-footer-inner">
+      <div class="og-footer-brand">
+        <img src={logo.src} width={logo.width} height={logo.height} alt="open-geocode" />
+        <p>Self-hosted address geocoding in pure Rust, served from one file.</p>
+        <a class="og-footer-icon" href={REPO} aria-label="open-geocode on GitHub"><Icon name="github" size="1.125rem" /></a>
+      </div>
+      {columns.map((c) => (
+        <nav class="og-footer-col" aria-label={c.title}>
+          <p class="og-footer-title">{c.title}</p>
+          <ul>
+            {c.links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+          </ul>
+        </nav>
+      ))}
+    </div>
+    <p class="og-footer-legal">
+      © 2026 open-geocode contributors · MIT License · Map data © OpenStreetMap contributors, ODbL
+    </p>
+  </div>
+</footer>

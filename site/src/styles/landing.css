@@ -1341,3 +1341,106 @@ body {
   }
 }
 
+/* Footer: the hero's card again, halftone rising from its bottom edge, so the page
+   closes as it opens. Brand left, three link columns, legal below. */
+.og-footer {
+  padding: 8px;
+}
+
+.og-footer-card {
+  --og-halftone-dot: var(--og-fg);
+
+  background-color: var(--og-surface);
+  border-radius: 16px;
+  box-shadow: inset 0 0 0 1px rgb(var(--og-shade) / 0.07);
+  isolation: isolate;
+  margin-inline: auto;
+  max-width: 92.5rem;
+  overflow: hidden;
+  padding: 3.5rem 1.5rem 7rem;
+  position: relative;
+}
+
+/* Dots only in the open band under the legal line: small grey text is unreadable
+   over them. */
+.og-footer-card .og-halftone {
+  height: 7.5rem;
+  top: auto;
+}
+
+.og-footer-inner {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+  margin: 0 auto;
+  max-width: 68rem;
+}
+
+.og-footer-brand img {
+  height: 1.75rem;
+  width: auto;
+}
+
+.og-footer-brand p {
+  color: rgb(var(--og-ink) / 0.7);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 1rem 0;
+  max-width: 16rem;
+}
+
+.og-footer-icon {
+  color: rgb(var(--og-ink) / 0.6);
+  display: inline-flex;
+}
+
+.og-footer-icon:hover {
+  color: var(--og-fg);
+}
+
+.og-footer-title {
+  color: rgb(var(--og-ink) / 0.55);
+  font-family: var(--type-family-code);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+}
+
+.og-footer-col ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.og-footer-col a {
+  color: rgb(var(--og-ink) / 0.75);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.og-footer-col a:hover {
+  color: var(--og-fg);
+}
+
+.og-footer-legal {
+  border-top: 1px solid var(--og-line);
+  color: rgb(var(--og-ink) / 0.7);
+  font-size: 0.75rem;
+  margin: 3rem auto 0;
+  max-width: 68rem;
+  padding-top: 1.5rem;
+}
+
+@media (max-width: 52rem) {
+  .og-footer-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .og-footer-brand {
+    grid-column: 1 / -1;
+  }
+}
