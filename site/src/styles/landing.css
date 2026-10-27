@@ -549,3 +549,421 @@ body {
   }
 }
 
+/* Walkthrough: steps on the left, a replayed terminal on the right, framed like the
+   features box with a hairline border and a square on each corner. */
+.og-walk {
+  margin: 0 auto 6rem;
+  max-width: 68rem;
+}
+
+.og-walk-box {
+  background: var(--og-surface);
+  border: 1px solid var(--og-line);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  position: relative;
+}
+
+.og-walk-eyebrow {
+  color: rgb(var(--og-ink) / 0.6);
+  font-family: var(--type-family-code);
+  font-size: 0.8125rem;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+}
+
+.og-walk-copy h2 {
+  font-size: 2.25rem;
+  font-family: var(--type-family-heading);
+  font-weight: var(--type-display-weight);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+
+.og-walk-intro {
+  color: rgb(var(--og-ink) / 0.7);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  margin: 1.5rem 0 2rem;
+}
+
+/* Steps as an accordion in the same frame as the section: a hairline box with a
+   square on each corner, rows split by hairlines. The active row brightens and its
+   description opens. */
+.og-walk-tabs {
+  border: 1px solid var(--og-line);
+  position: relative;
+}
+
+.og-walk-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.og-walk-steps li + li {
+  border-top: 1px solid var(--og-line);
+}
+
+.og-walk-steps button {
+  background: none;
+  border: 0;
+  color: rgb(var(--og-ink) / 0.5);
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 1rem;
+  grid-template-columns: 1.75rem minmax(0, 1fr);
+  padding: 0.5rem 0.875rem;
+  position: relative;
+  text-align: start;
+  transition: color 0.2s ease;
+  width: 100%;
+}
+
+.og-walk-steps button:hover,
+.og-walk-steps button[aria-current] {
+  color: var(--og-fg);
+}
+
+.og-walk-num {
+  font-family: var(--type-family-code);
+  font-size: 0.75rem;
+  line-height: 1.5rem;
+}
+
+[aria-current] .og-walk-num {
+  color: var(--og-green-ink);
+}
+
+/* One line per step: title left, command dimmed on the right; the description
+   spans the row below when open. */
+.og-walk-body {
+  align-items: baseline;
+  column-gap: 1rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-width: 0;
+}
+
+.og-walk-body code {
+  text-align: end;
+}
+
+.og-walk-more {
+  grid-column: 1 / -1;
+}
+
+.og-walk-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5rem;
+}
+
+.og-walk-body code {
+  font-family: var(--type-family-code);
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Height animates through a 0fr/1fr grid row, so the text needs no fixed height. */
+.og-walk-more {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.3s ease,
+    opacity 0.3s ease;
+}
+
+[aria-current] .og-walk-more {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+/* The clipping wrapper has no padding of its own, so a closed row keeps no height. */
+.og-walk-more > span {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.og-walk-text {
+  color: rgb(var(--og-ink) / 0.7);
+  display: block;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  padding-top: 0.125rem;
+}
+
+/* The active row's divider fills as its screen holds, then the next one opens. */
+.og-walk-progress {
+  background: #49a782;
+  bottom: -1px;
+  height: 1px;
+  left: 0;
+  position: absolute;
+  transform: scaleX(var(--og-progress, 0));
+  transform-origin: left;
+  width: 100%;
+}
+
+:not([aria-current]) > .og-walk-progress {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .og-walk-more,
+  .og-walk-steps button {
+    transition: none;
+  }
+}
+
+/* The terminal fills the half, so it is as tall as the steps beside it. */
+.og-walk-stage {
+  border-inline-start: 1px solid var(--og-line);
+  display: flex;
+  padding: 2rem 2.25rem;
+}
+
+.og-walk-stage > .og-term {
+  display: flex;
+  flex-direction: column;
+}
+
+.og-walk-stage .og-term-screen {
+  flex: 1;
+  min-height: 15rem;
+}
+
+.og-walk-stage > .og-term {
+  width: 100%;
+}
+
+/* A plain terminal window: black, a grey title bar with the three window buttons,
+   and the interface drawn in text. */
+.og-term {
+  background: #0c0c0c;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.55);
+  color: #d4d4d4;
+  display: block;
+  /* The system terminal fonts: the site's code face has no box-drawing or block
+     glyphs, and fallbacks of another width break the panel edges. */
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.6875rem;
+  overflow: hidden;
+}
+
+.og-term-bar {
+  align-items: center;
+  background: #1e1e1e;
+  border-bottom: 1px solid #000;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  padding: 0.5rem 0.75rem;
+}
+
+.og-term-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.og-term-dots i {
+  border-radius: 50%;
+  height: 12px;
+  width: 12px;
+}
+
+.og-term-dots i:nth-child(1) { background: #ff5f57; }
+.og-term-dots i:nth-child(2) { background: #febc2e; }
+.og-term-dots i:nth-child(3) { background: #28c840; }
+
+.og-term-path {
+  color: #9a9a9a;
+  font-family: var(--type-family-body);
+  font-size: 0.75rem;
+}
+
+.og-term-count {
+  color: #6b6b6b;
+  justify-self: end;
+}
+
+.og-term-screen {
+  line-height: 1.35;
+  overflow: hidden;
+  padding: 0.75rem 1rem;
+  white-space: pre;
+}
+
+.t-prompt { color: #5fb3e8; }
+.t-ok { color: #5fd38d; }
+.t-dim { color: #6e6e6e; }
+.t-bold { color: #ffffff; font-weight: 700; }
+.t-link { color: #5fb3e8; text-decoration: underline; }
+
+/* Reverse video, as a terminal draws a selected row. */
+.t-rev {
+  background: #5fd38d;
+  color: #0c0c0c;
+}
+
+.t-caret {
+  animation: og-blink 1s steps(1) infinite;
+  background: #d4d4d4;
+}
+
+@keyframes og-blink {
+  50% {
+    background: transparent;
+  }
+}
+
+/* Install box: a black command block with a small copy button inside it. */
+.og-install {
+  display: block;
+  margin-bottom: 1.25rem;
+}
+
+/* The eyebrow and the crates.io link share the column's top line. */
+.og-walk-top {
+  align-items: baseline;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.og-install-link {
+  color: rgb(var(--og-ink) / 0.6);
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.og-install-link:hover {
+  color: var(--og-fg);
+}
+
+.og-install-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 0.625rem;
+}
+
+.og-install-box {
+  align-items: center;
+  background: #0c0c0c;
+  border-radius: 8px;
+  color: #ffffff;
+  display: flex;
+  padding-inline-end: 0.375rem;
+}
+
+.og-install-box code {
+  flex: 1;
+  font-family: var(--type-family-code);
+  font-size: 0.75rem;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0.625rem 0.875rem;
+  scrollbar-width: none;
+  white-space: nowrap;
+}
+
+.og-install-prompt {
+  color: #5fd38d;
+}
+
+.og-install-copy {
+  align-items: center;
+  background: rgb(255 255 255 / 0.04);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 6px;
+  color: #9a9a9a;
+  cursor: pointer;
+  display: flex;
+  flex-shrink: 0;
+  height: 26px;
+  justify-content: center;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+  width: 26px;
+}
+
+.og-install-copy:hover {
+  background: rgb(255 255 255 / 0.1);
+  color: #ffffff;
+}
+
+.og-install-icon-done,
+.og-install-copy[data-copied] .og-install-icon-copy {
+  display: none !important;
+}
+
+.og-install-copy[data-copied] {
+  color: #5fd38d;
+}
+
+.og-install-copy[data-copied] .og-install-icon-done {
+  display: block !important;
+}
+
+.og-install-copy svg {
+  display: block;
+  fill: none;
+  height: 14px;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  width: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-caret {
+    animation: none;
+  }
+}
+
+@media (max-width: 60rem) {
+  .og-walk-box {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .og-walk-copy,
+  .og-walk-stage {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .og-walk-stage {
+    border-inline-start: 0;
+    border-top: 1px solid var(--og-line);
+  }
+
+  .og-walk-copy h2 {
+    font-size: 1.875rem;
+  }
+
+  .og-term-screen {
+    font-size: 0.625rem;
+    height: 20rem;
+    overflow-x: auto;
+  }
+}
+
+/* One placement for the left column of every split section: top-aligned, the same
+   padding and the same gaps, so eyebrows and headings line up section to section. */
+.og-walk-copy {
+  align-self: start;
+  padding: 2rem 2.25rem;
+}
