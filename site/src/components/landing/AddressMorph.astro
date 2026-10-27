@@ -59,9 +59,6 @@ const { examples } = Astro.props;
   class AddressMorph extends HTMLElement {
     #editing = false;
     #resume?: () => void;
-    // Index into the address/coordinates steps the cycle is on or heading to.
-    #step = 0;
-    #seed = "";
     #examples: string[][] = [];
     #text!: HTMLElement;
     #input!: HTMLInputElement;
@@ -77,23 +74,18 @@ const { examples } = Astro.props;
       });
       // Clicking away without having typed anything returns to the examples.
       this.#input.addEventListener("blur", () => {
-        const value = this.#input.value.trim();
-        if (!value || value === this.#seed) cancel();
+        if (!this.#input.value.trim()) cancel();
       });
       this.#cycle();
     }
 
-    // The current example's address becomes the input's text, selected, so the first
-    // keystroke replaces it like editing selected text. Taken from the data, not the
-    // screen, which may be mid-scramble.
+    // The headline empties to a blinking caret where it stood: plainly a place to type.
     startEditing() {
       this.#editing = true;
-      this.#seed = this.#examples[Math.floor(this.#step / 2) % this.#examples.length][0];
       this.#text.hidden = true;
       this.#input.hidden = false;
-      this.#input.value = this.#seed;
+      this.#input.value = "";
       this.#input.focus();
-      this.#input.select();
     }
 
     stopEditing() {
@@ -126,8 +118,7 @@ const { examples } = Astro.props;
       for (let i = 0; this.isConnected && steps.length > 1; i = (i + 1) % steps.length) {
         await wait(HOLD);
         if (this.#editing) await new Promise<void>((r) => (this.#resume = r));
-        this.#step = (i + 1) % steps.length;
-        const next = steps[this.#step];
+        const next = steps[(i + 1) % steps.length];
         const set = (text: string) => (this.#text.textContent = text);
         if (still) set(next);
         else await morph(set, steps[i], next);
