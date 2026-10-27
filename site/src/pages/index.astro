@@ -178,16 +178,7 @@ const menus = [
     </script>
     <script>
       // One menu open at a time; a click elsewhere closes it.
-      // Public landmarks only, so no example points at someone's home.
-const examples: [string, string][] = [
-  ["1600 Pennsylvania Ave NW, Washington", "38.89778, -77.03639"],
-  ["5 Av. Anatole France, Paris", "48.85822, 2.29450"],
-  ["Bennelong Point, Sydney", "-33.85694, 151.21528"],
-  ["4-2-8 Shibakoen, Tokyo", "35.65861, 139.74556"],
-  ["Piazza del Colosseo 1, Rome", "41.89028, 12.49222"],
-];
-
-const menus = [...document.querySelectorAll<HTMLDetailsElement>(".og-menu")];
+      const menus = [...document.querySelectorAll<HTMLDetailsElement>(".og-menu")];
       for (const menu of menus) {
         menu.addEventListener("toggle", () => {
           if (menu.open) for (const other of menus) if (other !== menu) other.open = false;
