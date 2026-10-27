@@ -1,0 +1,55 @@
+<og-halftone class="og-halftone" aria-hidden="true">
+  <canvas></canvas>
+</og-halftone>
+
+<script>
+  const STEP = 6; // CSS px between dot centres
+  const MAX_RADIUS = STEP * 0.46; // near-touching at the centre, so the field reads filled
+  // The field's centre and reach, as fractions of the card: centred on the globe's
+  // horizon at the bottom edge and reaching the top, so it trickles up past the copy.
+  const RX = 0.75;
+  const RY = 1.05;
+
+  // Halftone, not a flat grid: dots grow toward the horizon and shrink, fade and thin
+  // out going up, so only a faint scatter reaches the copy. A CSS pattern can only fade
+  // opacity, not vary dot size or density, hence a canvas. Static, so it redraws only
+  // when the card changes size.
+
+  // Stable per-dot noise, so the thinning is the same on every load and resize.
+  const hash = (x: number, y: number) => {
+    const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+    return n - Math.floor(n);
+  };
+  class HalftoneField extends HTMLElement {
+    connectedCallback() {
+      const canvas = this.querySelector("canvas")!;
+      const draw = () => {
+        const { width, height } = this.getBoundingClientRect();
+        const dpr = Math.min(2, devicePixelRatio || 1);
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        const ctx = canvas.getContext("2d")!;
+        ctx.scale(dpr, dpr);
+        ctx.fillStyle = getComputedStyle(this).getPropertyValue("--og-halftone-dot").trim() || "#ffffff";
+        const cx = width / 2;
+        const rx = width * RX;
+        const ry = height * RY;
+        for (let y = STEP / 2; y < height; y += STEP) {
+          for (let x = STEP / 2; x < width; x += STEP) {
+            const d = Math.hypot((x - cx) / rx, (y - height) / ry);
+            const v = 1 - d;
+            if (v <= 0 || hash(x, y) > 0.15 + 1.4 * v) continue;
+            const r = Math.max(0.45, MAX_RADIUS * Math.pow(v, 1.4));
+            ctx.globalAlpha = 0.03 + 0.22 * Math.pow(v, 1.2);
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      };
+      new ResizeObserver(draw).observe(this);
+    }
+  }
+
+  customElements.define("og-halftone", HalftoneField);
+</script>

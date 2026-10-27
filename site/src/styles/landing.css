@@ -1,18 +1,33 @@
 :root {
   --og-bg: #ffffff;
   --og-fg: #161616;
-  --og-dash: rgb(0 0 0 / 0.12);
-  --og-line: rgb(0 0 0 / 0.07);
-  --og-dots: rgb(0 0 0 / 0.09);
-  --og-hover: rgb(0 0 0 / 0.04);
-  --og-pill-border: rgb(0 0 0 / 0.1);
+  --og-dash: rgb(var(--og-shade) / 0.12);
+  --og-line: rgb(var(--og-shade) / 0.07);
+  --og-dots: rgb(var(--og-shade) / 0.09);
+  --og-hover: rgb(var(--og-shade) / 0.04);
+  --og-pill-border: rgb(var(--og-shade) / 0.1);
   /* The logo's own pair: navy letters, green globe. */
   --og-card: #0e2e54;
+  --og-globe-land-shadow: #2c6f55;
   --og-globe-land: #49a782;
   --og-globe-land-lit: #a7e3c8;
-  --og-globe-sea: #3a5878;
+  --og-globe-land-peak: #ffffff;
   --og-globe-ocean: #0e2e54;
+  --og-globe-sea: #4a6a8c;
+  --og-globe-sea-lit: #9fb3c8;
   --og-gutter: max(1.5rem, calc((100vw - 90rem) / 2));
+  /* Channels, not colours, so each use sets its own alpha. */
+  --og-ink: 22 22 22;
+  --og-shade: 0 0 0;
+  --og-solid: #0c0c0c;
+  --og-solid-hover: #2a2a2a;
+  --og-on-solid: #ffffff;
+  /* Green and amber darkened for text contrast on white. */
+  --og-green-ink: #2f7d5f;
+  --og-amber-ink: #b36a10;
+  /* Everything that sits over the dotted page: header, cards, boxes, menus. */
+  --og-surface: var(--og-bg);
+  --og-header-rule: 1px dashed var(--og-dash);
 
   color-scheme: light;
 }
@@ -57,8 +72,8 @@ body {
    the widths of the outer two. */
 .og-header {
   align-items: center;
-  background: var(--og-bg);
-  border-bottom: 1px dashed var(--og-dash);
+  background: var(--og-surface);
+  border-bottom: var(--og-header-rule);
   display: grid;
   gap: 1rem;
   grid-template-columns: 1fr auto 1fr;
@@ -110,7 +125,7 @@ body {
 }
 
 .og-menu-panel {
-  background: var(--og-bg);
+  background: var(--og-surface);
   border: 1px solid var(--og-pill-border);
   border-radius: 12px;
   box-shadow: 0 12px 32px rgb(0 0 0 / 0.08);
@@ -192,25 +207,19 @@ body {
   width: auto;
 }
 
-
 .og-hero {
   padding: 8px;
 }
 
-/* The card: 16px radius, a faint inner highlight, a fine dot grid over the fill and
-   a soft green glow where the globe rises from the bottom edge. */
 .og-card {
-  background-color: var(--og-card);
-  background-image:
-    radial-gradient(ellipse 50% 45% at 50% 38%, rgb(255 255 255 / 0.1), transparent 70%),
-    radial-gradient(ellipse 55% 40% at 50% 100%, rgb(73 167 130 / 0.2), transparent 72%);
+  --og-halftone-dot: var(--og-fg);
+
+  background-color: var(--og-surface);
   border-radius: 16px;
   isolation: isolate;
   position: relative;
-  box-shadow:
-    inset 1px 6px 6px rgb(255 255 255 / 0.2),
-    inset 0 0 0 1px rgb(255 255 255 / 0.35);
-  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgb(var(--og-shade) / 0.07);
+  color: var(--og-fg);
   display: grid;
   /* minmax(0, 1fr): the column must not grow to the search box's preferred width. */
   grid-template-columns: minmax(0, 1fr);
@@ -229,23 +238,18 @@ body {
   }
 }
 
-/* The dot grid sits behind the content and is masked to shine around the copy and
-   around the globe's horizon, fading out toward the card's edges. The globe's canvas
-   is transparent between its dots, so the grid shines through its ocean too. */
-.og-card::before {
-  background-image: radial-gradient(circle, rgb(255 255 255 / 0.3) 0.8px, transparent 1.1px);
-  background-size: 4px 4px;
-  content: "";
+/* The halftone behind the content; drawn by HalftoneField. */
+.og-halftone {
   inset: 0;
-  -webkit-mask-image:
-    radial-gradient(ellipse 60% 55% at 50% 40%, #000 0%, rgb(0 0 0 / 0.45) 45%, transparent 85%),
-    radial-gradient(ellipse 45% 55% at 50% 100%, #000 0%, rgb(0 0 0 / 0.5) 50%, transparent 85%);
-  mask-image:
-    radial-gradient(ellipse 60% 55% at 50% 40%, #000 0%, rgb(0 0 0 / 0.45) 45%, transparent 85%),
-    radial-gradient(ellipse 45% 55% at 50% 100%, #000 0%, rgb(0 0 0 / 0.5) 50%, transparent 85%);
   pointer-events: none;
   position: absolute;
   z-index: -1;
+}
+
+.og-halftone canvas {
+  display: block;
+  height: 100%;
+  width: 100%;
 }
 
 /* Copy centred in the space above the horizon, so the gaps above and below it stay
@@ -263,9 +267,9 @@ body {
 .og-try {
   align-items: center;
   background: transparent;
-  border: 1px solid rgb(255 255 255 / 0.5);
+  border: 1px solid rgb(var(--og-shade) / 0.2);
   border-radius: 999px;
-  color: #ffffff;
+  color: var(--og-fg);
   cursor: pointer;
   display: inline-flex;
   font: inherit;
@@ -277,14 +281,14 @@ body {
 }
 
 .og-try:hover {
-  background: rgb(255 255 255 / 0.08);
+  background: rgb(var(--og-shade) / 0.04);
 }
 
 .og-try-arrow {
   align-items: center;
-  background: #ffffff;
+  background: var(--og-solid);
   border-radius: 999px;
-  color: var(--og-card);
+  color: var(--og-on-solid);
   display: inline-flex;
   height: 28px;
   justify-content: center;
@@ -360,6 +364,7 @@ body {
 }
 
 .og-sub {
+  color: rgb(var(--og-ink) / 0.7);
   font-size: 1.2rem;
   letter-spacing: var(--letter-spacing-tighter);
   line-height: 1.2;
@@ -368,9 +373,9 @@ body {
 }
 
 .og-cta {
-  background: #ffffff;
+  background: var(--og-solid);
   border-radius: 999px;
-  color: #1f1f1f;
+  color: var(--og-on-solid);
   font-size: 1rem;
   font-weight: 500;
   line-height: 24px;
@@ -380,7 +385,7 @@ body {
 }
 
 .og-cta:hover {
-  background: #e8eef5;
+  background: var(--og-solid-hover);
 }
 
 /* The horizon: a fixed slice at the bottom of the card. The globe inside is wider
@@ -418,7 +423,7 @@ body {
 .og-features {
   --og-edge: linear-gradient(to bottom, var(--og-line) 50%, transparent 50%);
   background: var(--og-edge) left top / 1px 32px repeat-y, var(--og-edge) right top / 1px 32px repeat-y,
-    var(--og-bg);
+    var(--og-surface);
   margin: 0 auto 6rem;
   max-width: 75rem;
   padding-top: 6rem;
@@ -443,7 +448,7 @@ body {
 }
 
 .og-features-head p {
-  color: rgb(22 22 22 / 0.7);
+  color: rgb(var(--og-ink) / 0.7);
   font-size: 1.2rem;
   letter-spacing: -0.025em;
   line-height: 1.2;
@@ -452,7 +457,7 @@ body {
 }
 
 .og-features-box {
-  background: var(--og-bg);
+  background: var(--og-surface);
   border-block: 1px solid var(--og-line);
   position: relative;
 }
@@ -478,7 +483,7 @@ body {
 }
 
 .og-corner {
-  background: var(--og-bg);
+  background: var(--og-surface);
   border: 1px solid var(--og-line);
   border-radius: 3px;
   height: 14px;
@@ -512,7 +517,7 @@ body {
 }
 
 .og-features-grid p {
-  color: rgb(22 22 22 / 0.7);
+  color: rgb(var(--og-ink) / 0.7);
   font-size: 1rem;
   letter-spacing: -0.0025em;
   line-height: 1.3;
@@ -542,3 +547,4 @@ body {
     border-top: 1px solid var(--og-line);
   }
 }
+

@@ -101,16 +101,23 @@
         }
       }
 
+      let landShadow = 0;
       let land = 0;
       let landLit = 0;
-      let sea = 0;
+      let landPeak = 0;
       let ocean = 0;
+      let sea = 0;
+      let seaLit = 0;
       const readColours = () => {
         const style = getComputedStyle(this);
-        land = rgba(style.getPropertyValue("--og-globe-land"));
-        landLit = rgba(style.getPropertyValue("--og-globe-land-lit"));
-        sea = rgba(style.getPropertyValue("--og-globe-sea"));
-        ocean = rgba(style.getPropertyValue("--og-globe-ocean"));
+        const colour = (name: string) => rgba(style.getPropertyValue(name));
+        landShadow = colour("--og-globe-land-shadow");
+        land = colour("--og-globe-land");
+        landLit = colour("--og-globe-land-lit");
+        landPeak = colour("--og-globe-land-peak");
+        ocean = colour("--og-globe-ocean");
+        sea = colour("--og-globe-sea");
+        seaLit = colour("--og-globe-sea-lit");
       };
       readColours();
       new MutationObserver(() => {
@@ -127,13 +134,17 @@
           const col = Math.min(MASK_W - 1, Math.floor(((lon + Math.PI) / TAU) * MASK_W));
           const t = threshold[k];
           if (mask[row[k] + col] === 1) {
-            // Land is near solid; its brightest part dithers a lighter tint over it.
-            const brightness = 0.32 + 0.68 * shade[k];
-            if (brightness > t) pixels[idx[k]] = brightness - 0.78 > t * 0.3 ? landLit : land;
+            // Land is solid, stepped by light: dark green in shadow, the logo green,
+            // mint where lit and white at the brightest point.
+            const b = 0.32 + 0.68 * shade[k];
+            pixels[idx[k]] =
+              b - 0.95 > t * 0.06 ? landPeak : b - 0.78 > t * 0.35 ? landLit : b > t ? land : landShadow;
           } else {
-            // Unlit ocean is opaque so the card's dot grid stops at the rim: two dot
-            // patterns at different pitches would beat against each other.
-            pixels[idx[k]] = 0.03 + 0.1 * shade[k] + 0.22 * glow[k] > t ? sea : ocean;
+            // Ocean: navy, grey-blue dots where lit, light grey where the glow peaks.
+            // Opaque, so the card's halftone stops at the rim instead of beating
+            // against the globe's own dots.
+            const o = 0.03 + 0.1 * shade[k] + 0.34 * glow[k];
+            pixels[idx[k]] = o - 0.3 > t * 0.6 ? seaLit : o > t ? sea : ocean;
           }
         }
         ctx.putImageData(image, 0, 0);

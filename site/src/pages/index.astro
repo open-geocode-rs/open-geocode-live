@@ -6,6 +6,7 @@ import "../styles/landing.css";
 import logoLight from "../assets/logo-light.png";
 import AddressMorph from "../components/landing/AddressMorph.astro";
 import DitherGlobe from "../components/landing/DitherGlobe.astro";
+import HalftoneField from "../components/landing/HalftoneField.astro";
 
 // Public landmarks only, so no example points at someone's home.
 const examples: [string, string][] = [
@@ -98,6 +99,7 @@ const menus = [
     </header>
     <main class="og-hero">
       <section class="og-card">
+        <HalftoneField />
         <h1 class="sr-only">open-geocode</h1>
         <div class="og-copy" data-mode="examples">
           <button type="button" class="og-try">
