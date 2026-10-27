@@ -188,7 +188,7 @@ const menus = [
       copy.addEventListener("og-result", (event) => {
         const hit = (event as CustomEvent<{ label: string } | null | undefined>).detail;
         result.hidden = false;
-        result.textContent = hit
+        result.textContent = result.title = hit
           ? hit.label
           : hit === null
             ? "No match for that address."

@@ -263,7 +263,7 @@ body {
 }
 
 /* Copy centred in the space above the horizon, so the gaps above and below it stay
-   equal. Inside: 40px to the subtitle, 56px to the button. */
+   equal. Inside: 48px to the subtitle, 56px to the button. */
 .og-copy {
   align-items: center;
   display: flex;
@@ -315,8 +315,10 @@ body {
   width: 16px;
 }
 
+/* Hidden but still in place, so a result appearing never moves the page. */
 .og-result[hidden] {
-  display: none;
+  display: block;
+  visibility: hidden;
 }
 
 /* Typing happens in the headline itself: an input with the headline's type, size and
@@ -347,9 +349,17 @@ body {
 .og-result {
   font-family: var(--type-family-code);
   font-size: 0.9375rem;
-  margin: 1rem 0 0;
+  /* One line between headline and subtitle (0.5 + 1.5 + 1rem). A longer match is cut
+     short; the full text is its title. */
+  height: 1.5rem;
+  line-height: 1.5rem;
+  margin: 0.5rem 0 0;
+  max-width: 100%;
   opacity: 0.8;
+  overflow: hidden;
   text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Two lines reserved on narrow screens so a longer address never shifts the page. */
@@ -367,7 +377,11 @@ body {
 }
 
 @media (max-width: 52rem) {
+  /* One-line text sits at the bottom of the two, against the result line under it. */
   .og-morph {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     min-height: 2.2em;
   }
 }
@@ -377,7 +391,7 @@ body {
   font-size: 1.2rem;
   letter-spacing: var(--letter-spacing-tighter);
   line-height: 1.2;
-  margin: 2.5rem 0 0;
+  margin: 1rem 0 0;
   text-align: center;
 }
 
