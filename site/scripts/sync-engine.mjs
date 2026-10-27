@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 const site = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Default is the engine cloned beside this repo, not the pinned submodule: the site
-// documents the engine as it is now, the submodule pins what the demo deploys.
+// documents the engine as it is now, the submodule pins the VM runtime's version.
 const engine = resolve(site, process.env.ENGINE_DIR ?? "../../open-geocode");
 const contract = join(engine, "contract");
 
