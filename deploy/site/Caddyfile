@@ -5,18 +5,31 @@
 	admin localhost:2019
 }
 
+# Crawlers ignore these; robots.txt and the sitemap govern indexing.
+(security) {
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
+
 # Any host, not 127.0.0.1: tunnel requests carry the public hostname, and a site
 # address that doesn't match it answers with an empty 200.
 http://:8081 {
 	bind 127.0.0.1
 	root * /var/www/open-geocode-site
 	encode zstd gzip
+	import security
 	try_files {path} {path}/index.html {path}.html
 	file_server
 	# Hashed filenames, so a changed file is a new URL.
 	@assets path /_astro/*
 	header @assets Cache-Control "public, max-age=31536000, immutable"
+	# Error responses skip the site's header directives, so they import them again.
 	handle_errors {
+		import security
 		rewrite * /404.html
 		file_server
 	}
