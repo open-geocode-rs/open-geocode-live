@@ -51,13 +51,42 @@ const { examples } = Astro.props;
   }
 
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  type Hit = { label: string; coordinates: string };
+  type Feature = {
+    geometry: { coordinates: [number, number] };
+    properties: { label: string; context?: Record<string, { name: string } | undefined> };
+  };
+
+  // undefined when search can't be reached, null when it found nothing: only the
+  // first falls back to the examples.
+  async function search(query: string): Promise<Hit | null | undefined> {
+    try {
+      const response = await fetch(`/api/search?${new URLSearchParams({ q: query, limit: "1" })}`);
+      if (!response.ok) return undefined;
+      const feature: Feature | undefined = (await response.json()).features?.[0];
+      if (!feature) return null;
+      const [lon, lat] = feature.geometry.coordinates;
+      const { label, context = {} } = feature.properties;
+      // Labels often already name the city or region; add only the places they omit.
+      const places = [context.locality?.name, context.region?.name, context.country?.name].filter(
+        (name): name is string => !!name && !label.toLowerCase().includes(name.toLowerCase()),
+      );
+      return {
+        label: [label, ...new Set(places)].join(", "),
+        coordinates: `${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+      };
+    } catch {
+      return undefined;
+    }
+  }
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   // Cycles address, coordinates, next address... In editing mode the same line becomes
   // an input in the same type, and Enter morphs what was typed into its coordinates.
-  // No geocoder is connected yet, so only the examples resolve.
   class AddressMorph extends HTMLElement {
     #editing = false;
+    #searching = false;
     #resume?: () => void;
     #examples: string[][] = [];
     #text!: HTMLElement;
@@ -72,6 +101,14 @@ const { examples } = Astro.props;
         if (event.key === "Enter") this.geocode();
         if (event.key === "Escape") cancel();
       });
+      // Coordinates on show are an answer, not a draft: the next keystroke starts a new
+      // query instead of editing them.
+      this.#input.addEventListener("beforeinput", (event) => {
+        if (!("answer" in this.#input.dataset)) return;
+        delete this.#input.dataset.answer;
+        this.#input.value = "";
+        if (event.inputType.startsWith("delete")) event.preventDefault();
+      });
       // Clicking away without having typed anything returns to the examples.
       this.#input.addEventListener("blur", () => {
         if (!this.#input.value.trim()) cancel();
@@ -85,6 +122,7 @@ const { examples } = Astro.props;
       this.#text.hidden = true;
       this.#input.hidden = false;
       this.#input.value = "";
+      delete this.#input.dataset.answer;
       this.#input.focus();
     }
 
@@ -96,21 +134,29 @@ const { examples } = Astro.props;
     }
 
     async geocode() {
-      const query = this.#input.value.trim().toLowerCase();
+      const query = this.#input.value.trim();
       if (!query) {
         this.#input.focus();
         return;
       }
-      const hit = this.#examples.find(([address]) => {
-        const a = address.toLowerCase();
-        return a.includes(query) || query.includes(a);
-      });
-      this.dispatchEvent(new CustomEvent("og-result", { bubbles: true, detail: hit ?? null }));
+      if (this.#searching) return;
+      this.#searching = true;
+      let hit = await search(query);
+      this.#searching = false;
+      if (hit === undefined) {
+        const q = query.toLowerCase();
+        const example = this.#examples.find(([address]) => {
+          const a = address.toLowerCase();
+          return a.includes(q) || q.includes(a);
+        });
+        if (example) hit = { label: example[0], coordinates: example[1] };
+      }
+      this.dispatchEvent(new CustomEvent("og-result", { bubbles: true, detail: hit }));
       if (!hit) return;
       const set = (text: string) => (this.#input.value = text);
-      if (still) set(hit[1]);
-      else await morph(set, this.#input.value, hit[1]);
-      this.#input.select();
+      if (still) set(hit.coordinates);
+      else await morph(set, this.#input.value, hit.coordinates);
+      this.#input.dataset.answer = "";
     }
 
     async #cycle() {

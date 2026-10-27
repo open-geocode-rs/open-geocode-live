@@ -182,10 +182,16 @@ const menus = [
         else setEditing(true);
       });
       copy.addEventListener("og-cancel", () => setEditing(false));
+      copy.addEventListener("input", () => (result.hidden = true));
+      // The matched address goes under the coordinates, so a near miss is visible.
       copy.addEventListener("og-result", (event) => {
-        const hit = (event as CustomEvent<string[] | null>).detail;
-        result.hidden = Boolean(hit);
-        if (!hit) result.textContent = "Live search isn't connected yet. Try one of the example addresses.";
+        const hit = (event as CustomEvent<{ label: string } | null | undefined>).detail;
+        result.hidden = false;
+        result.textContent = hit
+          ? hit.label
+          : hit === null
+            ? "No match for that address."
+            : "Search isn't reachable right now. Try one of the example addresses.";
       });
     </script>
     <script>

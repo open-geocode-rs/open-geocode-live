@@ -335,6 +335,10 @@ body {
   width: 100%;
 }
 
+.og-morph-input[data-answer] {
+  caret-color: transparent;
+}
+
 .og-morph-input[hidden],
 .og-morph-text[hidden] {
   display: none;
