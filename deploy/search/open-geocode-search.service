@@ -1,0 +1,43 @@
+# The runtime behind the site's search box, separate from open-geocode.service. Caddy
+# forwards only GET /api/search to it (deploy/site/Caddyfile); nothing else reaches it.
+#
+#   sudo install -m 644 deploy/search/open-geocode-search.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now open-geocode-search
+[Unit]
+Description=open-geocode runtime for the site's search
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/opt/open-geocode-search/bin/open-geocode serve --pack /var/lib/open-geocode-search/pack.ogp --bind 127.0.0.1:8090
+Restart=always
+RestartSec=2
+# Half the cores, so a flood of searches slows search, not the rest of the VM.
+CPUQuota=200%
+
+DynamicUser=yes
+CapabilityBoundingSet=
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+# Loopback only: it answers Caddy and never opens a connection out.
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+[Install]
+WantedBy=multi-user.target

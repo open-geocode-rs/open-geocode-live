@@ -22,11 +22,27 @@ http://:8081 {
 	root * /var/www/open-geocode-site
 	encode zstd gzip
 	import security
-	try_files {path} {path}/index.html {path}.html
-	file_server
-	# Hashed filenames, so a changed file is a new URL.
-	@assets path /_astro/*
-	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	# The one API the site exposes: GET /api/search, with q alone and one result.
+	# Rebuilding the query drops every other parameter, and q is re-encoded, so it
+	# can't smuggle more in. Batch, reverse, other methods and other paths fall
+	# through to the static files and 404 (deploy/search/open-geocode-search.service).
+	@search {
+		method GET
+		path /api/search
+	}
+	handle @search {
+		rewrite * /search?q={query.q}&limit=1
+		reverse_proxy 127.0.0.1:8090
+	}
+
+	handle {
+		try_files {path} {path}/index.html {path}.html
+		file_server
+		# Hashed filenames, so a changed file is a new URL.
+		@assets path /_astro/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+	}
 	# Error responses skip the site's header directives, so they import them again.
 	handle_errors {
 		import security

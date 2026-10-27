@@ -3,14 +3,15 @@
 The website and deployment for the [`open-geocode`](https://github.com/open-geocode-rs/open-geocode)
 geocoding engine, which is pinned here as a submodule.
 
-One VM runs both halves, and neither takes public inbound traffic. A cloudflared
+One VM runs everything, and none of it takes public inbound traffic. A cloudflared
 tunnel carries every request in from Cloudflare's edge.
 
-| Part                | Source                | On the VM                                       |
-| ------------------- | --------------------- | ----------------------------------------------- |
-| Site and docs       | `site/` (Astro)       | Static files served by Caddy on `127.0.0.1:8081` |
-| Geocoding runtime   | `open-geocode/`       | `open-geocode.service` on `127.0.0.1:8080`       |
-| Tunnel              | `deploy/cloudflared/` | `cloudflared.service`, one hostname per service  |
+| Part              | Source                | On the VM                                                  |
+| ----------------- | --------------------- | ---------------------------------------------------------- |
+| Site and docs     | `site/` (Astro)       | Static files served by Caddy on `127.0.0.1:8081`            |
+| Site search       | `deploy/search/`      | `open-geocode-search.service` on `127.0.0.1:8090`           |
+| Geocoding runtime | `open-geocode/`       | `open-geocode.service` on `127.0.0.1:8080`                  |
+| Tunnel            | `deploy/cloudflared/` | `cloudflared.service`, one hostname per service             |
 
 ## Deploy the site
 
@@ -27,6 +28,20 @@ First-time setup on the VM:
    it.
 2. Add the site's hostname to the tunnel (`deploy/cloudflared/config.yml`), route
    its DNS to the tunnel, and restart cloudflared.
+
+## Site search
+
+The hero's search box calls `/api/search` on the site's own domain. Caddy forwards
+that one route, `GET` with `q` only and one result, to `open-geocode-search.service`;
+every other API path and method gets the site's 404. The service runs sandboxed on
+half the VM's cores, so heavy search traffic slows search and nothing else.
+
+To try search locally, tunnel a runtime to this machine and point the dev site at it:
+
+```sh
+ssh -fNL 8090:127.0.0.1:8090 <ssh-host>
+cd site && OG_API=http://127.0.0.1:8090 npm run dev
+```
 
 ## Deploy the runtime
 
