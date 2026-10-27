@@ -1,0 +1,157 @@
+---
+// Figures are the benchmarks page's (src/content/docs/benchmarks.md); keep the two in step.
+type Row = { name: string; bar: number; value: string; extra: string; og?: boolean };
+type Tab = { id: string; label: string; title: string; sub: string; cols: [string, string]; rows: Row[]; note: string };
+
+const SPEED = "Ontario extract, 2.03 million addresses · 4 CPU / 10 GB each · loopback HTTP";
+const tabs: Tab[] = [
+  {
+    id: "throughput",
+    label: "Throughput",
+    title: "Forward geocoding throughput",
+    sub: "Requests per second with p99 under 100 ms (higher is better)",
+    cols: ["Req/s", "Reverse"],
+    rows: [
+      { name: "open-geocode", bar: 1000, value: "1,000+", extra: "1,000+", og: true },
+      { name: "Pelias", bar: 100, value: "100", extra: "500" },
+      { name: "Nominatim", bar: 25, value: "25", extra: "100" },
+    ],
+    note: `${SPEED} · og's load test stopped at 1,000 req/s, not its ceiling`,
+  },
+  {
+    id: "latency",
+    label: "Latency",
+    title: "Forward service time",
+    sub: "One client, no queue · median in milliseconds (lower is better)",
+    cols: ["p50 ms", "p99 ms"],
+    rows: [
+      { name: "open-geocode", bar: 1.0, value: "1.0", extra: "2.0", og: true },
+      { name: "Pelias", bar: 11.5, value: "11.5", extra: "67.6" },
+      { name: "Nominatim", bar: 40.0, value: "40.0", extra: "1,384.7" },
+    ],
+    note: SPEED,
+  },
+  {
+    id: "footprint",
+    label: "Footprint",
+    title: "What it takes to deploy",
+    sub: "Size on disk and memory while serving, in GiB (lower is better)",
+    cols: ["Disk GiB", "RAM GiB"],
+    rows: [
+      { name: "open-geocode", bar: 0.3, value: "0.30", extra: "~1.2", og: true },
+      { name: "Pelias", bar: 5.88, value: "5.88", extra: "4.60" },
+      { name: "Nominatim", bar: 5.92, value: "5.92", extra: "2.75" },
+    ],
+    note: `${SPEED} · og's RAM is its page-cache working set; the process itself uses ~0.03 GiB`,
+  },
+  {
+    id: "accuracy",
+    label: "Accuracy",
+    title: "Street-level accuracy on MESSY STREETS",
+    sub: "First answer within ±0.6 km (GH6), % of queries (higher is better)",
+    cols: ["GH6", "GH4"],
+    rows: [
+      { name: "open-geocode", bar: 78.0, value: "78.0%", extra: "93.9%", og: true },
+      { name: "Pelias", bar: 67.8, value: "67.8%", extra: "85.9%" },
+      { name: "Photon", bar: 62.8, value: "62.8%", extra: "84.9%" },
+      { name: "Nominatim", bar: 55.6, value: "55.6%", extra: "66.6%" },
+    ],
+    note: "Open-source geocoders · 959 web addresses · og on its OpenStreetMap and OpenAddresses Planet Pack",
+  },
+];
+---
+
+<section class="og-bench" aria-labelledby="og-bench-title">
+  <div class="og-bench-box">
+    <span class="og-corner" aria-hidden="true"></span>
+    <span class="og-corner" aria-hidden="true"></span>
+    <span class="og-corner" aria-hidden="true"></span>
+    <span class="og-corner" aria-hidden="true"></span>
+    <div class="og-bench-copy">
+      <p class="og-walk-eyebrow">Benchmarks</p>
+      <h2 id="og-bench-title">Faster than Pelias and Nominatim, on the same hardware.</h2>
+      <p>
+        The same Ontario extract, the same 4 CPU / 10 GB cap and the same queries. og answers a forward query in
+        1.0&nbsp;ms at the median, and was still holding at 1,000 requests a second when the load test stopped.
+      </p>
+      <p>
+        On MESSY STREETS, a benchmark of real addresses copied from the web, it leads every open-source geocoder at
+        every resolution.
+      </p>
+      <a class="og-bench-link" href="/docs/benchmarks/">Read the full benchmarks →</a>
+    </div>
+    <og-bench-tabs class="og-bench-chart">
+      <div class="og-bench-tabs" role="tablist" aria-label="Benchmark">
+        {tabs.map((t, i) => (
+          <button type="button" role="tab" id={`og-bench-tab-${t.id}`} aria-controls={`og-bench-${t.id}`} aria-selected={i === 0 ? "true" : "false"} tabindex={i === 0 ? 0 : -1}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {tabs.map((t, i) => {
+        const max = Math.max(...t.rows.map((r) => r.bar));
+        return (
+          <div class="og-bench-panel" role="tabpanel" id={`og-bench-${t.id}`} aria-labelledby={`og-bench-tab-${t.id}`} hidden={i !== 0}>
+            <h3>{t.title}</h3>
+            <p class="og-bench-sub">{t.sub}</p>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col"><span class="sr-only">Geocoder</span></th>
+                  <th scope="col"><span class="sr-only">Bar</span></th>
+                  <th scope="col">{t.cols[0]}</th>
+                  <th scope="col">{t.cols[1]}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {t.rows.map((r) => (
+                  <tr class:list={{ "og-bench-og": r.og }}>
+                    <th scope="row">{r.name}</th>
+                    <td class="og-bench-bar" aria-hidden="true">
+                      <span style={`width: ${Math.max(1.5, (r.bar / max) * 100)}%`}></span>
+                    </td>
+                    <td class="og-bench-value">{r.value}</td>
+                    <td class="og-bench-extra">{r.extra}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p class="og-bench-note">
+              {t.note}
+              <a href="/docs/benchmarks/">method</a>
+            </p>
+          </div>
+        );
+      })}
+    </og-bench-tabs>
+  </div>
+</section>
+
+<script>
+  // Panels are all in the HTML for readers and crawlers; this only switches them.
+  class BenchTabs extends HTMLElement {
+    connectedCallback() {
+      const tabs = [...this.querySelectorAll<HTMLButtonElement>("[role=tab]")];
+      const select = (tab: HTMLButtonElement) => {
+        for (const t of tabs) {
+          const on = t === tab;
+          t.setAttribute("aria-selected", String(on));
+          t.tabIndex = on ? 0 : -1;
+          this.querySelector<HTMLElement>(`#${t.getAttribute("aria-controls")}`)!.hidden = !on;
+        }
+      };
+      tabs.forEach((tab, i) => {
+        tab.addEventListener("click", () => select(tab));
+        tab.addEventListener("keydown", (e) => {
+          const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+          if (!step) return;
+          const next = tabs[(i + step + tabs.length) % tabs.length];
+          select(next);
+          next.focus();
+        });
+      });
+    }
+  }
+
+  customElements.define("og-bench-tabs", BenchTabs);
+</script>

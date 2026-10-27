@@ -961,9 +961,222 @@ body {
   }
 }
 
+/* Benchmarks: two equal boxes in one frame, the copy left and a tabbed chart right. */
+.og-bench {
+  margin: 0 auto 6rem;
+  max-width: 68rem;
+}
+
+.og-bench-box {
+  background: var(--og-surface);
+  border: 1px solid var(--og-line);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  position: relative;
+}
+
 /* One placement for the left column of every split section: top-aligned, the same
    padding and the same gaps, so eyebrows and headings line up section to section. */
+.og-bench-copy,
 .og-walk-copy {
   align-self: start;
   padding: 2rem 2.25rem;
 }
+
+.og-bench-copy h2 {
+  font-family: var(--type-family-heading);
+  font-size: 2.25rem;
+  font-weight: var(--type-display-weight);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+
+.og-bench-copy p:not(.og-walk-eyebrow) {
+  color: rgb(var(--og-ink) / 0.7);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin: 0 0 0.875rem;
+}
+
+.og-bench-link {
+  color: var(--og-fg);
+  display: inline-block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.og-bench-chart {
+  border-inline-start: 1px solid var(--og-line);
+  display: flex;
+  flex-direction: column;
+}
+
+.og-bench-tabs {
+  border-bottom: 1px solid var(--og-line);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.og-bench-tabs button {
+  background: none;
+  border: 0;
+  color: rgb(var(--og-ink) / 0.65);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.875rem 0.5rem;
+}
+
+.og-bench-tabs button + button {
+  border-inline-start: 1px solid var(--og-line);
+}
+
+.og-bench-tabs button:not([aria-selected="true"]):hover {
+  color: var(--og-fg);
+}
+
+.og-bench-tabs [aria-selected="true"] {
+  background: var(--og-solid);
+  color: var(--og-on-solid);
+}
+
+.og-bench-panel {
+  padding: 2rem 2rem 1.5rem;
+}
+
+.og-bench-panel[hidden] {
+  display: none;
+}
+
+.og-bench-panel h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.og-bench-sub {
+  color: rgb(var(--og-ink) / 0.6);
+  font-size: 0.8125rem;
+  margin: 0.25rem 0 1.5rem;
+}
+
+.og-bench-panel table {
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  font-size: 0.875rem;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.og-bench-panel thead th {
+  color: rgb(var(--og-ink) / 0.5);
+  font-family: var(--type-family-code);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.og-bench-panel th:nth-child(1) { width: 28%; }
+.og-bench-panel th:nth-child(2) { width: 36%; }
+.og-bench-panel th:nth-child(3) { width: 18%; }
+.og-bench-panel th:nth-child(4) { width: 18%; }
+
+.og-bench-panel tbody th {
+  color: rgb(var(--og-ink) / 0.75);
+  font-weight: 400;
+  text-align: left;
+}
+
+.og-bench-og th {
+  color: var(--og-fg) !important;
+  font-weight: 600 !important;
+}
+
+.og-bench-bar {
+  padding-inline-end: 0.75rem;
+}
+
+.og-bench-bar span {
+  background: var(--og-fg);
+  display: block;
+  height: 26px;
+  min-width: 4px;
+}
+
+.og-bench-og .og-bench-bar span {
+  background: #49a782;
+}
+
+.og-bench-value,
+.og-bench-extra {
+  font-family: var(--type-family-code);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.og-bench-value {
+  color: rgb(var(--og-ink) / 0.8);
+}
+
+.og-bench-og .og-bench-value {
+  color: var(--og-fg);
+  font-weight: 700;
+}
+
+.og-bench-extra {
+  color: rgb(var(--og-ink) / 0.6);
+  font-size: 0.8125rem;
+}
+
+.og-bench-note {
+  border-top: 1px solid var(--og-line);
+  color: rgb(var(--og-ink) / 0.55);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  margin: 1rem 0 0;
+  padding-top: 0.875rem;
+}
+
+.og-bench-note a {
+  color: var(--og-fg);
+  margin-inline-start: 0.5rem;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 60rem) {
+  .og-bench-box {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .og-bench-chart {
+    border-inline-start: 0;
+    border-top: 1px solid var(--og-line);
+  }
+
+  .og-bench-copy {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .og-bench-copy h2 {
+    font-size: 1.875rem;
+  }
+
+  .og-bench-panel {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+/* The corner squares sit over the active tab's fill at the top-right. */
+.og-bench-box .og-corner {
+  z-index: 2;
+}
+
