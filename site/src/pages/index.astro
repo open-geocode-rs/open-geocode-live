@@ -12,14 +12,20 @@ import Footer from "../components/landing/Footer.astro";
 import GitHubMark from "../components/landing/GitHubMark.astro";
 import Walkthrough from "../components/landing/Walkthrough.astro";
 
-// Public landmarks only, so no example points at someone's home. Coordinates are
-// og's own answers on the planet Pack, so typing an example gives what it shows.
+// Public landmarks only, so no example points at someone's home, each in its own
+// language and script. Coordinates are og's own answers on the planet Pack, so typing
+// an example gives what it shows.
 const examples: [string, string][] = [
   ["1600 Pennsylvania Ave NW, Washington", "38.89747, -77.03655"],
+  ["名古屋城, 名古屋市", "35.18532, 136.89918"],
+  ["Красная площадь, Москва", "55.75276, 37.62358"],
+  ["इंडिया गेट, नई दिल्ली", "28.61293, 77.22949"],
   ["5 Av. Anatole France, Paris", "48.85882, 2.29460"],
-  ["Christ the Redeemer, Rio de Janeiro", "-22.95192, -43.21046"],
-  ["4-2-8 Shibakoen, Tokyo", "35.65975, 139.74407"],
-  ["Piazza del Colosseo 1, Rome", "41.89165, 12.49276"],
+  ["故宫博物院, 北京", "39.91743, 116.39078"],
+  ["قلعة صلاح الدين, القاهرة", "30.02983, 31.26147"],
+  ["불국사, 경주", "35.78909, 129.33182"],
+  ["הכותל המערבי, ירושלים", "31.77640, 35.23308"],
+  ["Cristo Redentor, Rio de Janeiro", "-22.95192, -43.21046"],
 ];
 
 const features = [
