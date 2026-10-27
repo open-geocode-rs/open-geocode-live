@@ -1,0 +1,84 @@
+---
+type Mark = "yes" | "part" | "no";
+type Cell = Mark | { mark: Mark; note: string };
+type Row = { title: string; sub: string; og: Cell; commercial: Cell; open: Cell };
+
+const rows: Row[] = [
+  { title: "Self-hosted", sub: "Addresses stay on your network", og: "yes", commercial: "no", open: "yes" },
+  { title: "No usage fees", sub: "No quotas or rate limits", og: "yes", commercial: "no", open: "yes" },
+  {
+    title: "Infrastructure",
+    sub: "What you run and maintain",
+    og: { mark: "yes", note: "One binary, one file" },
+    commercial: { mark: "yes", note: "None, it's hosted" },
+    open: { mark: "no", note: "Database + search cluster" },
+  },
+  {
+    title: "Batch geocoding",
+    sub: "CSV in, coordinates out",
+    og: { mark: "yes", note: "Free, unlimited" },
+    commercial: { mark: "yes", note: "Free tier, then per address" },
+    open: { mark: "no", note: "No batch endpoint" },
+  },
+  { title: "Open source", sub: "MIT licensed, open data", og: "yes", commercial: "no", open: "yes" },
+];
+
+const label: Record<Mark, string> = { yes: "Yes", part: "Partly", no: "No" };
+const path: Record<Mark, string> = { yes: "M5 12.5 10 17l9-10", part: "M6 12h12", no: "M7 7l10 10M17 7 7 17" };
+---
+
+<section class="og-cmp" aria-labelledby="og-cmp-title">
+  <div class="og-cmp-box">
+    <span class="og-corner" aria-hidden="true"></span>
+    <span class="og-corner" aria-hidden="true"></span>
+    <span class="og-corner" aria-hidden="true"></span>
+    <span class="og-corner" aria-hidden="true"></span>
+    <div class="og-bench-copy">
+      <p class="og-walk-eyebrow">Compare</p>
+      <h2 id="og-cmp-title">No API bills, no database, no cluster to run.</h2>
+      <p>Commercial APIs are quick to start with, but bill every lookup and see every address.</p>
+      <p>
+        Open-source geocoders keep the data in-house, but need a database or search cluster. og keeps it in-house and
+        runs from one file.
+      </p>
+    </div>
+    <div class="og-cmp-table">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Feature</th>
+            <th scope="col" class="og-cmp-og">og</th>
+            <th scope="col">Commercial</th>
+            <th scope="col">Open source</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr>
+              <th scope="row">
+                <span class="og-cmp-title">{r.title}</span>
+                <span class="og-cmp-sub">{r.sub}</span>
+              </th>
+              {[r.og, r.commercial, r.open].map((cell) => {
+                const m = typeof cell === "string" ? cell : cell.mark;
+                const note = typeof cell === "string" ? undefined : cell.note;
+                return (
+                  <td>
+                    <span class:list={["og-cmp-mark", `og-cmp-mark--${m}`]}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d={path[m]} /></svg>
+                      <span class="sr-only">{label[m]}</span>
+                    </span>
+                    {note && <span class="og-cmp-note">{note}</span>}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="og-bench-note">
+        Open source: Nominatim, Pelias and Photon. Commercial: Google, HERE, Mapbox and others.
+      </p>
+    </div>
+  </div>
+</section>
