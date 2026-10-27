@@ -1,0 +1,23 @@
+# The site as static files on loopback; public only through the cloudflared tunnel.
+# Install as /etc/caddy/Caddyfile, then `sudo systemctl reload caddy`.
+{
+	auto_https off
+	admin localhost:2019
+}
+
+# Any host, not 127.0.0.1: tunnel requests carry the public hostname, and a site
+# address that doesn't match it answers with an empty 200.
+http://:8081 {
+	bind 127.0.0.1
+	root * /var/www/open-geocode-site
+	encode zstd gzip
+	try_files {path} {path}/index.html {path}.html
+	file_server
+	# Hashed filenames, so a changed file is a new URL.
+	@assets path /_astro/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+	handle_errors {
+		rewrite * /404.html
+		file_server
+	}
+}

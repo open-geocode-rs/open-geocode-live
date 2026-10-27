@@ -6,6 +6,7 @@
 #   cloudflared tunnel login
 #   cloudflared tunnel create open-geocode   # writes ~/.cloudflared/<TUNNEL_ID>.json
 #   cloudflared tunnel route dns open-geocode origin.example.com
+#   cloudflared tunnel route dns open-geocode example.com
 # Fill in TUNNEL_ID; copy the credentials json to the VM as credentials.json (a
 # gitignored secret).
 
@@ -15,4 +16,6 @@ credentials-file: /etc/cloudflared/credentials.json
 ingress:
   - hostname: origin.example.com
     service: http://127.0.0.1:8080
+  - hostname: example.com
+    service: http://127.0.0.1:8081   # the site, deploy/site/Caddyfile
   - service: http_status:404   # reject everything else
