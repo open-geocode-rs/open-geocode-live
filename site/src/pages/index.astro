@@ -3,7 +3,6 @@ import { Icon } from "@astrojs/starlight/components";
 import { Font } from "astro:assets";
 import "../styles/type.css";
 import "../styles/landing.css";
-import logoDark from "../assets/logo-dark.png";
 import logoLight from "../assets/logo-light.png";
 import AddressMorph from "../components/landing/AddressMorph.astro";
 import DitherGlobe from "../components/landing/DitherGlobe.astro";
@@ -80,7 +79,7 @@ const menus = [
   <body>
     <header class="og-header">
       <a href="/" class="og-logo" aria-label="open-geocode home">
-        <picture><source srcset={logoDark.src} media="(prefers-color-scheme: dark)" /><img src={logoLight.src} width={logoLight.width} height={logoLight.height} alt="" /></picture>
+        <img src={logoLight.src} width={logoLight.width} height={logoLight.height} alt="" />
       </a>
       <nav class="og-nav" aria-label="Main">
         {menus.map((menu) => (

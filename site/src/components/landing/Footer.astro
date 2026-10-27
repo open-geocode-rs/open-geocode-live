@@ -1,6 +1,5 @@
 ---
 import { Icon } from "@astrojs/starlight/components";
-import logoDark from "../../assets/logo-dark.png";
 import logo from "../../assets/logo-light.png";
 import HalftoneField from "./HalftoneField.astro";
 
@@ -41,7 +40,7 @@ const columns = [
     <HalftoneField />
     <div class="og-footer-inner">
       <div class="og-footer-brand">
-        <picture><source srcset={logoDark.src} media="(prefers-color-scheme: dark)" /><img src={logo.src} width={logo.width} height={logo.height} alt="open-geocode" /></picture>
+        <img src={logo.src} width={logo.width} height={logo.height} alt="open-geocode" />
         <p>Self-hosted address geocoding in pure Rust, served from one file.</p>
         <a class="og-footer-icon" href={REPO} aria-label="open-geocode on GitHub"><Icon name="github" size="1.125rem" /></a>
       </div>

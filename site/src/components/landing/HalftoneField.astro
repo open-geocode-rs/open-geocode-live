@@ -13,7 +13,7 @@
   // Halftone, not a flat grid: dots grow toward the horizon and shrink, fade and thin
   // out going up, so only a faint scatter reaches the copy. A CSS pattern can only fade
   // opacity, not vary dot size or density, hence a canvas. Static, so it redraws only
-  // when the card changes size or the colour scheme flips.
+  // when the card changes size.
 
   // Stable per-dot noise, so the thinning is the same on every load and resize.
   const hash = (x: number, y: number) => {
@@ -48,7 +48,6 @@
         }
       };
       new ResizeObserver(draw).observe(this);
-      matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
     }
   }
 

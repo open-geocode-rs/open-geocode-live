@@ -32,29 +32,6 @@
   color-scheme: light;
 }
 
-/* The docs' dark: neutral charcoal, not navy. Surfaces take the docs header's raised
-   #1f1f1f over the #181818 page; the header keeps its solid hairline. Lines and fills
-   flip from black to white alpha; solid buttons invert. The terminal stays black. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --og-bg: #181818;
-    --og-fg: #ffffff;
-    --og-ink: 255 255 255;
-    --og-shade: 255 255 255;
-    --og-dots: rgb(255 255 255 / 0.08);
-    --og-pill-border: rgb(255 255 255 / 0.16);
-    --og-surface: #1f1f1f;
-    --og-header-rule: 1px solid rgb(255 255 255 / 0.08);
-    --og-solid: #f2f2f2;
-    --og-solid-hover: #d4d4d4;
-    --og-on-solid: #0c0c0c;
-    --og-green-ink: #6fcaa2;
-    --og-amber-ink: #e6a85a;
-
-    color-scheme: dark;
-  }
-}
-
 *,
 *::before,
 *::after {
@@ -79,8 +56,8 @@ body {
   min-height: 100vh;
 }
 
-/* Opaque, so the same green reads on the white page, the charcoal one and the black
-   terminal; a translucent tint washes out to pale green under white text on white. */
+/* Opaque, so the same green reads on the white page and the black terminal; a
+   translucent tint washes out to pale green under white text on white. */
 ::selection {
   background: #335d4d;
   color: #ffffff;
@@ -233,12 +210,6 @@ body {
 
 .og-logo {
   display: flex;
-}
-
-/* The logo's <picture> only picks the light or dark file; the img sizes it. */
-.og-logo picture,
-.og-footer-brand picture {
-  display: contents;
 }
 
 .og-logo img {
