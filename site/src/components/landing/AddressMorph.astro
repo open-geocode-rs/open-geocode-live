@@ -98,16 +98,24 @@ const { examples } = Astro.props;
       this.#examples = JSON.parse(this.dataset.examples ?? "[]");
       const cancel = () => this.dispatchEvent(new CustomEvent("og-cancel", { bubbles: true }));
       this.#input.addEventListener("keydown", (event) => {
+        // Enter also confirms the characters of an input method (Japanese, Chinese,
+        // Korean...); that Enter is part of typing, not a search.
+        if (event.isComposing || event.keyCode === 229) return;
         if (event.key === "Enter") this.geocode();
         if (event.key === "Escape") cancel();
       });
       // Coordinates on show are an answer, not a draft: the next keystroke starts a new
       // query instead of editing them.
-      this.#input.addEventListener("beforeinput", (event) => {
-        if (!("answer" in this.#input.dataset)) return;
+      const clearAnswer = () => {
+        if (!("answer" in this.#input.dataset)) return false;
         delete this.#input.dataset.answer;
         this.#input.value = "";
-        if (event.inputType.startsWith("delete")) event.preventDefault();
+        return true;
+      };
+      // An input method composes in place, so clear before it starts, not mid-word.
+      this.#input.addEventListener("compositionstart", clearAnswer);
+      this.#input.addEventListener("beforeinput", (event) => {
+        if (clearAnswer() && event.inputType.startsWith("delete")) event.preventDefault();
       });
       // Clicking away without having typed anything returns to the examples.
       this.#input.addEventListener("blur", () => {
@@ -140,9 +148,11 @@ const { examples } = Astro.props;
         return;
       }
       if (this.#searching) return;
+      // Read-only from the search until the answer lands, so keys pressed meanwhile
+      // can't fight the morph over the text.
       this.#searching = true;
+      this.#input.readOnly = true;
       let hit = await search(query);
-      this.#searching = false;
       if (hit === undefined) {
         const q = query.toLowerCase();
         const example = this.#examples.find(([address]) => {
@@ -152,11 +162,14 @@ const { examples } = Astro.props;
         if (example) hit = { label: example[0], coordinates: example[1] };
       }
       this.dispatchEvent(new CustomEvent("og-result", { bubbles: true, detail: hit }));
-      if (!hit) return;
-      const set = (text: string) => (this.#input.value = text);
-      if (still) set(hit.coordinates);
-      else await morph(set, this.#input.value, hit.coordinates);
-      this.#input.dataset.answer = "";
+      if (hit) {
+        const set = (text: string) => (this.#input.value = text);
+        if (still) set(hit.coordinates);
+        else await morph(set, this.#input.value, hit.coordinates);
+        this.#input.dataset.answer = "";
+      }
+      this.#input.readOnly = false;
+      this.#searching = false;
     }
 
     async #cycle() {
