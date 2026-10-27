@@ -1,6 +1,6 @@
 ---
-import { Icon } from "@astrojs/starlight/components";
 import logo from "../../assets/logo-light.png";
+import GitHubMark from "./GitHubMark.astro";
 import HalftoneField from "./HalftoneField.astro";
 
 const REPO = "https://github.com/open-geocode-rs/open-geocode";
@@ -42,7 +42,7 @@ const columns = [
       <div class="og-footer-brand">
         <img src={logo.src} width={logo.width} height={logo.height} alt="open-geocode" />
         <p>Self-hosted address geocoding in pure Rust, served from one file.</p>
-        <a class="og-footer-icon" href={REPO} aria-label="open-geocode on GitHub"><Icon name="github" size="1.125rem" /></a>
+        <a class="og-footer-icon" href={REPO} aria-label="open-geocode on GitHub"><GitHubMark size={18} /></a>
       </div>
       {columns.map((c) => (
         <nav class="og-footer-col" aria-label={c.title}>

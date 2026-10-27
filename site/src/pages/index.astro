@@ -1,5 +1,4 @@
 ---
-import { Icon } from "@astrojs/starlight/components";
 import { Font } from "astro:assets";
 import "../styles/type.css";
 import "../styles/landing.css";
@@ -10,6 +9,7 @@ import HalftoneField from "../components/landing/HalftoneField.astro";
 import Benchmarks from "../components/landing/Benchmarks.astro";
 import Compare from "../components/landing/Compare.astro";
 import Footer from "../components/landing/Footer.astro";
+import GitHubMark from "../components/landing/GitHubMark.astro";
 import Walkthrough from "../components/landing/Walkthrough.astro";
 
 // Public landmarks only, so no example points at someone's home. Coordinates are
@@ -102,7 +102,7 @@ const menus = [
       </nav>
       <div class="og-actions">
         <a class="og-pill" href="https://github.com/open-geocode-rs/open-geocode">
-          <Icon name="github" size="1rem" />
+          <GitHubMark />
           GitHub
         </a>
       </div>
