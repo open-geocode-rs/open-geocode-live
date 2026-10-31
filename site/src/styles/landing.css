@@ -438,8 +438,10 @@ body {
   caret-color: transparent;
 }
 
+/* Pre: the script breaks the lines itself (see AddressMorph's #lines). */
 .og-morph-text {
   cursor: text;
+  white-space: pre;
 }
 
 /* Input and key centred together on the headline's line. */

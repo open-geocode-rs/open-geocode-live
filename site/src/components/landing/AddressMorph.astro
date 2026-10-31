@@ -43,24 +43,32 @@ const { examples, placeholder } = Astro.props;
   const SETTLE = 380;
   const GLYPHS = "0123456789.,-/abcdefghijklmnopqrstuvwxyz";
 
-  // Each character scrambles, then settles on its target left to right.
-  function morph(set: (text: string) => void, from: string, to: string): Promise<void> {
-    const length = Math.max(from.length, to.length);
+  // Each character scrambles, then settles on its target left to right, line by line.
+  // Lines are fixed before it starts: left to wrap itself, the scrambled text would
+  // re-break on every frame wherever the random glyphs land.
+  function morph(set: (text: string) => void, from: string[], to: string[]): Promise<void> {
+    const rows = Array.from({ length: Math.max(from.length, to.length) }, (_, k) => [from[k] ?? "", to[k] ?? ""]);
+    const length = rows.reduce((sum, [f, t]) => sum + Math.max(f.length, t.length), 0);
     const start = performance.now();
     return new Promise((done) => {
       const step = (now: number) => {
         const t = now - start;
-        let out = "";
-        for (let i = 0; i < length; i++) {
-          const settleAt = i * STAGGER + SETTLE;
-          if (t >= settleAt) out += to[i] ?? "";
-          else if (t >= i * STAGGER) out += to[i] === " " ? " " : GLYPHS[(Math.random() * GLYPHS.length) | 0];
-          else out += from[i] ?? "";
-        }
-        set(out.trimEnd());
+        let offset = 0;
+        const lines = rows.map(([f, g]) => {
+          let out = "";
+          for (let i = 0; i < Math.max(f.length, g.length); i++) {
+            const at = (offset + i) * STAGGER;
+            if (t >= at + SETTLE) out += g[i] ?? "";
+            else if (t >= at) out += g[i] === " " ? " " : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+            else out += f[i] ?? "";
+          }
+          offset += Math.max(f.length, g.length);
+          return out.trimEnd();
+        });
+        set(lines.join("\n").trimEnd());
         if (t < (length - 1) * STAGGER + SETTLE) requestAnimationFrame(step);
         else {
-          set(to);
+          set(to.join("\n"));
           done();
         }
       };
@@ -104,6 +112,8 @@ const { examples, placeholder } = Astro.props;
   // an input in the same type, and Enter morphs what was typed into its coordinates.
   class AddressMorph extends HTMLElement {
     #editing = false;
+    #morphing = false;
+    #measure?: CanvasRenderingContext2D;
     #searching = false;
     #resume?: () => void;
     #examples: string[][] = [];
@@ -214,7 +224,7 @@ const { examples, placeholder } = Astro.props;
           this.#fit();
         };
         if (still) set(hit.coordinates);
-        else await morph(set, this.#input.value, hit.coordinates);
+        else await morph(set, [this.#input.value], [hit.coordinates]);
         this.#input.dataset.answer = "";
         this.#input.scrollLeft = 0;
       }
@@ -250,15 +260,57 @@ const { examples, placeholder } = Astro.props;
       this.#field.dataset.value = this.#input.value || this.#input.placeholder;
     }
 
+    // Where the text would wrap at the headline's width: one line if it fits, else two
+    // split where the longer is shortest, as text-wrap: balance would, else as many as
+    // it takes.
+    #lines(text: string): string[] {
+      const style = getComputedStyle(this.#text);
+      const ctx = (this.#measure ??= document.createElement("canvas").getContext("2d")!);
+      ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const spacing = parseFloat(style.letterSpacing) || 0;
+      const width = (line: string) => ctx.measureText(line).width + spacing * line.length;
+      const room = this.clientWidth;
+      if (width(text) <= room) return [text];
+      const words = text.split(" ");
+      let best: string[] | undefined;
+      let widest = Infinity;
+      for (let k = 1; k < words.length; k++) {
+        const pair = [words.slice(0, k).join(" "), words.slice(k).join(" ")];
+        const w = Math.max(...pair.map(width));
+        if (w <= room && w < widest) [best, widest] = [pair, w];
+      }
+      if (best) return best;
+      const out: string[] = [];
+      let line = "";
+      for (const word of words) {
+        const longer = line ? `${line} ${word}` : word;
+        if (line && width(longer) > room) {
+          out.push(line);
+          line = word;
+        } else line = longer;
+      }
+      return [...out, line];
+    }
+
     async #cycle() {
       const steps = this.#examples.flat();
+      await document.fonts.ready;
+      const set = (text: string) => (this.#text.textContent = text);
+      let shown = this.#lines(steps[0] ?? "");
+      set(shown.join("\n"));
+      // A new width re-breaks the text on show; one mid-morph is caught by the next step.
+      new ResizeObserver(() => {
+        if (!this.#morphing) set((shown = this.#lines(shown.join(" "))).join("\n"));
+      }).observe(this);
       for (let i = 0; this.isConnected && steps.length > 1; i = (i + 1) % steps.length) {
         await wait(HOLD);
         if (this.#editing) await new Promise<void>((r) => (this.#resume = r));
-        const next = steps[(i + 1) % steps.length];
-        const set = (text: string) => (this.#text.textContent = text);
-        if (still) set(next);
-        else await morph(set, steps[i], next);
+        const next = this.#lines(steps[(i + 1) % steps.length]);
+        this.#morphing = true;
+        if (still) set(next.join("\n"));
+        else await morph(set, shown, next);
+        this.#morphing = false;
+        shown = next;
       }
     }
   }
