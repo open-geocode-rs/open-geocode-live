@@ -262,6 +262,47 @@ body {
   width: 100%;
 }
 
+/* The searched place's streets, over the halftone and under everything else. Faded
+   out toward the card's edges, so it reads as a backdrop. */
+.og-street-map {
+  font-family: var(--type-family-code);
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 0.6s ease-out;
+  z-index: -1;
+}
+
+.og-street-map[data-shown] {
+  opacity: 1;
+}
+
+.og-street-map canvas {
+  display: block;
+  height: 100%;
+  mask-image: radial-gradient(
+    ellipse 60% 65% at var(--og-map-x, 50%) var(--og-map-y, 45%),
+    #000000 25%,
+    transparent 100%
+  );
+  width: 100%;
+}
+
+
+/* Required by the tiles' and the map data's licences whenever the map shows. */
+.og-street-map-credit {
+  color: rgb(var(--og-ink) / 0.45);
+  font-size: 0.6875rem;
+  left: 1rem;
+  margin: 0;
+  pointer-events: auto;
+  position: absolute;
+  right: 1rem;
+  text-align: right;
+  top: 0.75rem;
+}
+
 /* Copy centred in the space above the horizon, so the gaps above and below it stay
    equal. Inside: 48px to the subtitle, 56px to the button. */
 .og-copy {

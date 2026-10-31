@@ -1,0 +1,260 @@
+<og-street-map class="og-street-map">
+  <canvas aria-hidden="true"></canvas>
+  <p class="og-street-map-credit">© OpenFreeMap © OpenMapTiles © OpenStreetMap contributors</p>
+</og-street-map>
+
+<script>
+  import { VectorTile } from "@mapbox/vector-tile";
+  import { PbfReader } from "pbf";
+
+  const TILEJSON = "https://tiles.openfreemap.org/planet";
+  const Z = 14; // the tiles' most detailed level: streets, buildings, house numbers
+  const TILE = 3200; // CSS px per tile: about half a metre a pixel, a few blocks across
+
+  // Bottom to top. All in the page's ink, navy and green at low alpha: a backdrop, not
+  // a map to read.
+  type Paint = { layer: string; classes?: string[]; fill?: string; stroke?: string; width?: number; dash?: number[] };
+  const PAINT: Paint[] = [
+    { layer: "water", fill: "rgb(14 46 84 / 0.08)" },
+    { layer: "park", fill: "rgb(73 167 130 / 0.1)" },
+    { layer: "landcover", classes: ["grass", "wood", "farmland"], fill: "rgb(73 167 130 / 0.08)" },
+    { layer: "waterway", stroke: "rgb(14 46 84 / 0.18)", width: 1 },
+    { layer: "building", fill: "rgb(22 22 22 / 0.045)", stroke: "rgb(22 22 22 / 0.09)", width: 0.5 },
+    { layer: "transportation", classes: ["path", "track"], stroke: "rgb(22 22 22 / 0.16)", width: 1, dash: [1, 3] },
+    { layer: "transportation", classes: ["rail", "transit"], stroke: "rgb(22 22 22 / 0.2)", width: 1, dash: [6, 4] },
+    { layer: "transportation", classes: ["minor", "service"], stroke: "rgb(22 22 22 / 0.16)", width: 1.25 },
+    { layer: "transportation", classes: ["secondary", "tertiary"], stroke: "rgb(22 22 22 / 0.22)", width: 2 },
+    { layer: "transportation", classes: ["motorway", "trunk", "primary"], stroke: "rgb(22 22 22 / 0.28)", width: 2.75 },
+  ];
+
+  // A slow tile server never holds a request open: past this the map is skipped.
+  const TIMEOUT = 8000;
+
+  // The tile URL carries a data version that changes on each release, so it's read
+  // from the TileJSON rather than written down. A failed read is retried next time.
+  let template: Promise<string> | undefined;
+  const tileTemplate = () =>
+    (template ??= fetch(TILEJSON, { signal: AbortSignal.timeout(TIMEOUT) })
+      .then((response) => response.json())
+      .then((json: { tiles: string[] }) => json.tiles[0])
+      .catch((error) => {
+        template = undefined;
+        throw error;
+      }));
+
+  // Streets are named along their longest straight stretch, so the name can sit on
+  // it; neighbourhoods at their point. Lower rank is placed first and wins overlaps.
+  type Label = { name: string; rank: number; x: number; y: number; angle: number; room: number };
+  type Tile = { x: number; y: number; paths: Path2D[]; labels: Label[] };
+
+  const STREET_RANK: Record<string, number> = { motorway: 1, trunk: 1, primary: 1, secondary: 2, tertiary: 2, minor: 3 };
+  const PLACES = ["suburb", "quarter", "neighbourhood"];
+
+  // Paths are built once per tile, in CSS px from its corner; a redraw only places them.
+  function paths(tile: VectorTile): Path2D[] {
+    return PAINT.map((paint) => {
+      const path = new Path2D();
+      const layer = tile.layers[paint.layer];
+      if (!layer) return path;
+      const scale = TILE / layer.extent;
+      for (let i = 0; i < layer.length; i++) {
+        const feature = layer.feature(i);
+        if (paint.classes && !paint.classes.includes(String(feature.properties.class))) continue;
+        if (feature.type !== (paint.fill ? 3 : 2)) continue;
+        for (const ring of feature.loadGeometry()) {
+          ring.forEach((p, k) => (k ? path.lineTo(p.x * scale, p.y * scale) : path.moveTo(p.x * scale, p.y * scale)));
+          if (feature.type === 3) path.closePath();
+        }
+      }
+      return path;
+    });
+  }
+
+  function labels(tile: VectorTile): Label[] {
+    const out: Label[] = [];
+    const places = tile.layers.place;
+    for (let i = 0; places && i < places.length; i++) {
+      const feature = places.feature(i);
+      const name = feature.properties.name;
+      if (!PLACES.includes(String(feature.properties.class)) || typeof name !== "string") continue;
+      const scale = TILE / places.extent;
+      const [p] = feature.loadGeometry()[0];
+      out.push({ name: name.toUpperCase(), rank: 0, x: p.x * scale, y: p.y * scale, angle: 0, room: Infinity });
+    }
+    const streets = tile.layers.transportation_name;
+    for (let i = 0; streets && i < streets.length; i++) {
+      const feature = streets.feature(i);
+      const name = feature.properties.name;
+      const rank = STREET_RANK[String(feature.properties.class)];
+      if (!rank || typeof name !== "string" || feature.type !== 2) continue;
+      const scale = TILE / streets.extent;
+      let best = { room: 0, x: 0, y: 0, angle: 0 };
+      for (const line of feature.loadGeometry()) {
+        for (let k = 1; k < line.length; k++) {
+          const dx = (line[k].x - line[k - 1].x) * scale;
+          const dy = (line[k].y - line[k - 1].y) * scale;
+          const room = Math.hypot(dx, dy);
+          if (room <= best.room) continue;
+          let angle = Math.atan2(dy, dx);
+          // Kept upright: never read upside down.
+          if (angle > Math.PI / 2) angle -= Math.PI;
+          if (angle < -Math.PI / 2) angle += Math.PI;
+          best = { room, angle, x: ((line[k].x + line[k - 1].x) / 2) * scale, y: ((line[k].y + line[k - 1].y) / 2) * scale };
+        }
+      }
+      if (best.room) out.push({ name, rank, ...best });
+    }
+    return out;
+  }
+
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+  // The streets around a found place, faint behind the hero.
+  class StreetMap extends HTMLElement {
+    #canvas!: HTMLCanvasElement;
+    #tiles: Tile[] = [];
+    #centre: [number, number] = [0, 0];
+    #request = 0;
+
+    connectedCallback() {
+      this.#canvas = this.querySelector("canvas")!;
+      new ResizeObserver(() => this.#draw()).observe(this);
+    }
+
+    // The place sits just above the globe's horizon, in the open strip under the copy,
+    // not behind the headline.
+    #anchor(): [number, number] {
+      const box = this.getBoundingClientRect();
+      const horizon = this.closest(".og-card")?.querySelector(".og-horizon")?.getBoundingClientRect();
+      return [box.width / 2, horizon ? horizon.top - box.top - 8 : box.height / 2];
+    }
+
+    async show(lat: number, lon: number) {
+      const request = ++this.#request;
+      const fading = this.hasAttribute("data-shown");
+      this.removeAttribute("data-shown");
+      const n = 2 ** Z;
+      const wx = ((lon + 180) / 360) * n;
+      const wy = ((1 - Math.asinh(Math.tan((lat * Math.PI) / 180)) / Math.PI) / 2) * n;
+      // Only the tiles the card shows with the place at its anchor: one to four.
+      const { width, height } = this.getBoundingClientRect();
+      const [ax, ay] = this.#anchor();
+      const xs = [Math.floor(wx - ax / TILE), Math.floor(wx + (width - ax) / TILE)];
+      const ys = [Math.floor(wy - ay / TILE), Math.floor(wy + (height - ay) / TILE)];
+      const coords: [number, number][] = [];
+      for (let x = xs[0]; x <= xs[1]; x++) for (let y = ys[0]; y <= ys[1]; y++) coords.push([x, y]);
+      try {
+        const url = await tileTemplate();
+        const [tiles] = await Promise.all([
+          Promise.all(
+            coords.map(async ([x, y]) => {
+              const tileUrl = url.replace("{z}", `${Z}`).replace("{x}", `${x}`).replace("{y}", `${y}`);
+              const response = await fetch(tileUrl, { signal: AbortSignal.timeout(TIMEOUT) });
+              if (!response.ok) throw new Error(`tile ${Z}/${x}/${y}: ${response.status}`);
+              const tile = new VectorTile(new PbfReader(new Uint8Array(await response.arrayBuffer())));
+              return { x, y, paths: paths(tile), labels: labels(tile) };
+            }),
+          ),
+          // Lets the last map fade out before the next is drawn over it.
+          fading ? wait(300) : null,
+        ]);
+        await document.fonts.ready;
+        if (request !== this.#request) return;
+        this.#tiles = tiles;
+        this.#centre = [wx, wy];
+        this.#draw();
+        this.setAttribute("data-shown", "");
+      } catch {
+        if (request === this.#request) this.#tiles = [];
+      }
+    }
+
+    hide() {
+      this.#request++;
+      this.removeAttribute("data-shown");
+    }
+
+    #draw() {
+      const { width, height } = this.getBoundingClientRect();
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      this.#canvas.width = Math.round(width * dpr);
+      this.#canvas.height = Math.round(height * dpr);
+      const ctx = this.#canvas.getContext("2d")!;
+      ctx.scale(dpr, dpr);
+      const [ax, ay] = this.#anchor();
+      const ox = ax - this.#centre[0] * TILE;
+      const oy = ay - this.#centre[1] * TILE;
+      this.style.setProperty("--og-map-x", `${ax}px`);
+      this.style.setProperty("--og-map-y", `${ay}px`);
+      for (const { x, y, paths } of this.#tiles) {
+        ctx.save();
+        ctx.translate(ox + x * TILE, oy + y * TILE);
+        // Tiles carry a margin of their neighbours' geometry; unclipped, translucent
+        // fills would double up into dark seams.
+        ctx.beginPath();
+        ctx.rect(0, 0, TILE, TILE);
+        ctx.clip();
+        PAINT.forEach((paint, i) => {
+          if (paint.fill) {
+            ctx.fillStyle = paint.fill;
+            ctx.fill(paths[i]);
+          }
+          if (paint.stroke) {
+            ctx.strokeStyle = paint.stroke;
+            ctx.lineWidth = paint.width ?? 1;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            ctx.setLineDash(paint.dash ?? []);
+            ctx.stroke(paths[i]);
+          }
+        });
+        ctx.restore();
+      }
+      this.#label(ctx, ox, oy, width, height);
+    }
+
+    // Over every tile at once, since a tile's margin repeats its neighbours' names:
+    // a name already placed nearby is skipped, as is one that would overlap another.
+    #label(ctx: CanvasRenderingContext2D, ox: number, oy: number, width: number, height: number) {
+      const family = getComputedStyle(this).fontFamily;
+      const all = this.#tiles
+        .flatMap(({ x, y, labels }) =>
+          labels.map((label) => ({ ...label, x: ox + x * TILE + label.x, y: oy + y * TILE + label.y })),
+        )
+        .filter((label) => label.x > 0 && label.y > 0 && label.x < width && label.y < height)
+        .sort((a, b) => a.rank - b.rank);
+      const taken: { x0: number; y0: number; x1: number; y1: number }[] = [];
+      const placed: { name: string; x: number; y: number }[] = [];
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.lineJoin = "round";
+      ctx.setLineDash([]);
+      for (const label of all) {
+        const place = label.rank === 0;
+        ctx.font = `${place ? 500 : 400} ${place ? 11 : label.rank === 1 ? 12 : 11}px ${family}`;
+        ctx.letterSpacing = place ? "0.18em" : "0px";
+        const w = ctx.measureText(label.name).width;
+        if (w + 24 > label.room) continue;
+        if (placed.some((p) => p.name === label.name && Math.hypot(p.x - label.x, p.y - label.y) < 480)) continue;
+        // The rotated text's bounding box, padded.
+        const hw = (Math.abs(Math.cos(label.angle)) * w + Math.abs(Math.sin(label.angle)) * 14) / 2 + 6;
+        const hh = (Math.abs(Math.sin(label.angle)) * w + Math.abs(Math.cos(label.angle)) * 14) / 2 + 6;
+        const box = { x0: label.x - hw, y0: label.y - hh, x1: label.x + hw, y1: label.y + hh };
+        if (taken.some((t) => box.x0 < t.x1 && box.x1 > t.x0 && box.y0 < t.y1 && box.y1 > t.y0)) continue;
+        taken.push(box);
+        placed.push(label);
+        ctx.save();
+        ctx.translate(label.x, label.y);
+        ctx.rotate(label.angle);
+        ctx.strokeStyle = "rgb(255 255 255 / 0.85)";
+        ctx.lineWidth = 3;
+        ctx.strokeText(label.name, 0, 0);
+        ctx.fillStyle = place ? "rgb(22 22 22 / 0.32)" : "rgb(22 22 22 / 0.42)";
+        ctx.fillText(label.name, 0, 0);
+        ctx.restore();
+      }
+    }
+  }
+
+  customElements.define("og-street-map", StreetMap);
+</script>
