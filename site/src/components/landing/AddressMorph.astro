@@ -1,22 +1,40 @@
 ---
 interface Props {
   examples: [address: string, coordinates: string][];
+  placeholder: string;
 }
 
-const { examples } = Astro.props;
+const { examples, placeholder } = Astro.props;
 ---
 
 <og-address-morph class="og-morph" data-examples={JSON.stringify(examples)}>
   <span class="sr-only">{examples.map(([address, coordinates]) => `${address} geocodes to ${coordinates}.`).join(" ")}</span>
   <span class="og-morph-text" aria-hidden="true">{examples[0][0]}</span>
-  <input
-    class="og-morph-input"
-    type="text"
-    aria-label="Type an address or place, then press Enter"
-    autocomplete="off"
-    spellcheck="false"
-    hidden
-  />
+  <span class="og-morph-line" hidden>
+    <span class="og-morph-field" data-value={placeholder}>
+      <input
+        class="og-morph-input"
+        type="text"
+        size="1"
+        aria-label="Type an address or place, then press Enter"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder={placeholder}
+      />
+    </span>
+    <span class="og-keys">
+      <button type="button" class="og-key og-enter" disabled>
+        Search
+        <span class="og-key-disc" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="m9 10-5 5 5 5M20 4v7a4 4 0 0 1-4 4H4" /></svg>
+        </span>
+      </button>
+      <button type="button" class="og-key og-clear" hidden>
+        Clear
+        <span class="og-key-disc"><kbd>esc</kbd></span>
+      </button>
+    </span>
+  </span>
 </og-address-morph>
 
 <script>
@@ -90,19 +108,36 @@ const { examples } = Astro.props;
     #resume?: () => void;
     #examples: string[][] = [];
     #text!: HTMLElement;
+    #line!: HTMLElement;
+    #field!: HTMLElement;
     #input!: HTMLInputElement;
+    #enter!: HTMLButtonElement;
+    #clear!: HTMLButtonElement;
 
     connectedCallback() {
       this.#text = this.querySelector<HTMLElement>(".og-morph-text")!;
+      this.#line = this.querySelector<HTMLElement>(".og-morph-line")!;
+      this.#field = this.querySelector<HTMLElement>(".og-morph-field")!;
       this.#input = this.querySelector<HTMLInputElement>(".og-morph-input")!;
+      this.#enter = this.querySelector<HTMLButtonElement>(".og-enter")!;
+      this.#clear = this.querySelector<HTMLButtonElement>(".og-clear")!;
       this.#examples = JSON.parse(this.dataset.examples ?? "[]");
       const cancel = () => this.dispatchEvent(new CustomEvent("og-cancel", { bubbles: true }));
+      this.#text.addEventListener("click", () => this.dispatchEvent(new CustomEvent("og-edit", { bubbles: true })));
+      // Keeps focus in the input, so its blur can't end editing before the click lands.
+      for (const key of [this.#enter, this.#clear]) key.addEventListener("mousedown", (event) => event.preventDefault());
+      this.#enter.addEventListener("click", () => this.geocode());
+      this.#clear.addEventListener("click", () => this.clear());
       this.#input.addEventListener("keydown", (event) => {
         // Enter also confirms the characters of an input method (Japanese, Chinese,
         // Korean...); that Enter is part of typing, not a search.
         if (event.isComposing || event.keyCode === 229) return;
         if (event.key === "Enter") this.geocode();
-        if (event.key === "Escape") cancel();
+        // Esc presses Clear while it shows; with nothing to clear it leaves search.
+        if (event.key === "Escape" && !this.#searching) {
+          if (this.#clear.hidden) cancel();
+          else this.clear();
+        }
       });
       // Coordinates on show are an answer, not a draft: the next keystroke starts a new
       // query instead of editing them.
@@ -110,12 +145,19 @@ const { examples } = Astro.props;
         if (!("answer" in this.#input.dataset)) return false;
         delete this.#input.dataset.answer;
         this.#input.value = "";
+        this.#fit();
+        this.#setReady(false);
         return true;
       };
       // An input method composes in place, so clear before it starts, not mid-word.
       this.#input.addEventListener("compositionstart", clearAnswer);
       this.#input.addEventListener("beforeinput", (event) => {
         if (clearAnswer() && event.inputType.startsWith("delete")) event.preventDefault();
+      });
+      this.#input.addEventListener("input", () => {
+        this.#fit();
+        this.#setReady(!!this.#input.value.trim());
+        this.#showClear(false);
       });
       // Clicking away without having typed anything returns to the examples.
       this.#input.addEventListener("blur", () => {
@@ -128,15 +170,18 @@ const { examples } = Astro.props;
     startEditing() {
       this.#editing = true;
       this.#text.hidden = true;
-      this.#input.hidden = false;
+      this.#line.hidden = false;
       this.#input.value = "";
+      this.#fit();
       delete this.#input.dataset.answer;
+      this.#setReady(false);
+      this.#showClear(false);
       this.#input.focus();
     }
 
     stopEditing() {
       this.#editing = false;
-      this.#input.hidden = true;
+      this.#line.hidden = true;
       this.#text.hidden = false;
       this.#resume?.();
     }
@@ -148,6 +193,7 @@ const { examples } = Astro.props;
         return;
       }
       if (this.#searching) return;
+      this.#setReady(false);
       // Read-only from the search until the answer lands, so keys pressed meanwhile
       // can't fight the morph over the text.
       this.#searching = true;
@@ -163,13 +209,45 @@ const { examples } = Astro.props;
       }
       this.dispatchEvent(new CustomEvent("og-result", { bubbles: true, detail: hit }));
       if (hit) {
-        const set = (text: string) => (this.#input.value = text);
+        const set = (text: string) => {
+          this.#input.value = text;
+          this.#fit();
+        };
         if (still) set(hit.coordinates);
         else await morph(set, this.#input.value, hit.coordinates);
         this.#input.dataset.answer = "";
+        this.#input.scrollLeft = 0;
       }
       this.#input.readOnly = false;
       this.#searching = false;
+      this.#showClear(true);
+    }
+
+    clear() {
+      if (this.#searching) return;
+      this.#input.value = "";
+      delete this.#input.dataset.answer;
+      this.#fit();
+      this.#setReady(false);
+      this.#showClear(false);
+      this.dispatchEvent(new CustomEvent("og-clear", { bubbles: true }));
+      this.#input.focus();
+    }
+
+    #setReady(ready: boolean) {
+      this.#enter.disabled = !ready;
+    }
+
+    // Search and Clear take turns in one spot: Clear once a search lands, Search again
+    // on the next keystroke.
+    #showClear(show: boolean) {
+      this.#clear.hidden = !show;
+      this.#enter.hidden = show;
+    }
+
+    // The field's hidden twin of the text sizes it, so the key follows the text.
+    #fit() {
+      this.#field.dataset.value = this.#input.value || this.#input.placeholder;
     }
 
     async #cycle() {
