@@ -7,8 +7,8 @@ import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 const site = process.env.SITE_URL ?? "https://example.com";
 
 const description =
-  "Self-hosted address geocoding in pure Rust: forward, autocomplete, reverse and batch, " +
-  "served from one memory-mapped file built from OpenStreetMap and OpenAddresses.";
+  "OpenGeocode is free, open-source, self-hosted address geocoding in pure Rust: forward, autocomplete, reverse and " +
+  "batch, served from one memory-mapped file built from OpenStreetMap and OpenAddresses.";
 
 // Dev only: OG_API is a runtime to send /api/search to, e.g. an SSH tunnel to the VM.
 const api = process.env.OG_API;
@@ -44,16 +44,23 @@ export default defineConfig({
   ],
   integrations: [
     starlight({
-      title: "open-geocode",
+      title: "OpenGeocode",
       description,
       logo: {
         light: "./src/assets/logo-light.png",
         dark: "./src/assets/logo-dark.png",
-        alt: "open-geocode",
+        alt: "OpenGeocode",
         replacesTitle: true,
       },
       favicon: "/favicon.png",
-      head: [{ tag: "link", attrs: { rel: "apple-touch-icon", href: "/apple-touch-icon.png" } }],
+      head: [
+        { tag: "link", attrs: { rel: "apple-touch-icon", href: "/apple-touch-icon.png" } },
+        // Starlight emits twitter:card summary_large_image but no image, so previews came up blank.
+        { tag: "meta", attrs: { property: "og:image", content: `${site}/og.png` } },
+        { tag: "meta", attrs: { property: "og:image:width", content: "1200" } },
+        { tag: "meta", attrs: { property: "og:image:height", content: "630" } },
+        { tag: "meta", attrs: { property: "og:image:alt", content: "OpenGeocode logo: fast, lightweight, self-hosted geocoding engine in pure Rust." } },
+      ],
       social: [
         { icon: "github", label: "GitHub", href: "https://github.com/open-geocode-rs/open-geocode" },
       ],
@@ -78,9 +85,10 @@ export default defineConfig({
           },
         ]),
         starlightLlmsTxt({
-          projectName: "open-geocode",
+          projectName: "OpenGeocode",
           description,
           details: [
+            "- Also known as open-geocode (the crate, repository and batch binary) and og (the CLI).",
             "- Two binaries: `og` builds a Pack for a region and serves it; `open-geocode` adds batch CSV geocoding, benchmarks and lower-level Pack tools.",
             "- A Pack is one file. The HTTP API is GET-only and answers GeoJSON FeatureCollections; errors are RFC 9457 problem documents.",
             "- The machine-readable contract is the OpenAPI 3.1 document at /openapi.json.",

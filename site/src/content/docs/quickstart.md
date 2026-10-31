@@ -1,6 +1,6 @@
 ---
 title: Quickstart
-description: Install open-geocode, build a Pack for Ontario in about a minute, serve it, and send your first forward and reverse geocoding queries.
+description: Install OpenGeocode, build a Pack for Ontario in about a minute, serve it, and send your first forward and reverse geocoding queries.
 ---
 
 Build a Pack for Ontario, Canada, serve it, and send it your first forward and reverse queries.

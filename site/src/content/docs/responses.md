@@ -1,6 +1,6 @@
 ---
 title: Responses
-description: Every open-geocode answer is a GeoJSON FeatureCollection. This page explains the feature properties, layers, accuracy tiers, score and confidence, and the RFC 9457 error format.
+description: Every OpenGeocode answer is a GeoJSON FeatureCollection. This page explains the feature properties, layers, accuracy tiers, score and confidence, and the RFC 9457 error format.
 ---
 
 Every answer from og is one GeoJSON `FeatureCollection`. Forward and reverse answers have the same shape.

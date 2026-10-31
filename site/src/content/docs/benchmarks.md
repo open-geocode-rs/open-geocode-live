@@ -1,6 +1,6 @@
 ---
 title: Benchmarks
-description: open-geocode accuracy on the MESSY STREETS benchmark against 12 geocoders including Google Maps, and speed against Pelias and Nominatim on the same Ontario data and hardware.
+description: OpenGeocode accuracy on the MESSY STREETS benchmark against 12 geocoders including Google Maps, and speed against Pelias and Nominatim on the same Ontario data and hardware.
 ---
 
 ## Accuracy: MESSY STREETS
@@ -15,7 +15,7 @@ Ranked by CRR, as the paper ranks them:
 | --- | ---: | ---: | ---: | ---: |
 | Google Maps v3 | 100.0±0.0 | 100.0±0.0 | 98.6±0.7 | 88.3±2.0 |
 | MapQuest v1 | 100.0±0.0 | 98.5±0.5 | 97.1±0.5 | 84.0±1.5 |
-| **open-geocode** † \* | **100.0** | **99.1** | **93.9** | **78.0** |
+| **OpenGeocode** † \* | **100.0** | **99.1** | **93.9** | **78.0** |
 | ArcGIS | 99.8±0.3 | 99.8±0.3 | 97.9±1.3 | 85.3±2.8 |
 | Geoapify v1 | 99.7±0.4 | 99.2±0.5 | 96.3±1.2 | 79.1±3.7 |
 | Here v7 | 99.1±0.6 | 99.0±0.5 | 97.6±0.5 | 85.1±2.0 |
@@ -53,7 +53,7 @@ Each ran alone in Docker with the same cap of 4 CPUs and 10 GB, queried over loo
 - **Service time** is measured closed-loop with a single client, so there is no queue and overload can't inflate it.
 - **Throughput** is measured open-loop: the highest steady arrival rate that keeps p99 under 100 ms.
 
-| | open-geocode | Pelias | Nominatim |
+| | OpenGeocode | Pelias | Nominatim |
 | --- | ---: | ---: | ---: |
 | Deployable footprint | **0.30 GiB** | 5.88 GiB | 5.92 GiB |
 | RAM while serving | **~1.2 GiB** | 4.60 GiB | 2.75 GiB |

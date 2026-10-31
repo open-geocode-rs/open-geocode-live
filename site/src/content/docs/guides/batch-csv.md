@@ -1,6 +1,6 @@
 ---
 title: Batch geocode a CSV
-description: Geocode every row of a CSV file offline with open-geocode. Choose address columns and fallbacks, check answers against city, region and postcode columns, and read the audit file.
+description: Geocode every row of a CSV file offline with OpenGeocode. Choose address columns and fallbacks, check answers against city, region and postcode columns, and read the audit file.
 ---
 
 `open-geocode geocode batch` reads a CSV, geocodes each row against a Pack, and writes the same rows back with latitude and longitude columns.

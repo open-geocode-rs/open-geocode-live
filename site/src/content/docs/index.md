@@ -1,9 +1,9 @@
 ---
-title: What is open-geocode?
-description: open-geocode (og) is a self-hosted address geocoder in pure Rust. It answers forward, autocomplete, reverse and batch queries from one file built from OpenStreetMap and OpenAddresses.
+title: What is OpenGeocode?
+description: OpenGeocode (open-geocode, or og) is a free, open-source, self-hosted address geocoder in pure Rust. It answers forward, autocomplete, reverse and batch queries from one file built from OpenStreetMap and OpenAddresses.
 ---
 
-open-geocode is a fast, self-hosted geocoder for addresses.
+OpenGeocode (open-geocode, or og for short) is a fast, free, open-source geocoder for addresses that you host yourself.
 It ships as a single binary called `og`, and it answers every query from a single file called a **Pack**.
 
 ```sh

@@ -1,6 +1,6 @@
 ---
 title: Build a Pack
-description: Build an open-geocode Pack from OpenStreetMap for one region or several, add OpenAddresses points, cap memory and disk use, and resume a stopped build.
+description: Build an OpenGeocode Pack from OpenStreetMap for one region or several, add OpenAddresses points, cap memory and disk use, and resume a stopped build.
 ---
 
 A Pack is the one file og answers from.

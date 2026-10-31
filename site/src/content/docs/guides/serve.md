@@ -1,6 +1,6 @@
 ---
 title: Serve the API
-description: Run the open-geocode HTTP API from a Pack, choose the bind address, check health and readiness, and deploy it on a VM or a scale-to-zero platform.
+description: Run the OpenGeocode HTTP API from a Pack, choose the bind address, check health and readiness, and deploy it on a VM or a scale-to-zero platform.
 ---
 
 Use `og serve` to serve a Pack's HTTP API.

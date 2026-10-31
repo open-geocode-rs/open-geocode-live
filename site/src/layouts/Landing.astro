@@ -1,0 +1,85 @@
+---
+import { Font } from "astro:assets";
+import "../styles/type.css";
+import "../styles/landing.css";
+import Footer from "../components/landing/Footer.astro";
+import SiteHeader from "../components/landing/SiteHeader.astro";
+
+interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+
+const home = new URL("/", Astro.site).href;
+// Pages build as directories, so the canonical form ends in a slash, as the sitemap's do.
+const canonical = new URL(Astro.url.pathname.replace(/\/?$/, "/"), Astro.site).href;
+// Link previews need an absolute image URL; a relative one leaves the card blank.
+const card = new URL("/og.png", Astro.site).href;
+const cardAlt = "OpenGeocode logo: fast, lightweight, self-hosted geocoding engine in pure Rust.";
+const repo = "https://github.com/open-geocode-rs/open-geocode";
+// Every spelling people use, so search engines and AI models treat them as one thing.
+const names = { name: "OpenGeocode", alternateName: ["Open Geocode", "open-geocode", "og"] };
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", "@id": `${home}#website`, url: home, ...names },
+    {
+      "@type": "Organization",
+      "@id": `${home}#org`,
+      ...names,
+      url: home,
+      logo: new URL("/apple-touch-icon.png", Astro.site).href,
+      sameAs: [repo],
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${home}#software`,
+      ...names,
+      description:
+        "Free, open-source, self-hosted geocoding in pure Rust: forward, autocomplete, reverse and batch, offline, from one file built from OpenStreetMap and OpenAddresses.",
+      url: home,
+      image: card,
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "Linux, macOS, Windows",
+      license: "https://opensource.org/license/mit",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      publisher: { "@id": `${home}#org` },
+      sameAs: [repo, "https://crates.io/crates/open-geocode"],
+    },
+  ],
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="OpenGeocode" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={card} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={cardAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <link rel="icon" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <Font cssVariable="--font-display" preload />
+    <Font cssVariable="--font-body" preload />
+  </head>
+  <body>
+    <SiteHeader />
+    <slot />
+    <Footer />
+  </body>
+</html>

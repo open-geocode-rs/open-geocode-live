@@ -1,15 +1,12 @@
 ---
-import { Font } from "astro:assets";
-import "../styles/type.css";
-import "../styles/landing.css";
-import logoLight from "../assets/logo-light.png";
+import Landing from "../layouts/Landing.astro";
 import AddressMorph from "../components/landing/AddressMorph.astro";
 import DitherGlobe from "../components/landing/DitherGlobe.astro";
 import HalftoneField from "../components/landing/HalftoneField.astro";
+import StreetMap from "../components/landing/StreetMap.astro";
 import Benchmarks from "../components/landing/Benchmarks.astro";
 import Compare from "../components/landing/Compare.astro";
-import Footer from "../components/landing/Footer.astro";
-import GitHubMark from "../components/landing/GitHubMark.astro";
+import Faq from "../components/landing/Faq.astro";
 import Walkthrough from "../components/landing/Walkthrough.astro";
 
 // Public landmarks only, so no example points at someone's home, each in its own
@@ -46,172 +43,119 @@ const features = [
   },
 ];
 
-const menus = [
-  {
-    label: "Solutions",
-    items: [
-      { label: "Forward geocoding", href: "/docs/api/operations/search/", icon: "M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0" },
-      { label: "Autocomplete", href: "/docs/api/operations/autocomplete/", icon: "M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0M21 21l-4.3-4.3" },
-      { label: "Reverse geocoding", href: "/docs/api/operations/reverse/", icon: "M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0M2 12h3M19 12h3M12 2v3M12 19v3" },
-      { label: "Batch geocoding", href: "/docs/guides/batch-csv/", icon: "M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 9h18M3 15h18M9 3v18" },
-    ],
-  },
-  {
-    label: "Resources",
-    items: [
-      { label: "Documentation", href: "/docs/", icon: "M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z" },
-      { label: "API reference", href: "/docs/api/", icon: "m16 18 6-6-6-6M8 6l-6 6 6 6" },
-      { label: "Benchmarks", href: "/docs/benchmarks/", icon: "M3 3v18h18M8 17v-4M13 17V9M18 17V5" },
-      { label: "GitHub", href: "https://github.com/open-geocode-rs/open-geocode", icon: "M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.3-.3-2.5-1-3.5.3-1.2.3-2.4 0-3.5 0 0-1 0-3 1.5a19 19 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.3 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.7-.2.6-.2 1.2-.1 1.8v4M9 18c-4.5 2-5-2-7-2" },
-    ],
-  },
-];
+const title = "OpenGeocode: free, open-source, self-hosted geocoding";
+const description =
+  "OpenGeocode is free, open-source geocoding you host yourself: forward, reverse, autocomplete and batch, offline, from one file built from OpenStreetMap and OpenAddresses.";
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>open-geocode</title>
-    <meta
-      name="description"
-      content="Self-hosted address geocoding in pure Rust, served from one file built from OpenStreetMap and OpenAddresses."
-    />
-    <link rel="icon" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <Font cssVariable="--font-display" preload />
-    <Font cssVariable="--font-body" preload />
-  </head>
-  <body>
-    <header class="og-header">
-      <a href="/" class="og-logo" aria-label="open-geocode home">
-        <img src={logoLight.src} width={logoLight.width} height={logoLight.height} alt="" />
-      </a>
-      <nav class="og-nav" aria-label="Main">
-        {menus.map((menu) => (
-          <details class="og-menu">
-            <summary>
-              {menu.label}
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></svg>
-            </summary>
-            <div class="og-menu-panel">
-              {menu.items.map((item) => (
-                <a href={item.href}>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d={item.icon} /></svg>
-                  {item.label}
-                </a>
-              ))}
-            </div>
-          </details>
-        ))}
-      </nav>
-      <div class="og-actions">
-        <a class="og-pill" href="https://github.com/open-geocode-rs/open-geocode">
-          <GitHubMark />
-          GitHub
-        </a>
+<Landing title={title} description={description}>
+  <main class="og-hero">
+    <section class="og-card">
+      <HalftoneField />
+      <StreetMap />
+      <h1 class="sr-only">OpenGeocode: free, open-source, self-hosted geocoding</h1>
+      <div class="og-copy" data-mode="examples">
+        <button type="button" class="og-try">
+          <span class="og-try-label">Try it for free</span>
+          <span class="og-try-arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </span>
+        </button>
+        <AddressMorph examples={examples} placeholder="100 Queen St W, Toronto" />
+        <p class="og-result" aria-live="polite" hidden></p>
+        <p class="og-sub">Fast, lightweight, self-hosted geocoding engine in pure Rust.</p>
+        <a class="og-cta" href="/docs/quickstart/">Get started</a>
       </div>
-    </header>
-    <main class="og-hero">
-      <section class="og-card">
-        <HalftoneField />
-        <h1 class="sr-only">open-geocode</h1>
-        <div class="og-copy" data-mode="examples">
-          <button type="button" class="og-try">
-            <span class="og-try-label">Try it for free</span>
-            <span class="og-try-arrow" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-            </span>
-          </button>
-          <AddressMorph examples={examples} />
-          <p class="og-result" aria-live="polite" hidden></p>
-          <p class="og-sub">Fast, lightweight, self-hosted geocoding engine in pure Rust.</p>
-          <a class="og-cta" href="/docs/quickstart/">Get started</a>
-        </div>
-        <div class="og-horizon">
-          <DitherGlobe />
-        </div>
-      </section>
-      <section class="og-features" aria-labelledby="og-features-title">
-        <div class="og-features-head">
-          <h2 id="og-features-title">630 million addresses in a single file.</h2>
-          <p>Forward, reverse and batch geocoding built from OpenStreetMap and OpenAddresses, served from your own hardware.</p>
-        </div>
-        <div class="og-features-box">
-          <span class="og-corner" aria-hidden="true"></span>
-          <span class="og-corner" aria-hidden="true"></span>
-          <span class="og-corner" aria-hidden="true"></span>
-          <span class="og-corner" aria-hidden="true"></span>
-          <ul class="og-features-grid">
-            {features.map((f) => (
-              <li>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d={f.icon} /></svg>
-                <h3>{f.title}</h3>
-                <p>{f.text}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-      <Benchmarks />
-      <Walkthrough />
-      <Compare />
-    </main>
-    <Footer />
-    <script>
-      // The pill starts typing in the headline; while typing it becomes the Search button.
-      const copy = document.querySelector<HTMLElement>(".og-copy")!;
-      const pill = copy.querySelector<HTMLButtonElement>(".og-try")!;
-      const label = copy.querySelector<HTMLElement>(".og-try-label")!;
-      const result = copy.querySelector<HTMLElement>(".og-result")!;
-      const line = copy.querySelector("og-address-morph") as HTMLElement & {
-        startEditing(): void;
-        stopEditing(): void;
-        geocode(): void;
-      };
+      <div class="og-horizon">
+        <DitherGlobe />
+      </div>
+    </section>
+    <section class="og-features" aria-labelledby="og-features-title">
+      <div class="og-features-head">
+        <h2 id="og-features-title">630 million addresses in a single file.</h2>
+        <p>
+          OpenGeocode (open-geocode, or og for short) is free, open-source geocoding: forward, reverse and batch, built from
+          OpenStreetMap and OpenAddresses and served from your own hardware.
+        </p>
+      </div>
+      <div class="og-features-box">
+        <span class="og-corner" aria-hidden="true"></span>
+        <span class="og-corner" aria-hidden="true"></span>
+        <span class="og-corner" aria-hidden="true"></span>
+        <span class="og-corner" aria-hidden="true"></span>
+        <ul class="og-features-grid">
+          {features.map((f) => (
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d={f.icon} /></svg>
+              <h3>{f.title}</h3>
+              <p>{f.text}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+    <Benchmarks />
+    <Walkthrough />
+    <Compare />
+    <Faq />
+  </main>
+  <script>
+    // The pill or a click on the example starts typing in the headline.
+    const copy = document.querySelector<HTMLElement>(".og-copy")!;
+    const pill = copy.querySelector<HTMLButtonElement>(".og-try")!;
+    const result = copy.querySelector<HTMLElement>(".og-result")!;
+    const line = copy.querySelector("og-address-morph") as HTMLElement & {
+      startEditing(): void;
+      stopEditing(): void;
+    };
+    // Decoration only: if either failed to load, its methods are missing and the calls
+    // below are skipped, so search itself never depends on them.
+    const globe = document.querySelector("og-dither-globe") as HTMLElement & {
+      turnTo?(lat: number, lon: number): void;
+      release?(): void;
+    };
+    const map = document.querySelector("og-street-map") as HTMLElement & {
+      show?(lat: number, lon: number): void;
+      hide?(): void;
+    };
 
-      const setEditing = (editing: boolean) => {
-        copy.dataset.mode = editing ? "edit" : "examples";
-        label.textContent = editing ? "Search" : "Try it for free";
-        result.hidden = true;
-        if (editing) line.startEditing();
-        else line.stopEditing();
-      };
-
-      // Keeps focus in the headline when the pill is pressed, so the input's blur
-      // does not end editing before the click can search.
-      pill.addEventListener("mousedown", (event) => {
-        if (copy.dataset.mode === "edit") event.preventDefault();
-      });
-      pill.addEventListener("click", () => {
-        if (copy.dataset.mode === "edit") line.geocode();
-        else setEditing(true);
-      });
-      copy.addEventListener("og-cancel", () => setEditing(false));
-      copy.addEventListener("input", () => (result.hidden = true));
-      // The matched address goes under the coordinates, so a near miss is visible.
-      copy.addEventListener("og-result", (event) => {
-        const hit = (event as CustomEvent<{ label: string } | null | undefined>).detail;
-        result.hidden = false;
-        result.textContent = result.title = hit
-          ? hit.label
-          : hit === null
-            ? "No match for that address."
-            : "Search isn't reachable right now. Try one of the example addresses.";
-      });
-    </script>
-    <script>
-      // One menu open at a time; a click elsewhere closes it.
-      const menus = [...document.querySelectorAll<HTMLDetailsElement>(".og-menu")];
-      for (const menu of menus) {
-        menu.addEventListener("toggle", () => {
-          if (menu.open) for (const other of menus) if (other !== menu) other.open = false;
-        });
+    const setEditing = (editing: boolean) => {
+      copy.dataset.mode = editing ? "edit" : "examples";
+      result.hidden = true;
+      if (editing) line.startEditing();
+      else {
+        line.stopEditing();
+        globe.release?.();
+        map.hide?.();
       }
-      document.addEventListener("click", (event) => {
-        for (const menu of menus) if (!menu.contains(event.target as Node)) menu.open = false;
-      });
-    </script>
-  </body>
-</html>
+    };
+
+    pill.addEventListener("click", () => setEditing(true));
+    copy.addEventListener("og-edit", () => setEditing(true));
+    copy.addEventListener("og-cancel", () => setEditing(false));
+    copy.addEventListener("og-clear", () => {
+      result.hidden = true;
+      globe.release?.();
+      map.hide?.();
+    });
+    copy.addEventListener("input", () => (result.hidden = true));
+    // The matched address goes under the coordinates, so a near miss is visible.
+    copy.addEventListener("og-result", (event) => {
+      const hit = (event as CustomEvent<{ label: string; coordinates: string } | null | undefined>).detail;
+      result.hidden = false;
+      if (hit) {
+        const [lat, lon] = hit.coordinates.split(",").map(Number);
+        globe.turnTo?.(lat, lon);
+        map.show?.(lat, lon);
+      } else {
+        globe.release?.();
+        map.hide?.();
+      }
+      result.textContent = result.title = hit
+        ? hit.label
+        : hit === null
+          ? "No match for that address."
+          : "Search isn't reachable right now. Try one of the example addresses.";
+    });
+  </script>
+</Landing>
