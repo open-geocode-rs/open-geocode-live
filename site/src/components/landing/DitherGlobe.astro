@@ -22,11 +22,19 @@
   const TILT = (-22 * Math.PI) / 180;
   const SPEED = 0.12; // radians per second
   const LIGHT = normalize([-0.35, 0.7, 0.62]);
+  const TAU = Math.PI * 2;
+  // The card shows only the top of the disc: down to about 0.5 of the radius on wide
+  // screens, 0.35 on phones. A found place turns to this height, inside both.
+  const PLACE_Y = 0.72;
+  const FLY = 1400; // ms to turn to a place
 
   function normalize([x, y, z]: number[]) {
     const l = Math.hypot(x, y, z);
     return [x / l, y / l, z / l];
   }
+
+  const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+  const wrap = (a: number) => a - Math.round(a / TAU) * TAU;
 
   // Land as an equirectangular bitmap, rasterised once: per-frame lookups are then a
   // single array read instead of a point-in-polygon test.
@@ -56,9 +64,20 @@
     return ((a << 24) | (b << 16) | (g << 8) | r) >>> 0;
   }
 
+  // Spins until a search lands, then turns and tilts the place into view and stops.
   class DitherGlobe extends HTMLElement {
     #frame = 0;
     #visible = true;
+    #turn?: (lat: number, lon: number) => void;
+    #release?: () => void;
+
+    turnTo(lat: number, lon: number) {
+      this.#turn?.(lat, lon);
+    }
+
+    release() {
+      this.#release?.();
+    }
 
     connectedCallback() {
       const canvas = this.querySelector("canvas")!;
@@ -71,15 +90,11 @@
       const pixels = new Uint32Array(image.data.buffer);
       const mask = landMask();
 
-      // Tilt and light never change, so each pixel's latitude row, base longitude and
-      // shading are worked out once; a frame only adds the spin to the longitude.
+      // Light is fixed to the screen, so shading, glow and dither thresholds are
+      // worked out once. Latitude row and base longitude depend on tilt, which only
+      // changes while turning to a place.
       const radius = n / 2 - 1;
-      const idx: number[] = [];
-      const row: number[] = [];
-      const lon0: number[] = [];
-      const shade: number[] = [];
-      const glow: number[] = [];
-      const threshold: number[] = [];
+      const cells: number[][] = [];
       for (let j = 0; j < n; j++) {
         for (let i = 0; i < n; i++) {
           const x = (i + 0.5 - n / 2) / radius;
@@ -87,19 +102,37 @@
           const d = x * x + y * y;
           if (d > 1) continue;
           const z = Math.sqrt(1 - d);
-          const ty = y * Math.cos(TILT) - z * Math.sin(TILT);
-          const tz = y * Math.sin(TILT) + z * Math.cos(TILT);
-          const lat = Math.asin(Math.max(-1, Math.min(1, ty)));
-          idx.push(j * n + i);
-          row.push(Math.min(MASK_H - 1, Math.floor(((Math.PI / 2 - lat) / Math.PI) * MASK_H)) * MASK_W);
-          lon0.push(Math.atan2(x, tz));
-          shade.push(Math.max(0, x * LIGHT[0] + y * LIGHT[1] + z * LIGHT[2]));
-          // Screen-space falloff from the upper middle of the disc, the part above the
-          // card's edge: ocean dots shine there and thin out toward the rim.
-          glow.push(Math.max(0, 1 - Math.hypot(x, y - 0.55) / 1.1));
-          threshold.push(BAYER[(j % 8) * 8 + (i % 8)]);
+          cells.push([
+            j * n + i,
+            x,
+            y,
+            z,
+            Math.max(0, x * LIGHT[0] + y * LIGHT[1] + z * LIGHT[2]),
+            // Screen-space falloff from the upper middle of the disc, the part above
+            // the card's edge: ocean dots shine there and thin out toward the rim.
+            Math.max(0, 1 - Math.hypot(x, y - 0.55) / 1.1),
+            BAYER[(j % 8) * 8 + (i % 8)],
+          ]);
         }
       }
+      const count = cells.length;
+      const column = (c: number) => Float32Array.from(cells, (cell) => cell[c]);
+      const idx = Int32Array.from(cells, (cell) => cell[0]);
+      const [xs, ys, zs, shade, glow, threshold] = [1, 2, 3, 4, 5, 6].map(column);
+      const row = new Int32Array(count);
+      const lon0 = new Float32Array(count);
+
+      const project = (tilt: number) => {
+        const c = Math.cos(tilt);
+        const s = Math.sin(tilt);
+        for (let k = 0; k < count; k++) {
+          const ty = ys[k] * c - zs[k] * s;
+          const tz = ys[k] * s + zs[k] * c;
+          const lat = Math.asin(Math.max(-1, Math.min(1, ty)));
+          row[k] = Math.min(MASK_H - 1, Math.floor(((Math.PI / 2 - lat) / Math.PI) * MASK_H)) * MASK_W;
+          lon0[k] = Math.atan2(xs[k], tz);
+        }
+      };
 
       let landShadow = 0;
       let land = 0;
@@ -120,15 +153,16 @@
         seaLit = colour("--og-globe-sea-lit");
       };
       readColours();
-      new MutationObserver(() => {
-        readColours();
-        draw(spin);
-      }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
 
-      const TAU = Math.PI * 2;
-      const draw = (spin: number) => {
+      let spin = -0.15;
+      let tilt = TILT;
+      let held = false;
+      let fly: { spin0: number; spin1: number; tilt0: number; tilt1: number; start: number } | null = null;
+      project(tilt);
+
+      const render = () => {
         pixels.fill(0);
-        for (let k = 0; k < idx.length; k++) {
+        for (let k = 0; k < count; k++) {
           let lon = lon0[k] - spin;
           lon -= Math.floor((lon + Math.PI) / TAU) * TAU;
           const col = Math.min(MASK_W - 1, Math.floor(((lon + Math.PI) / TAU) * MASK_W));
@@ -150,19 +184,57 @@
         ctx.putImageData(image, 0, 0);
       };
 
-      let spin = -0.15;
-      draw(spin);
-      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      new MutationObserver(() => {
+        readColours();
+        render();
+      }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+      const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const flyTo = (spin1: number, tilt1: number) => {
+        if (still) {
+          spin = spin1;
+          tilt = tilt1;
+          project(tilt);
+          render();
+        } else fly = { spin0: spin, spin1, tilt0: tilt, tilt1, start: performance.now() };
+      };
+
+      this.#turn = (lat, lon) => {
+        const phi = (lat * Math.PI) / 180;
+        const lambda = (lon * Math.PI) / 180;
+        held = true;
+        flyTo(spin + wrap(-lambda - spin), Math.asin(PLACE_Y) - phi);
+      };
+      this.#release = () => {
+        if (!held) return;
+        held = false;
+        flyTo(spin, TILT);
+      };
+
+      render();
+      if (still) return;
 
       new IntersectionObserver(([entry]) => (this.#visible = entry.isIntersecting)).observe(this);
       let last = performance.now();
+      // Only redraws while something moves: a settled globe costs nothing.
+      const step = (now: number, dt: number) => {
+        if (fly) {
+          const t = Math.min(1, (now - fly.start) / FLY);
+          const e = ease(t);
+          spin = fly.spin0 + (fly.spin1 - fly.spin0) * e;
+          tilt = fly.tilt0 + (fly.tilt1 - fly.tilt0) * e;
+          project(tilt);
+          if (t === 1) fly = null;
+          return true;
+        }
+        if (held) return false;
+        spin += dt * SPEED;
+        return true;
+      };
       const tick = (now: number) => {
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
-        if (this.#visible && !document.hidden) {
-          spin += dt * SPEED;
-          draw(spin);
-        }
+        if (this.#visible && !document.hidden && step(now, dt)) render();
         this.#frame = requestAnimationFrame(tick);
       };
       this.#frame = requestAnimationFrame(tick);
