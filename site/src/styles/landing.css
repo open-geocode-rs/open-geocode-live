@@ -75,7 +75,8 @@ body {
   width: 1px;
 }
 
-/* Logo and menus on the left, actions pushed to the right. */
+/* Logo and menus on the left, actions pushed to the right. Above the hero, so an
+   open menu's band lies over it. */
 .og-header {
   align-items: center;
   background: var(--og-surface);
@@ -84,43 +85,43 @@ body {
   gap: 2rem;
   height: 4.5rem;
   padding-inline: var(--og-gutter);
+  position: relative;
+  z-index: 10;
 }
 
 .og-nav {
   display: flex;
-  gap: 4px;
+  gap: 8px;
+}
+
+/* Each menu fills the header's height, so the pointer stays on it from the pill down
+   to the band. Static, so the band positions against the whole header. */
+.og-nav {
+  align-self: stretch;
 }
 
 .og-menu {
-  position: relative;
-}
-
-.og-menu summary {
   align-items: center;
-  border-radius: 6px;
-  color: var(--og-fg);
-  cursor: pointer;
   display: flex;
-  font-size: 1rem;
+  position: static;
+}
+
+.og-menu > .og-pill {
+  background: none;
+  cursor: pointer;
+  font: inherit;
   font-weight: 500;
-  gap: 4px;
-  line-height: 24px;
-  list-style: none;
-  padding: 6px 12px;
 }
 
-.og-menu summary::-webkit-details-marker {
-  display: none;
-}
-
-.og-menu summary:hover,
-.og-menu[open] summary {
+.og-menu:hover > .og-pill,
+.og-menu:focus-within > .og-pill {
   background: var(--og-hover);
 }
 
-.og-menu summary svg {
+.og-menu > .og-pill svg {
   fill: none;
   height: 16px;
+  margin-inline-end: -4px;
   opacity: 0.5;
   stroke: currentColor;
   stroke-linecap: round;
@@ -129,51 +130,75 @@ body {
   width: 16px;
 }
 
+/* A full-width band under the header's rule, never over it: it unrolls downward from
+   the rule, and closes back up into it after a short grace, so crossing the rule on
+   the way down doesn't shut it. */
 .og-menu-panel {
   background: var(--og-surface);
-  border: 1px solid var(--og-pill-border);
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgb(0 0 0 / 0.08);
+  border-bottom: var(--og-header-rule);
+  box-shadow: 0 16px 32px rgb(0 0 0 / 0.05);
+  clip-path: inset(0 0 100% 0);
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 12px 16px;
   left: 0;
-  min-width: 13rem;
-  padding: 6px;
+  opacity: 0;
+  padding: 16px var(--og-gutter) 20px;
   position: absolute;
-  top: calc(100% + 8px);
-  z-index: 10;
+  right: 0;
+  top: calc(100% + 1px);
+  transition:
+    clip-path 0.22s ease-in 0.12s,
+    opacity 0.18s ease-in 0.12s,
+    visibility 0s linear 0.34s;
+  visibility: hidden;
 }
 
-.og-menu-panel a {
-  align-items: center;
-  border-radius: 8px;
-  color: var(--og-fg);
-  display: flex;
-  gap: 10px;
-  font-size: 0.9375rem;
-  padding: 8px 12px;
-  text-decoration: none;
+.og-menu:hover .og-menu-panel,
+.og-menu:focus-within .og-menu-panel {
+  clip-path: inset(0 0 -48px 0);
+  opacity: 1;
+  transition:
+    clip-path 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.2s ease-out;
+  visibility: visible;
 }
 
-.og-menu-panel a:hover {
-  background: var(--og-hover);
+/* Moving to the other menu swaps bands at once instead of stacking two. */
+.og-nav:has(.og-menu:hover) .og-menu:not(:hover) .og-menu-panel {
+  transition: none;
 }
 
-/* The feature icons' stroke, dimmed so the labels lead. */
-.og-menu-panel svg {
-  color: rgb(var(--og-ink) / 0.6);
-  fill: none;
-  flex: none;
-  height: 16px;
-  stroke: currentColor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.5;
-  width: 16px;
+/* Icon first: here it names the link, where Search and Clear's disc shows a key. The
+   links rise in one by one and leave together. */
+.og-menu-panel .og-key {
+  opacity: 0;
+  padding: 6px 16px 6px 5px;
+  transition:
+    opacity 0.15s ease-in,
+    translate 0.15s ease-in,
+    transform 0.08s ease-out,
+    box-shadow 0.08s ease-out;
+  translate: 0 6px;
 }
 
-.og-menu-panel a:hover svg {
-  color: var(--og-fg);
+.og-menu:hover .og-menu-panel .og-key,
+.og-menu:focus-within .og-menu-panel .og-key {
+  opacity: 1;
+  transition:
+    opacity 0.28s ease-out calc(60ms + var(--i, 0) * 35ms),
+    translate 0.28s ease-out calc(60ms + var(--i, 0) * 35ms),
+    transform 0.08s ease-out,
+    box-shadow 0.08s ease-out;
+  translate: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .og-menu-panel,
+  .og-menu-panel .og-key {
+    clip-path: none;
+    translate: none;
+  }
 }
 
 .og-actions {
