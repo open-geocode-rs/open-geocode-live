@@ -1658,6 +1658,115 @@ body {
   }
 }
 
+/* FAQ: the comparison box's split, with the questions in its right half. Each opens
+   in place, its plus turning to a cross. */
+.og-faq {
+  margin: 0 auto 6rem;
+  max-width: 68rem;
+}
+
+.og-faq-box {
+  background: var(--og-surface);
+  border: 1px solid var(--og-line);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  position: relative;
+}
+
+.og-faq-box .og-corner {
+  z-index: 2;
+}
+
+.og-faq-list {
+  border-inline-start: 1px solid var(--og-line);
+  interpolate-size: allow-keywords;
+}
+
+.og-faq-list details + details {
+  border-top: 1px solid var(--og-line);
+}
+
+.og-faq-list summary {
+  align-items: baseline;
+  cursor: pointer;
+  display: flex;
+  font-family: var(--type-family-code);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  gap: 1rem;
+  line-height: 1.4;
+  list-style: none;
+  padding: 1.25rem 1.5rem;
+}
+
+.og-faq-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.og-faq-list summary::before {
+  color: rgb(var(--og-ink) / 0.5);
+  content: "+";
+  flex: none;
+  font-size: 1.25rem;
+  font-weight: 300;
+  line-height: 1;
+  transition: rotate 0.2s ease-out;
+  width: 1rem;
+}
+
+.og-faq-list details[open] summary::before {
+  rotate: 45deg;
+}
+
+.og-faq-list details p {
+  color: rgb(var(--og-ink) / 0.7);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  margin: 0;
+  padding: 0 1.5rem 1.25rem 3.5rem;
+}
+
+.og-faq-list details a {
+  color: var(--og-fg);
+  text-underline-offset: 3px;
+}
+
+.og-faq-list code {
+  font-family: var(--type-family-code);
+  font-size: 0.875em;
+}
+
+/* Opens and closes by height where the browser can animate it; elsewhere it snaps. */
+.og-faq-list details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 0.25s ease-out,
+    content-visibility 0.25s allow-discrete;
+}
+
+.og-faq-list details[open]::details-content {
+  block-size: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .og-faq-list summary::before,
+  .og-faq-list details::details-content {
+    transition: none;
+  }
+}
+
+@media (max-width: 60rem) {
+  .og-faq-box {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .og-faq-list {
+    border-inline-start: 0;
+    border-top: 1px solid var(--og-line);
+  }
+}
+
 /* Footer: the hero's card again, halftone rising from its bottom edge, so the page
    closes as it opens. Brand left, three link columns, legal below. */
 .og-footer {
