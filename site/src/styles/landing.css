@@ -1434,6 +1434,17 @@ body {
   background: #49a782;
 }
 
+/* A tab with more rows draws them thinner, so every tab keeps the height of four. */
+.og-bench-dense table {
+  border-spacing: 0 3px;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+.og-bench-dense .og-bench-bar span {
+  height: 14px;
+}
+
 .og-bench-value,
 .og-bench-extra {
   font-family: var(--type-family-code);

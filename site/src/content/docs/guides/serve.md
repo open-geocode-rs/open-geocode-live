@@ -48,6 +48,6 @@ og is designed to be easy to deploy.
 - **Updates**. Build a new Pack, swap the file, and restart.
 
 :::tip[Performance]
-On the Ontario benchmark, the og process's own memory was about 0.03 GiB.
-The working set in the page cache was about 1.2 GiB, against 4.60 GiB for Pelias and 2.75 GiB for Nominatim.
+On the Netherlands benchmark, og served every address in the country at 100 requests a second within 1 GiB of memory, page cache included.
+Photon needed 4 GiB for the same load, and Pelias 8 GiB.
 :::

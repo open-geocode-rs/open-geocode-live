@@ -41,7 +41,7 @@ See [Benchmarks](/docs/benchmarks/) for how it measures up against them.
 
 ## Design goals
 
-- **Speed**. On the same Ontario data and hardware, og answers a forward query in 1.0 ms at the median, against 11.5 ms for Pelias and 40.0 ms for Nominatim. It holds 10x the throughput of Pelias. See [Benchmarks](/docs/benchmarks/).
+- **Speed**. On the same Netherlands data and hardware, og answers a forward query in 0.72 ms at the median, against 2.0 ms for Photon and 4.7 ms for Pelias. It serves 6x their throughput, and the whole country on 1 vCPU and 1 GiB of memory. See [Benchmarks](/docs/benchmarks/).
 - **One file**. A Pack holds the records, their text index and their spatial index. To deploy og, copy the binary and the Pack. Ontario's Pack is 324 MB.
 - **Fast builds**. Ontario's 2 million addresses build in about a minute on a 24-core machine. The whole planet builds in under 3 hours on a 32 GB desktop.
 - **Accuracy**. [MESSY STREETS](https://arxiv.org/abs/2609.01612) is a benchmark of real addresses copied verbatim from the web. og answers all of them, 94.4% with a full answer rather than a fallback area, and its first answer lands within about 20 km of the target 93.9% of the time.

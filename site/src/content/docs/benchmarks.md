@@ -1,6 +1,6 @@
 ---
 title: Benchmarks
-description: OpenGeocode accuracy on the MESSY STREETS benchmark against 12 geocoders including Google Maps, and speed against Pelias and Nominatim on the same Ontario data and hardware.
+description: OpenGeocode accuracy on the MESSY STREETS benchmark against 12 geocoders including Google Maps, and speed against Photon and Pelias on the same Netherlands data and hardware.
 ---
 
 ## Accuracy: MESSY STREETS
@@ -38,6 +38,8 @@ It was built in 5 h 20 min on a 24-core, 32 GB desktop with a 9 GB memory budget
 Counting only full answers, CRR is 94.4%.
 From OpenStreetMap alone (17.9 GB, 233.7 million records, built in 2 h 51 min), GH6 is 67.7%.
 
+The rows og was scored on: [bench/data/messy-streets](https://github.com/open-geocode-rs/open-geocode/tree/main/bench/data/messy-streets).
+
 ### Reading the results
 
 og gives an answer to every query, as Google does, though 52 of them are fallback areas (full answers: 94.4%).
@@ -45,30 +47,31 @@ At GH1 it is within 0.9 points of every commercial API.
 At street level (GH6) it leads OpenCage, is within 1.4 points of Geoapify and TomTom, and is behind the other commercial APIs (81.0% to 88.3%), which have proprietary address data.
 Among open-source geocoders, og leads Pelias, Photon and Nominatim at every resolution.
 
-## Speed: og vs Pelias vs Nominatim
+## Speed: og vs Photon vs Pelias
 
-Three geocoders served the same Ontario OpenStreetMap extract (about 2.03 million addresses).
-Each ran alone in Docker with the same cap of 4 CPUs and 10 GB, queried over loopback HTTP, on a 24-core, 32 GB Windows 11 host.
+Three geocoders served every OpenStreetMap address in the Netherlands, from the same 2026-11-01 extract.
+Each ran alone on the same 32-vCPU machine, on its own cores with its memory capped, queried over loopback HTTP.
 
-- **Service time** is measured closed-loop with a single client, so there is no queue and overload can't inflate it.
-- **Throughput** is measured open-loop: the highest steady arrival rate that keeps p99 under 100 ms.
-
-| | OpenGeocode | Pelias | Nominatim |
+| | OpenGeocode | Photon | Pelias |
 | --- | ---: | ---: | ---: |
-| Deployable footprint | **0.30 GiB** | 5.88 GiB | 5.92 GiB |
-| RAM while serving | **~1.2 GiB** | 4.60 GiB | 2.75 GiB |
-| Forward service time p50 / p99 | **1.0 / 2.0 ms** | 11.5 / 67.6 ms | 40.0 / 1384.7 ms |
-| Reverse service time p50 / p99 | **1.0 / 1.5 ms** | 5.0 / 9.5 ms | 7.5 / 14.2 ms |
-| Forward throughput (req/s, p99 < 100 ms) | **1000** | 100 | 25 |
-| Reverse throughput (req/s, p99 < 100 ms) | **1000** | 500 | 100 |
-| Addresses indexed | 2,032,851 | 2,036,529 | 2,037,682 |
+| Disk (data + image) | **0.36 GB** | 3.94 GB | 7.00 GB |
+| Build time | **1 min 55 s** | 6 min 50 s | 10 min 18 s |
+| Ready after start | **0.36 s** | 4.8 s | 15.3 s |
+| RAM while serving | **1.1 GiB** | 23.5 GiB | 39.4 GiB |
+| Forward latency p50 / p99 | **0.72 / 4.2 ms** | 2.0 / 19.4 ms | 4.7 / 9.6 ms |
+| Reverse latency p50 / p99 | **0.20 / 0.37 ms** | 1.8 / 3.0 ms | 5.3 / 10.5 ms |
+| Max forward throughput | **14,087 req/s** | 2,194 req/s | 2,323 req/s |
+| Max reverse throughput | **≥ 65,606 req/s** | 3,098 req/s | 2,406 req/s |
+| Smallest machine for 100 req/s, forward | **1 vCPU / 1 GiB** | 2 vCPU / 4 GiB | 1 vCPU / 8 GiB |
+| Smallest machine for 100 req/s, reverse | **1 vCPU / 256 MiB** | 1 vCPU / 4 GiB | 1 vCPU / 8 GiB |
+| First answer within 100 m, forward / reverse | 98.9% / 98.8% | 99.7% / 99.9% | 99.5% / 100% |
 
 ### Notes
 
-- og memory-maps its Pack. The process itself used about 0.03 GiB; the ~1.2 GiB is the working set held in the operating system's page cache.
-- 1000 req/s is where the load grid stopped, not og's ceiling.
-- The footprint is the single-file Pack, 324 MB for Ontario. The serving rows were measured on an earlier multi-file Pack (1.28 GiB) and have not been re-run.
-- The engines do different work per query (Pelias parses with libpostal, Nominatim resolves its place hierarchy). This is reported, not corrected for.
-- Nominatim's forward p99 is a real heavy tail under the CPU cap, not overload. Its p50 is 40 ms.
-- Everything ran on one host with CPU capped and cache and disk shared, so ratios travel better than absolute numbers.
-- Only the ~2.03 million addresses are directly comparable; each engine also indexes different extra layers.
+- Latency is one request at a time, so there is no queue.
+- Throughput is the highest rate with p99 under 100 ms and at least 99.9% of requests answered, on 16 vCPU / 64 GiB. og turns away what it cannot take on at once, so the requests it takes stay fast.
+- 65,606 req/s is the most the load generator could send, not og's limit.
+- RAM while serving is the peak on 16 vCPU / 64 GiB, page cache included. Photon and Pelias size their heap to the machine, as their documentation says; the smallest-machine rows show what each needs.
+- 256 MiB is the smallest size tried.
+- The engines do different work per query. This is reported, not corrected for.
+- The harness and how to run it again: [bench](https://github.com/open-geocode-rs/open-geocode/tree/main/bench).

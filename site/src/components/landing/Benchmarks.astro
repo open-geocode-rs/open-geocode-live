@@ -3,60 +3,64 @@
 type Row = { name: string; bar: number; value: string; extra: string; og?: boolean };
 type Tab = { id: string; label: string; title: string; sub: string; cols: [string, string]; rows: Row[]; note: string };
 
-const SPEED = "Ontario extract, 2.03 million addresses · 4 CPU / 10 GB each · loopback HTTP";
+const RUN = "Every OpenStreetMap address in the Netherlands · each engine alone, memory capped";
+const BOX = `${RUN} · 16 vCPU / 64 GiB`;
 const tabs: Tab[] = [
+  {
+    id: "accuracy",
+    label: "Accuracy",
+    title: "Geocoding real web addresses",
+    sub: "First answer within 20 km, % of queries (higher is better)",
+    cols: ["GH4", "GH6"],
+    rows: [
+      { name: "Google Maps", bar: 98.6, value: "98.6%", extra: "88.3%" },
+      { name: "open-geocode", bar: 93.9, value: "93.9%", extra: "78.0%", og: true },
+      { name: "TomTom", bar: 91.8, value: "91.8%", extra: "79.4%" },
+      { name: "OpenCage", bar: 90.2, value: "90.2%", extra: "68.2%" },
+      { name: "Pelias", bar: 85.9, value: "85.9%", extra: "67.8%" },
+      { name: "Photon", bar: 84.9, value: "84.9%", extra: "62.8%" },
+      { name: "Nominatim", bar: 66.6, value: "66.6%", extra: "55.6%" },
+    ],
+    note: "MESSY STREETS · 959 web addresses · other rows from the paper · og on its Planet Pack",
+  },
   {
     id: "throughput",
     label: "Throughput",
-    title: "Forward geocoding throughput",
+    title: "Serving a country",
     sub: "Requests per second with p99 under 100 ms (higher is better)",
-    cols: ["Req/s", "Reverse"],
+    cols: ["Forward", "Reverse"],
     rows: [
-      { name: "open-geocode", bar: 1000, value: "1,000+", extra: "1,000+", og: true },
-      { name: "Pelias", bar: 100, value: "100", extra: "500" },
-      { name: "Nominatim", bar: 25, value: "25", extra: "100" },
+      { name: "open-geocode", bar: 14087, value: "14,087", extra: "65,606+", og: true },
+      { name: "Pelias", bar: 2323, value: "2,323", extra: "2,406" },
+      { name: "Photon", bar: 2194, value: "2,194", extra: "3,098" },
     ],
-    note: `${SPEED} · og's load test stopped at 1,000 req/s, not its ceiling`,
+    note: `${BOX} · reverse capped by the load generator`,
   },
   {
     id: "latency",
     label: "Latency",
-    title: "Forward service time",
-    sub: "One client, no queue · median in milliseconds (lower is better)",
-    cols: ["p50 ms", "p99 ms"],
+    title: "Answering one query",
+    sub: "One request at a time · milliseconds (lower is better)",
+    cols: ["p50", "p99"],
     rows: [
-      { name: "open-geocode", bar: 1.0, value: "1.0", extra: "2.0", og: true },
-      { name: "Pelias", bar: 11.5, value: "11.5", extra: "67.6" },
-      { name: "Nominatim", bar: 40.0, value: "40.0", extra: "1,384.7" },
+      { name: "open-geocode", bar: 0.72, value: "0.72", extra: "4.2", og: true },
+      { name: "Photon", bar: 2.0, value: "2.0", extra: "19.4" },
+      { name: "Pelias", bar: 4.7, value: "4.7", extra: "9.6" },
     ],
-    note: SPEED,
+    note: BOX,
   },
   {
-    id: "footprint",
-    label: "Footprint",
-    title: "What it takes to deploy",
-    sub: "Size on disk and memory while serving, in GiB (lower is better)",
-    cols: ["Disk GiB", "RAM GiB"],
+    id: "memory",
+    label: "Memory",
+    title: "Serving 100 requests a second",
+    sub: "Least memory to serve 100 req/s, in GiB (lower is better)",
+    cols: ["GiB", "vCPU"],
     rows: [
-      { name: "open-geocode", bar: 0.3, value: "0.30", extra: "~1.2", og: true },
-      { name: "Pelias", bar: 5.88, value: "5.88", extra: "4.60" },
-      { name: "Nominatim", bar: 5.92, value: "5.92", extra: "2.75" },
+      { name: "open-geocode", bar: 1, value: "1", extra: "1", og: true },
+      { name: "Photon", bar: 4, value: "4", extra: "2" },
+      { name: "Pelias", bar: 8, value: "8", extra: "1" },
     ],
-    note: `${SPEED} · og's RAM is its page-cache working set; the process itself uses ~0.03 GiB`,
-  },
-  {
-    id: "accuracy",
-    label: "Accuracy",
-    title: "Street-level accuracy on MESSY STREETS",
-    sub: "First answer within ±0.6 km (GH6), % of queries (higher is better)",
-    cols: ["GH6", "GH4"],
-    rows: [
-      { name: "open-geocode", bar: 78.0, value: "78.0%", extra: "93.9%", og: true },
-      { name: "Pelias", bar: 67.8, value: "67.8%", extra: "85.9%" },
-      { name: "Photon", bar: 62.8, value: "62.8%", extra: "84.9%" },
-      { name: "Nominatim", bar: 55.6, value: "55.6%", extra: "66.6%" },
-    ],
-    note: "Open-source geocoders · 959 web addresses · og on its OpenStreetMap and OpenAddresses Planet Pack",
+    note: `${RUN} · page cache included`,
   },
 ];
 ---
@@ -69,14 +73,11 @@ const tabs: Tab[] = [
     <span class="og-corner" aria-hidden="true"></span>
     <div class="og-bench-copy">
       <p class="og-walk-eyebrow">Benchmarks</p>
-      <h2 id="og-bench-title">Faster than Pelias and Nominatim, on the same hardware.</h2>
+      <h2 id="og-bench-title">Paid-API accuracy. None of the weight.</h2>
       <p>
-        The same Ontario extract, the same 4 CPU / 10 GB cap and the same queries. og answers a forward query in
-        1.0&nbsp;ms at the median, and was still holding at 1,000 requests a second when the load test stopped.
-      </p>
-      <p>
-        On MESSY STREETS, a benchmark of real addresses copied from the web, it leads every open-source geocoder at
-        every resolution.
+        On real web addresses, og puts more answers in the right city than TomTom or OpenCage, and trails TomTom by
+        1.4 points at street level. Against open-source engines it isn't close: the whole Netherlands on 1&nbsp;vCPU
+        and 1&nbsp;GiB, at 0.72&nbsp;ms a query and 6× the throughput of Photon and Pelias.
       </p>
       <a class="og-bench-link" href="/docs/benchmarks/">Read the full benchmarks →</a>
     </div>
@@ -91,7 +92,7 @@ const tabs: Tab[] = [
       {tabs.map((t, i) => {
         const max = Math.max(...t.rows.map((r) => r.bar));
         return (
-          <div class="og-bench-panel" role="tabpanel" id={`og-bench-${t.id}`} aria-labelledby={`og-bench-tab-${t.id}`} hidden={i !== 0}>
+          <div class:list={["og-bench-panel", { "og-bench-dense": t.rows.length > 4 }]} role="tabpanel" id={`og-bench-${t.id}`} aria-labelledby={`og-bench-tab-${t.id}`} hidden={i !== 0}>
             <h3>{t.title}</h3>
             <p class="og-bench-sub">{t.sub}</p>
             <table>
