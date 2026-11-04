@@ -193,6 +193,28 @@ body {
   translate: 0 0;
 }
 
+/* Pricing's band is one line of text where the others hold keys. */
+.og-pricing p {
+  color: rgb(var(--og-ink) / 0.6);
+  line-height: 42px;
+  margin: 0;
+}
+
+.og-pricing strong,
+.og-pricing a {
+  color: var(--og-fg);
+  font-weight: 500;
+}
+
+.og-pricing a {
+  text-decoration-color: rgb(var(--og-ink) / 0.3);
+  text-underline-offset: 3px;
+}
+
+.og-pricing a:hover {
+  text-decoration-color: currentColor;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .og-menu-panel,
   .og-menu-panel .og-key {
