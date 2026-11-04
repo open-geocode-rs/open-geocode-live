@@ -1,11 +1,55 @@
 :root {
-  --og-method-get: #49a782;
-  --og-method-get-bg: rgb(73 167 130 / 0.16);
-  --og-method-get-border: rgb(73 167 130 / 0.24);
+  --og-method-fg: #49a782;
+  --og-method-bg: rgb(73 167 130 / 0.16);
+  --og-method-border: rgb(73 167 130 / 0.24);
+  --og-method-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 7 7 17M17 17H7V7'/%3E%3C/svg%3E");
 }
 
 :root[data-theme="light"] {
-  --og-method-get: #2f7d5f;
+  --og-method-fg: #2f7d5f;
+}
+
+/* GET's colours and arrow are the default; a badge of another method takes its own. */
+.og-method--post,
+.og-example-badge--post,
+.sl-openapi-method-post,
+.sl-openapi-operation-method-badge.post {
+  --og-method-fg: #6f9ff0;
+  --og-method-bg: rgb(111 159 240 / 0.16);
+  --og-method-border: rgb(111 159 240 / 0.24);
+  --og-method-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7M7 7h10v10'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="light"] :is(.og-method--post, .og-example-badge--post, .sl-openapi-method-post, .sl-openapi-operation-method-badge.post) {
+  --og-method-fg: #2c62c2;
+}
+
+.og-method--query,
+.og-example-badge--query,
+.sl-openapi-method-query,
+.sl-openapi-operation-method-badge.query {
+  --og-method-fg: #b38cf0;
+  --og-method-bg: rgb(179 140 240 / 0.16);
+  --og-method-border: rgb(179 140 240 / 0.24);
+  --og-method-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="light"] :is(.og-method--query, .og-example-badge--query, .sl-openapi-method-query, .sl-openapi-operation-method-badge.query) {
+  --og-method-fg: #7446c2;
+}
+
+.og-method--delete,
+.og-example-badge--delete,
+.sl-openapi-method-delete,
+.sl-openapi-operation-method-badge.delete {
+  --og-method-fg: #e8736b;
+  --og-method-bg: rgb(232 115 107 / 0.16);
+  --og-method-border: rgb(232 115 107 / 0.24);
+  --og-method-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="light"] :is(.og-method--delete, .og-example-badge--delete, .sl-openapi-method-delete, .sl-openapi-operation-method-badge.delete) {
+  --og-method-fg: #b8423a;
 }
 
 /* Title bar: breadcrumbs left, page actions right; 16px below the content top. */
@@ -150,10 +194,10 @@
 /* Method badge: 20px, 4px radius, 12px mono at weight 500. */
 .og-method {
   align-items: center;
-  background: var(--og-method-get-bg);
-  border: 1px solid var(--og-method-get-border);
+  background: var(--og-method-bg);
+  border: 1px solid var(--og-method-border);
   border-radius: 4px;
-  color: var(--og-method-get);
+  color: var(--og-method-fg);
   display: inline-flex;
   font-family: var(--sl-font-mono);
   font-size: 0.75rem;
@@ -191,8 +235,18 @@ h1#_top {
   line-height: 1.2;
 }
 
+/* A second method the route answers the same, such as a QUERY batch's POST. */
+.og-endpoint-alias {
+  align-items: center;
+  color: var(--sl-color-gray-3);
+  display: inline-flex;
+  font-size: 0.875rem;
+  gap: 4px;
+  margin-left: 4px;
+}
+
 /* Sidebar method badges become a leading 20px icon tile; the text stays for screen readers. */
-.sidebar-content a:has(> .sl-openapi-method-get) {
+.sidebar-content a:has(> [class*="sl-openapi-method-"]) {
   align-items: flex-start;
   display: flex;
   flex-direction: row-reverse;
@@ -200,9 +254,9 @@ h1#_top {
   justify-content: flex-end;
 }
 
-.sidebar-content .sl-badge.sl-openapi-method-get {
-  background: var(--og-method-get-bg);
-  border: 1px solid var(--og-method-get-border);
+.sidebar-content .sl-badge[class*="sl-openapi-method-"] {
+  background: var(--og-method-bg);
+  border: 1px solid var(--og-method-border);
   border-radius: 4px;
   color: transparent;
   flex-shrink: 0;
@@ -214,12 +268,12 @@ h1#_top {
   width: 20px;
 }
 
-.sidebar-content .sl-badge.sl-openapi-method-get::before {
-  background: var(--og-method-get);
+.sidebar-content .sl-badge[class*="sl-openapi-method-"]::before {
+  background: var(--og-method-fg);
   content: "";
   inset: 2px;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 7 7 17M17 17H7V7'/%3E%3C/svg%3E") center / 14px no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 7 7 17M17 17H7V7'/%3E%3C/svg%3E") center / 14px no-repeat;
+  -webkit-mask: var(--og-method-icon) center / 14px no-repeat;
+  mask: var(--og-method-icon) center / 14px no-repeat;
   position: absolute;
 }
 
@@ -304,10 +358,10 @@ h1#_top {
 
 .og-example-badge {
   align-items: center;
-  background: var(--og-method-get-bg);
-  border: 1px solid var(--og-method-get-border);
+  background: var(--og-method-bg);
+  border: 1px solid var(--og-method-border);
   border-radius: 4px;
-  color: var(--og-method-get);
+  color: var(--og-method-fg);
   display: inline-flex;
   flex-shrink: 0;
   height: 24px;
@@ -705,10 +759,10 @@ h1#_top {
 
 /* Plugin method badges everywhere match the site's 20px tinted tile. */
 .sl-openapi-operation-method-badge {
-  background: var(--og-method-get-bg) !important;
-  border: 1px solid var(--og-method-get-border) !important;
+  background: var(--og-method-bg) !important;
+  border: 1px solid var(--og-method-border) !important;
   border-radius: 4px;
-  color: var(--og-method-get) !important;
+  color: var(--og-method-fg) !important;
   font-family: var(--sl-font-mono);
   font-size: 0.75rem;
   font-weight: 500 !important;

@@ -1,0 +1,13 @@
+---
+// Stands in for starlight-openapi's overview row (aliased in astro.config.mjs) so a
+// QUERY batch is listed as QUERY, as its page shows it, not as its POST alias.
+import Link from "../../node_modules/starlight-openapi/components/overview/OverviewNavigationLink.astro";
+import { operationFor } from "../lib/api";
+
+type Props = Parameters<typeof Link>[0];
+
+const props = Astro.props;
+const operation = operationFor(props.href.replace(/^\/|\/$/g, ""));
+---
+
+<Link {...props} method={(operation?.method ?? props.method) as Props["method"]} />

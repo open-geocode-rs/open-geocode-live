@@ -1,4 +1,5 @@
 import starlight from "@astrojs/starlight";
+import { fileURLToPath } from "node:url";
 import { defineConfig, fontProviders } from "astro/config";
 import starlightLlmsTxt from "starlight-llms-txt";
 import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
@@ -17,6 +18,15 @@ export default defineConfig({
   site,
   trailingSlash: "ignore",
   vite: {
+    resolve: {
+      // The plugin's overview row lists a QUERY batch as POST; ours lists it as QUERY.
+      alias: [
+        {
+          find: /^\.\/OverviewNavigationLink\.astro$/,
+          replacement: fileURLToPath(new URL("./src/components/OverviewNavigationLink.astro", import.meta.url)),
+        },
+      ],
+    },
     server: {
       proxy: api ? { "/api/search": { target: api, rewrite: (path) => path.replace(/^\/api/, "") } } : undefined,
     },

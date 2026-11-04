@@ -23,5 +23,10 @@ const operation = operationFor(route.id);
   <p class="og-endpoint">
     <MethodBadge method={operation.method} />
     <code>{operation.path}</code>
+    {operation.alias && (
+      <span class="og-endpoint-alias">
+        or <MethodBadge method={operation.alias} />
+      </span>
+    )}
   </p>
 )}

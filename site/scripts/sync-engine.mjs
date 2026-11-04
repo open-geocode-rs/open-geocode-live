@@ -22,19 +22,47 @@ if (!existsSync(join(contract, "openapi.json"))) {
 copyFileSync(join(contract, "openapi.json"), join(site, "public", "openapi.json"));
 
 // Each answer is paired with the request src/contract_tests.rs sends to produce it,
-// so a page never shows a response its request would not return.
+// so a page never shows a response its request would not return. An operation with
+// no committed answer shows its request alone. Batches are sent as QUERY, which the
+// contract answers exactly as the POST its tests send.
+const JOB = "4f9c2a7e1b8d4c6fa3e5d7b9c1f2a4e6";
 const EXAMPLES = {
-  search: ["/search?q=10%20King%20Street", "search-address"],
-  autocomplete: ["/autocomplete?q=Quee", "autocomplete"],
-  geocode: ["/geocode?address=10%20King%20Street&postcode=M5V%201A1", "geocode-address"],
-  reverse: ["/reverse?lon=-79.0&lat=43.0", "reverse-address"],
+  search: { request: "/search?q=10%20King%20Street", response: "search-address" },
+  autocomplete: { request: "/autocomplete?q=Quee", response: "autocomplete" },
+  geocode: { request: "/geocode?address=10%20King%20Street&postcode=M5V%201A1", response: "geocode-address" },
+  reverse: { request: "/reverse?lon=-79.0&lat=43.0", response: "reverse-address" },
+  geocode_batch: {
+    method: "query",
+    request: "/geocode?country=CA",
+    body: [
+      { id: "row-1", address: "10 King Street", postcode: "M5V 1A1" },
+      { id: "row-2", address: "" },
+    ],
+    response: "batch-geocode",
+  },
+  reverse_batch: {
+    method: "query",
+    request: "/reverse",
+    body: [
+      { id: "a", lon: -79.3832, lat: 43.6532 },
+      { id: "b", lon: -75.6972, lat: 45.4215 },
+    ],
+  },
+  version: { request: "/version" },
+  create: { method: "post", request: "/jobs?country=CA", upload: { file: "addresses.csv", type: "text/csv" }, answer: "text" },
+  status: { request: `/jobs/${JOB}` },
+  results: { request: `/jobs/${JOB}/results`, answer: "text" },
+  cancel: { method: "post", request: `/jobs/${JOB}/cancel` },
+  delete: { method: "delete", request: `/jobs/${JOB}`, answer: "none" },
 };
 
 const examples = Object.fromEntries(
-  Object.entries(EXAMPLES).map(([operationId, [request, file]]) => [
+  Object.entries(EXAMPLES).map(([operationId, { response, ...example }]) => [
     operationId,
-    // Kept as text: a JSON round trip turns the engine's -79.0 into -79.
-    { request, response: readFileSync(join(contract, "responses", `${file}.json`), "utf8").trimEnd() },
+    response
+      ? // Kept as text: a JSON round trip turns the engine's -79.0 into -79.
+        { ...example, response: readFileSync(join(contract, "responses", `${response}.json`), "utf8").trimEnd() }
+      : example,
   ]),
 );
 writeFileSync(join(site, "src", "data", "examples.json"), JSON.stringify(examples, null, 2) + "\n");
