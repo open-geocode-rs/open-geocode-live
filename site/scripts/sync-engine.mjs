@@ -27,9 +27,9 @@ copyFileSync(join(contract, "openapi.json"), join(site, "public", "openapi.json"
 // contract answers exactly as the POST its tests send.
 const JOB = "4f9c2a7e1b8d4c6fa3e5d7b9c1f2a4e6";
 const EXAMPLES = {
-  search: { request: "/search?q=10%20King%20Street", response: "search-address" },
+  geocode: { request: "/geocode?q=10%20King%20Street", response: "geocode-text" },
+  places: { request: "/places?q=Queen%20Bakery", response: "places" },
   autocomplete: { request: "/autocomplete?q=Quee", response: "autocomplete" },
-  geocode: { request: "/geocode?address=10%20King%20Street&postcode=M5V%201A1", response: "geocode-address" },
   reverse: { request: "/reverse?lon=-79.0&lat=43.0", response: "reverse-address" },
   geocode_batch: {
     method: "query",
@@ -39,6 +39,14 @@ const EXAMPLES = {
       { id: "row-2", address: "" },
     ],
     response: "batch-geocode",
+  },
+  places_batch: {
+    method: "query",
+    request: "/places",
+    body: [
+      { id: "a", q: "Queen Bakery" },
+      { id: "b", ids: "osm:relation:3" },
+    ],
   },
   reverse_batch: {
     method: "query",
