@@ -23,7 +23,8 @@ http://:8081 {
 	encode zstd gzip
 	import security
 
-	# The one API the site exposes: GET /api/search, with q alone and one result.
+	# The one API the site exposes: GET /api/search, with q alone and one result,
+	# answered by the runtime's /places: the hero's examples are landmarks.
 	# Rebuilding the query drops every other parameter, and q is re-encoded, so it
 	# can't smuggle more in. Batch, reverse, other methods and other paths fall
 	# through to the static files and 404 (deploy/search/open-geocode-search.service).
@@ -32,9 +33,13 @@ http://:8081 {
 		path /api/search
 	}
 	handle @search {
-		rewrite * /search?q={query.q}&limit=1
+		rewrite * /places?q={query.q}&limit=1
 		reverse_proxy 127.0.0.1:8090
 	}
+
+	# /search became /geocode and /places in the engine; keep old links working.
+	redir /docs/api/operations/search/ /docs/api/operations/geocode/ permanent
+	redir /docs/api/operations/search.md /docs/api/operations/geocode.md permanent
 
 	handle {
 		try_files {path} {path}/index.html {path}.html
