@@ -28,7 +28,7 @@ export default defineConfig({
       ],
     },
     server: {
-      proxy: api ? { "/api/search": { target: api, rewrite: (path) => path.replace(/^\/api\/search/, "/places") } } : undefined,
+      proxy: api ? { "/api/search": { target: api, rewrite: (path) => path.replace(/^\/api\/search/, "/geocode") } } : undefined,
     },
   },
   fonts: [

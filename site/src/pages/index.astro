@@ -9,20 +9,20 @@ import Compare from "../components/landing/Compare.astro";
 import Faq from "../components/landing/Faq.astro";
 import Walkthrough from "../components/landing/Walkthrough.astro";
 
-// Public landmarks only, so no example points at someone's home, each in its own
-// language and script. Coordinates are og's own /places answers on the planet Pack, so typing
-// an example gives what it shows.
+// The street addresses of public landmarks, so no example points at someone's
+// home, each in its own language and script. Coordinates are og's own /geocode
+// answers on the planet Pack, so typing an example gives what it shows.
 const examples: [string, string][] = [
-  ["1600 Pennsylvania Ave NW, Washington", "38.89764, -77.03655"],
-  ["名古屋城, 名古屋市", "35.18459, 136.90008"],
-  ["Красная площадь, Москва", "55.75361, 37.62148"],
-  ["इंडिया गेट, नई दिल्ली", "28.61293, 77.22949"],
+  ["1600 Pennsylvania Ave NW, Washington, DC", "38.89747, -77.03655"],
+  ["大阪市中央区大阪城1-1", "34.68737, 135.52586"],
+  ["Красная площадь, 3, Москва", "55.75470, 37.62144"],
+  ["1 شارع الشيخ محمد بن راشد, دبي", "25.19721, 55.27416"],
   ["5 Av. Anatole France, Paris", "48.85826, 2.29450"],
-  ["故宫博物院, 北京", "39.91743, 116.39078"],
-  ["قلعة صلاح الدين, القاهرة", "30.02983, 31.26147"],
-  ["불국사, 경주", "35.78909, 129.33182"],
-  ["הכותל המערבי, ירושלים", "31.77683, 35.23443"],
-  ["Cristo Redentor, Rio de Janeiro", "-22.95192, -43.21046"],
+  ["北京市东城区景山前街4号", "39.91743, 116.39078"],
+  ["불국로 385, 경주", "35.79015, 129.33206"],
+  ["רחוב רוטשילד 16, תל אביב", "32.06280, 34.77093"],
+  ["Διονυσίου Αρεοπαγίτου 15, Αθήνα", "37.96847, 23.72848"],
+  ["Av. Atlântica 1702, Rio de Janeiro", "-22.96701, -43.17919"],
 ];
 
 const features = [

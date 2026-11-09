@@ -24,7 +24,7 @@ http://:8081 {
 	import security
 
 	# The one API the site exposes: GET /api/search, with q alone and one result,
-	# answered by the runtime's /places: the hero's examples are landmarks.
+	# answered by the runtime's /geocode: the hero geocodes addresses.
 	# Rebuilding the query drops every other parameter, and q is re-encoded, so it
 	# can't smuggle more in. Batch, reverse, other methods and other paths fall
 	# through to the static files and 404 (deploy/search/open-geocode-search.service).
@@ -33,7 +33,7 @@ http://:8081 {
 		path /api/search
 	}
 	handle @search {
-		rewrite * /places?q={query.q}&limit=1
+		rewrite * /geocode?q={query.q}&limit=1
 		reverse_proxy 127.0.0.1:8090
 	}
 

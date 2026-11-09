@@ -33,7 +33,7 @@ First-time setup on the VM:
 ## Site search
 
 The hero's search box calls `/api/search` on the site's own domain. Caddy forwards
-that one route, `GET` with `q` only and one result, to `/places` on
+that one route, `GET` with `q` only and one result, to `/geocode` on
 `open-geocode-search.service`; every other API path and method gets the site's 404.
 The service runs sandboxed on 2 CPU cores, so heavy search traffic slows search and
 nothing else.
