@@ -16,7 +16,7 @@ const examples: [string, string][] = [
   ["1600 Pennsylvania Ave NW, Washington, DC", "38.89747, -77.03655"],
   ["大阪市中央区大阪城1-1", "34.68737, 135.52586"],
   ["Красная площадь, 3, Москва", "55.75470, 37.62144"],
-  ["1 شارع الشيخ محمد بن راشد, دبي", "25.19721, 55.27416"],
+  ["1 شارع الشيخ محمد بن راشد، دبي", "25.19721, 55.27416"],
   ["5 Av. Anatole France, Paris", "48.85826, 2.29450"],
   ["北京市东城区景山前街4号", "39.91743, 116.39078"],
   ["불국로 385, 경주", "35.79015, 129.33206"],
@@ -62,7 +62,7 @@ const description =
           </span>
         </button>
         <AddressMorph examples={examples} placeholder="100 Queen St W, Toronto" />
-        <p class="og-result" aria-live="polite" hidden></p>
+        <p class="og-result" dir="auto" aria-live="polite" hidden></p>
         <p class="og-sub">Fast, lightweight, self-hosted geocoding engine in pure Rust.</p>
         <a class="og-cta" href="/docs/quickstart/">Get started</a>
       </div>

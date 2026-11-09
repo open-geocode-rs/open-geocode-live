@@ -15,8 +15,9 @@ const { examples, placeholder } = Astro.props;
       <input
         class="og-morph-input"
         type="text"
+        dir="auto"
         size="1"
-        aria-label="Type an address or place, then press Enter"
+        aria-label="Type an address, then press Enter"
         autocomplete="off"
         spellcheck="false"
         placeholder={placeholder}
@@ -42,6 +43,8 @@ const { examples, placeholder } = Astro.props;
   const STAGGER = 28;
   const SETTLE = 380;
   const GLYPHS = "0123456789.,-/abcdefghijklmnopqrstuvwxyz";
+  // Hebrew, Arabic, Syriac, Thaana and N'Ko, and their presentation forms.
+  const RTL = /[\u0590-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 
   // Each character scrambles, then settles on its target left to right, line by line.
   // Lines are fixed before it starts: left to wrap itself, the scrambled text would
@@ -296,6 +299,10 @@ const { examples, placeholder } = Astro.props;
       const steps = this.#examples.flat();
       await document.fonts.ready;
       const set = (text: string) => (this.#text.textContent = text);
+      // Arabic and Hebrew read right to left, so "1 شارع" keeps its number on the
+      // right. Set before a morph, so the scramble already runs in that direction.
+      const direct = (text: string) => (this.#text.dir = RTL.test(text) ? "rtl" : "ltr");
+      direct(steps[0] ?? "");
       let shown = this.#lines(steps[0] ?? "");
       set(shown.join("\n"));
       // A new width re-breaks the text on show; one mid-morph is caught by the next step.
@@ -306,6 +313,7 @@ const { examples, placeholder } = Astro.props;
         await wait(HOLD);
         if (this.#editing) await new Promise<void>((r) => (this.#resume = r));
         const next = this.#lines(steps[(i + 1) % steps.length]);
+        direct(steps[(i + 1) % steps.length]);
         this.#morphing = true;
         if (still) set(next.join("\n"));
         else await morph(set, shown, next);
