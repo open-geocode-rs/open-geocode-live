@@ -116,10 +116,21 @@ const description =
       hide?(): void;
     };
 
+    // While typing, the result's line says what to type; the answer replaces it.
+    const hint = () => {
+      result.hidden = false;
+      result.dataset.hint = "";
+      result.textContent = "Type a street address, anywhere in the world.";
+      result.title = "";
+    };
+
     const setEditing = (editing: boolean) => {
       copy.dataset.mode = editing ? "edit" : "examples";
       result.hidden = true;
-      if (editing) line.startEditing();
+      if (editing) {
+        line.startEditing();
+        hint();
+      }
       else {
         line.stopEditing();
         globe.release?.();
@@ -131,15 +142,18 @@ const description =
     copy.addEventListener("og-edit", () => setEditing(true));
     copy.addEventListener("og-cancel", () => setEditing(false));
     copy.addEventListener("og-clear", () => {
-      result.hidden = true;
+      hint();
       globe.release?.();
       map.hide?.();
     });
-    copy.addEventListener("input", () => (result.hidden = true));
+    copy.addEventListener("input", () => {
+      if (!("hint" in result.dataset)) hint();
+    });
     // The matched address goes under the coordinates, so a near miss is visible.
     copy.addEventListener("og-result", (event) => {
       const hit = (event as CustomEvent<{ label: string; coordinates: string } | null | undefined>).detail;
       result.hidden = false;
+      delete result.dataset.hint;
       if (hit) {
         const [lat, lon] = hit.coordinates.split(",").map(Number);
         globe.turnTo?.(lat, lon);

@@ -11,7 +11,7 @@ const description =
   "OpenGeocode is free, open-source, self-hosted address geocoding in pure Rust: forward, autocomplete, reverse and " +
   "batch, served from one memory-mapped file built from OpenStreetMap and OpenAddresses.";
 
-// Dev only: OG_API is a runtime to send /api/search to, e.g. an SSH tunnel to the VM.
+// Dev only: OG_API is a runtime to send /api/geocode to, e.g. an SSH tunnel to the VM.
 const api = process.env.OG_API;
 
 export default defineConfig({
@@ -28,7 +28,7 @@ export default defineConfig({
       ],
     },
     server: {
-      proxy: api ? { "/api/search": { target: api, rewrite: (path) => path.replace(/^\/api\/search/, "/geocode") } } : undefined,
+      proxy: api ? { "/api/geocode": { target: api, rewrite: (path) => path.replace(/^\/api/, "") } } : undefined,
     },
   },
   fonts: [

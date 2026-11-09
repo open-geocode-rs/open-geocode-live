@@ -1,5 +1,5 @@
 # The runtime behind the site's search box, separate from open-geocode.service. Caddy
-# forwards only GET /api/search to it (deploy/site/Caddyfile); nothing else reaches it.
+# forwards only GET /api/geocode to it (deploy/site/Caddyfile); nothing else reaches it.
 #
 #   sudo install -m 644 deploy/search/open-geocode-search.service /etc/systemd/system/
 #   sudo systemctl daemon-reload && sudo systemctl enable --now open-geocode-search

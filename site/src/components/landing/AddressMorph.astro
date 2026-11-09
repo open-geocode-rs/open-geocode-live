@@ -17,7 +17,7 @@ const { examples, placeholder } = Astro.props;
         type="text"
         dir="auto"
         size="1"
-        aria-label="Type an address, then press Enter"
+        aria-label="Type a street address, then press Enter"
         autocomplete="off"
         spellcheck="false"
         placeholder={placeholder}
@@ -91,7 +91,7 @@ const { examples, placeholder } = Astro.props;
   // first falls back to the examples.
   async function search(query: string): Promise<Hit | null | undefined> {
     try {
-      const response = await fetch(`/api/search?${new URLSearchParams({ q: query, limit: "1" })}`);
+      const response = await fetch(`/api/geocode?${new URLSearchParams({ q: query, limit: "1" })}`);
       if (!response.ok) return undefined;
       const feature: Feature | undefined = (await response.json()).features?.[0];
       if (!feature) return null;
