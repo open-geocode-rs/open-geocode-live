@@ -44,7 +44,7 @@ Coordinates are `[longitude, latitude]`, as GeoJSON requires.
 ## Layers
 
 `layer` says what kind of record a feature is: `address`, `street`, `interpolation`, `postcode`, `poi`, `place`, `neighbourhood`, `locality`, `district`, `region` or `country`.
-Pass `layer=` to a forward endpoint to only get one kind.
+Pass `layer=` to `/geocode`, `/autocomplete` or `/reverse` to only get one kind.
 
 ## Accuracy
 

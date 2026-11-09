@@ -64,10 +64,16 @@ The API is now listening on `http://127.0.0.1:8080`.
 
 ## 4. Query it
 
-Forward geocode a free-form address with `/search`.
+Forward geocode a free-form address with `/geocode`.
 
 ```sh
-curl 'http://127.0.0.1:8080/search?q=10+King+Street+Toronto'
+curl 'http://127.0.0.1:8080/geocode?q=10+King+Street+Toronto'
+```
+
+Find a place by name, such as a landmark, a shop or a town, with `/places`.
+
+```sh
+curl 'http://127.0.0.1:8080/places?q=CN+Tower'
 ```
 
 Reverse geocode a point with `/reverse`.
@@ -77,7 +83,7 @@ Longitude comes first, as in GeoJSON.
 curl 'http://127.0.0.1:8080/reverse?lon=-79.38&lat=43.65'
 ```
 
-Both return a GeoJSON `FeatureCollection`, so the result drops straight into a map library.
+Each returns a GeoJSON `FeatureCollection`, so the result drops straight into a map library.
 Each feature carries the matched address, its coordinates, an accuracy tier and a score.
 See [Responses](/docs/responses/) for every field.
 
