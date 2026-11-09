@@ -12,7 +12,7 @@ Wants=network-online.target
 ExecStart=/opt/open-geocode-search/bin/open-geocode serve --pack /var/lib/open-geocode-search/pack.ogp --bind 127.0.0.1:8090
 Restart=always
 RestartSec=2
-# Half the cores, so a flood of searches slows search, not the rest of the VM.
+# Two cores, so a flood of searches slows search, not the rest of the VM.
 CPUQuota=200%
 
 DynamicUser=yes
