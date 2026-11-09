@@ -18,10 +18,12 @@ There is no PostgreSQL, Elasticsearch or other service to keep running, and an u
 
 ## What's inside
 
-- **Forward geocoding**: turn free-form text into coordinates with [`/search`](/docs/api/operations/search/), or an address already split into fields with [`/geocode`](/docs/api/operations/geocode/).
+- **Forward geocoding**: turn an address into coordinates with [`/geocode`](/docs/api/operations/geocode/), as free-form text or already split into fields.
+- **Place search**: find a landmark, shop or town by name, or a place by its stable id, with [`/places`](/docs/api/operations/places/).
 - **Autocomplete**: suggest addresses as someone types with [`/autocomplete`](/docs/api/operations/autocomplete/).
 - **Reverse geocoding**: find the nearest address to a point, with its locality, region and country, with [`/reverse`](/docs/api/operations/reverse/).
-- **Batch geocoding**: geocode a whole CSV offline with [`open-geocode geocode batch`](/docs/guides/batch-csv/).
+  Pass `layer=` to get only the nearest street, or only the town the point lies in.
+- **Batch geocoding**: send up to 1,000 lookups in one request to `/geocode`, `/places` or `/reverse`, upload a CSV to [`/jobs`](/docs/api/operations/create/), or geocode a whole CSV offline with [`open-geocode geocode batch`](/docs/guides/batch-csv/).
 - **Interactive interface**: pick a region, build it, search it and geocode CSV files from the terminal with `og`.
 
 New to og?

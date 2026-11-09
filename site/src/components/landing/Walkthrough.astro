@@ -147,7 +147,7 @@ const steps = [
       { html: ok(`Listening on ${c("t-link", "http://127.0.0.1:8080")}`), delay: 300 },
       { html: "" },
       ...[
-        ["/search?q=10+King+St+W", "1.0"],
+        ["/geocode?q=10+King+St+W", "1.0"],
         ["/autocomplete?q=Queen+St", "0.9"],
         ["/reverse?lon=-79.38&lat=43.65", "1.0"],
         ["/geocode?address=1+Yonge+St", "1.1"],
