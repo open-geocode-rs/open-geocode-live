@@ -1,12 +1,17 @@
 [Unit]
-Description=open-geocode runtime
+Description=open-geocode runtime (API)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/opt/open-geocode/bin/open-geocode serve --pack /var/lib/open-geocode/pack --bind 127.0.0.1:8080
+ExecStart=/opt/open-geocode/bin/open-geocode serve --pack /var/lib/open-geocode/pack.ogp --bind 127.0.0.1:8080
 Restart=always
+RestartSec=2
 User=oguser
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target

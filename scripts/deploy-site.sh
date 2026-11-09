@@ -4,6 +4,8 @@
 #
 #   sh scripts/deploy-site.sh <ssh-host> <site-url>
 #   sh scripts/deploy-site.sh ubuntu@my-vm https://example.com
+#
+# On the VM itself, pass `local` as the host to copy without SSH.
 set -eu
 HOST="${1:?usage: deploy-site.sh <ssh-host> <site-url>}"
 URL="${2:?usage: deploy-site.sh <ssh-host> <site-url>}"
@@ -11,5 +13,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/site"
 SITE_URL="$URL" npm run build
 # --delete, so pages removed from the site stop being served.
-rsync -az --delete dist/ "$HOST:/var/www/open-geocode-site/"
+if [ "$HOST" = local ]; then
+  rsync -a --delete dist/ /var/www/open-geocode-site/
+else
+  rsync -az --delete dist/ "$HOST:/var/www/open-geocode-site/"
+fi
 echo "deployed $URL"

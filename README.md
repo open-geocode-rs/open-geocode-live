@@ -20,6 +20,7 @@ sh scripts/deploy-site.sh <ssh-host> https://example.com
 ```
 
 This builds `site/` for that URL and copies it to `/var/www/open-geocode-site/`.
+On the VM itself, pass `local` as the host.
 Caddy serves the new files straight away, with no restart.
 
 First-time setup on the VM:
@@ -32,9 +33,10 @@ First-time setup on the VM:
 ## Site search
 
 The hero's search box calls `/api/search` on the site's own domain. Caddy forwards
-that one route, `GET` with `q` only and one result, to `open-geocode-search.service`;
-every other API path and method gets the site's 404. The service runs sandboxed on
-half the VM's cores, so heavy search traffic slows search and nothing else.
+that one route, `GET` with `q` only and one result, to `/places` on
+`open-geocode-search.service`; every other API path and method gets the site's 404.
+The service runs sandboxed on 2 CPU cores, so heavy search traffic slows search and
+nothing else.
 
 To try search locally, tunnel a runtime to this machine and point the dev site at it:
 
