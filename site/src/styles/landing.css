@@ -655,6 +655,14 @@ body {
   white-space: nowrap;
 }
 
+/* The hint is prose, not an answer: the subtitle's font, small enough for one line
+   on a phone. Declared after .og-result so it wins. */
+.og-result[data-hint] {
+  font-family: inherit;
+  font-size: 0.875rem;
+  opacity: 0.6;
+}
+
 /* Two lines reserved on narrow screens so a longer address never shifts the page. */
 .og-morph {
   display: block;
