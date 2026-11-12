@@ -15,8 +15,10 @@ Rust 1.88 or newer, with Cargo on your `PATH`. Get it from [rustup.rs](https://r
 Install og from source with Cargo.
 
 ```sh
-cargo install --git https://github.com/open-geocode-rs/open-geocode open-geocode --features tui
+cargo install --locked --git https://github.com/open-geocode-rs/open-geocode open-geocode --features tui
 ```
+
+og is pre-release, so this builds the latest development version from main.
 
 This installs two binaries:
 
