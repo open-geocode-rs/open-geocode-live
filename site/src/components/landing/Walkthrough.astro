@@ -1,7 +1,7 @@
 ---
 // Steps of the replayed terminal. Screens are built in the script below; stage names
 // are og's own, from its build view.
-const INSTALL = "cargo install open-geocode --features tui";
+const INSTALL = "cargo install --locked --git https://github.com/open-geocode-rs/open-geocode open-geocode --features tui";
 
 const steps = [
   { title: "Pick a region", cmd: "og", text: "The interactive interface: pick any region of the catalog." },
@@ -29,7 +29,7 @@ const steps = [
     <div class="og-walk-copy">
       <div class="og-walk-top">
         <p class="og-walk-eyebrow">Quickstart</p>
-        <a class="og-install-link" href="https://crates.io/crates/open-geocode">v0.1.0 on crates.io ↗</a>
+        <a class="og-install-link" href="https://github.com/open-geocode-rs/open-geocode">Pre-release, from main ↗</a>
       </div>
       <h2 id="og-walk-title">From an extract to answers in one binary.</h2>
       <og-install class="og-install">
