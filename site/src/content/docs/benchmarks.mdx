@@ -1,9 +1,14 @@
 ---
 title: Benchmarks
-description: OpenGeocode accuracy on the MESSY STREETS benchmark against 12 geocoders including Google Maps, and speed against Photon and Pelias on the same Netherlands data and hardware.
+description: OpenGeocode accuracy on the MESSY STREETS benchmark against 12 geocoders including Google Maps and on 19 national address registers, and speed against Photon and Pelias on the same Netherlands data and hardware.
 ---
 
-## Accuracy: MESSY STREETS
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+## Accuracy
+
+<Tabs>
+<TabItem label="MESSY STREETS">
 
 [MESSY STREETS](https://arxiv.org/abs/2609.01612) (Gaere and von Wangenheim, SIGSPATIAL 2026) is a benchmark of addresses copied verbatim from the web, each verified to exist.
 The paper scored 12 geocoders on its gold tier: 10 runs of 100 rows at each resolution, 959 distinct inputs.
@@ -46,6 +51,47 @@ og gives an answer to every query, as Google does, though 52 of them are fallbac
 At GH1 it is within 0.9 points of every commercial API.
 At street level (GH6) it leads OpenCage, is within 1.4 points of Geoapify and TomTom, and is behind the other commercial APIs (81.0% to 88.3%), which have proprietary address data.
 Among open-source geocoders, og leads Pelias, Photon and Nominatim at every resolution.
+
+</TabItem>
+<TabItem label="National registers">
+
+og was given 2,000 random addresses from each of 19 national address datasets, leaving out units and addresses without a house number, street or town.
+Each was sent twice as a free-text query, once in full and once without postcode, region or country and with words abbreviated, and scored against the dataset's own point.
+Ranked by GH6:
+
+| Country | Register | CRR | Full | GH4 | GH6 | GH6 full | GH6 messy |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Norway | Matrikkelen | 100.0 | 99.9 | 99.9 | 99.8 | 100.0 | 99.7 |
+| Denmark | DAR | 100.0 | 100.0 | 99.8 | 99.8 | 100.0 | 99.5 |
+| Netherlands | BAG | 100.0 | 99.9 | 99.7 | 99.2 | 99.6 | 98.9 |
+| Belgium | BeST | 99.9 | 99.8 | 99.6 | 98.9 | 99.6 | 98.2 |
+| Latvia | VAR | 100.0 | 99.8 | 99.9 | 98.7 | 98.8 | 98.5 |
+| Switzerland | GWR | 99.9 | 99.6 | 99.8 | 98.3 | 98.8 | 97.8 |
+| Slovenia | Register naslovov | 100.0 | 99.8 | 99.8 | 98.2 | 98.8 | 97.5 |
+| Luxembourg | CACLR | 98.8 | 98.7 | 98.6 | 98.1 | 99.5 | 96.7 |
+| Australia | G-NAF | 100.0 | 99.8 | 99.5 | 98.0 | 98.4 | 97.6 |
+| Estonia | ADS | 100.0 | 100.0 | 99.9 | 97.8 | 97.8 | 98.0 |
+| France | BAN | 99.0 | 98.8 | 98.8 | 97.5 | 98.7 | 96.3 |
+| Czechia | RÚIAN | 100.0 | 99.8 | 99.8 | 96.9 | 96.7 | 97.1 |
+| Austria | BEV | 99.8 | 99.3 | 99.1 | 96.1 | 97.5 | 94.8 |
+| Canada | ODA | 99.8 | 99.1 | 98.1 | 95.0 | 95.5 | 94.5 |
+| New Zealand | LINZ | 99.9 | 96.3 | 97.7 | 94.5 | 94.8 | 94.1 |
+| South Korea | Juso | 100.0 | 97.3 | 98.7 | 94.1 | 94.9 | 93.3 |
+| Finland | Ryhti | 100.0 | 99.8 | 99.5 | 93.9 | 94.8 | 93.0 |
+| United States | NAD | 98.7 | 96.7 | 94.4 | 90.8 | 93.2 | 88.3 |
+| Brazil | CNEFE | 97.3 | 77.7 | 78.0 | 73.1 | 96.0 | 50.1 |
+
+- **CRR, GH4, GH6**: as in the MESSY STREETS table, in percent. A fallback area counts as an answer, and a query that ran past the server's 1-second limit counts as none.
+- **Full**: CRR without fallback areas.
+- **GH6 full, GH6 messy**: GH6 for each form of the query, 2,000 each.
+- 264 of the 76,000 queries ran past the 1-second limit, 108 of them in Brazil, 48 in the United States, 47 in Luxembourg and 38 in France.
+- og ran the Planet Pack that serves this site, built on 10 November 2026. MESSY STREETS used the October Pack.
+
+The addresses come from each country's national address database, most of which og's Pack also holds through OpenAddresses.
+The queries are in [fixtures/queries](https://github.com/open-geocode-rs/open-geocode/tree/main/fixtures/queries).
+
+</TabItem>
+</Tabs>
 
 ## Speed: og vs Photon vs Pelias
 
