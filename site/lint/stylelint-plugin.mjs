@@ -7,6 +7,7 @@ import stylelint from "stylelint";
 import {
   budget,
   definedNames,
+  fontVariables,
   frameVariables,
   groupOf,
   groups,
@@ -78,7 +79,15 @@ function literalsIn(value, { insideMath = true } = {}) {
 }
 
 // Rule 1. Every token name falls in a group, each group holds its budgeted count, and no token is made elsewhere.
+// Every var() names a token the token files define, a font variable, or --value, so a misspelt name never passes
+// as a member of its group.
 const budgetRule = rule("budget", ({ root, file, say }) => {
+  const known = new Set([...definedNames(), ...fontVariables(), "--value"]);
+  root.walkDecls((d) => {
+    for (const m of d.value.matchAll(/var\(\s*(--[\w-]+)/g)) {
+      if (!known.has(m[1])) say(d, `${d.prop} reads ${m[1]}, which no token file defines. Use an existing token`);
+    }
+  });
   if (!isTokenFile(file)) {
     root.walkDecls(/^--/, (d) => {
       if (d.prop !== "--value") say(d, `${d.prop} makes a token outside the token files. Use an existing token`);

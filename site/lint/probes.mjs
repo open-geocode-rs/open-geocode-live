@@ -19,7 +19,7 @@ const probes = readdirSync(probeDir)
 
 const work = mkdtempSync(join(tmpdir(), "og-lint-probes-"));
 try {
-  for (const part of ["src", "lint", "stylelint.config.mjs", "eslint.config.mjs", "package.json", "tsconfig.json"]) {
+  for (const part of ["src", "lint", "astro.config.mjs", "stylelint.config.mjs", "eslint.config.mjs", "package.json", "tsconfig.json"]) {
     cpSync(join(root, part), join(work, part), { recursive: true });
   }
   symlinkSync(join(root, "node_modules"), join(work, "node_modules"));

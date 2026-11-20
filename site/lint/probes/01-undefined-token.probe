@@ -1,0 +1,2 @@
+probe {"rule": "og/budget", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    padding: var(--space-999);

@@ -53,6 +53,11 @@ export function definedNames() {
   return tokenFiles.flatMap((f) => [...readFileSync(join(root, f), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]));
 }
 
+/** The variables the font loader defines, from the cssVariable of each font in astro.config.mjs. */
+export function fontVariables() {
+  return [...readFileSync(join(root, "astro.config.mjs"), "utf8").matchAll(/cssVariable:\s*["'](--[\w-]+)["']/g)].map((m) => m[1]);
+}
+
 export function groupOf(name) {
   return groups.find((g) => g.re.test(name));
 }
