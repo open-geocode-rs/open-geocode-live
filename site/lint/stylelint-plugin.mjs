@@ -60,6 +60,8 @@ function literalsIn(value, { insideMath = true } = {}) {
         if (n.value === "steps") continue;
         walk(n.nodes, inMath || math);
       } else if (n.type === "word") {
+        // The multiplier -1 turns a token negative inside calc(), min() or max(), as rule 8 allows everywhere.
+        if (inMath && n.value === "-1") continue;
         if (/^#[0-9a-f]{3,8}$/i.test(n.value)) found.push(n.value);
         else if (colourWords.has(n.value.toLowerCase())) found.push(n.value);
         else {

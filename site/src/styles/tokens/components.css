@@ -17,28 +17,33 @@
   --map-label-halo: var(--color-background);
 
   /* button-raised: the landing page's raised buttons, each a cap on a base it sinks into when pressed. The cap shades
-     toward its foot, with a highlight along its top edge. The plain cap is the page's own background on a solid
-     base. The solid cap is the solid fill, for the page's primary action, on a darker base. */
+     toward its foot, with a highlight along its top edge and a shade along its foot. The plain cap is the page's own
+     background on a solid base. The solid cap is the solid fill, for the page's primary action, a hairline deeper on
+     a black base. */
   --button-raised-cap: linear-gradient(var(--color-background), color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), var(--color-background)));
   --button-raised-cap-hover: linear-gradient(var(--color-background), color-mix(in srgb, var(--color-foreground) var(--p-alpha-4), var(--color-background)));
   --button-raised-edge: var(--color-solid);
   --button-raised-shadow:
     inset 0 var(--border-strong) 0 var(--color-background),
+    inset 0 calc(var(--border-strong) * -1) 0 color-mix(in srgb, var(--p-black) var(--p-alpha-8), transparent),
     0 var(--space-1) 0 var(--button-raised-edge),
     0 var(--space-1-5) var(--space-1-5) color-mix(in srgb, var(--p-black) var(--p-alpha-16), transparent);
   --button-raised-shadow-pressed:
     inset 0 var(--border-strong) 0 var(--color-background),
+    inset 0 calc(var(--border-strong) * -1) 0 color-mix(in srgb, var(--p-black) var(--p-alpha-8), transparent),
     0 0 0 var(--button-raised-edge),
     0 var(--border) var(--space-0-5) color-mix(in srgb, var(--p-black) var(--p-alpha-8), transparent);
   --button-raised-solid-cap: linear-gradient(color-mix(in srgb, var(--color-on-solid) var(--p-alpha-16), var(--color-solid)), var(--color-solid), var(--color-solid));
   --button-raised-solid-cap-hover: linear-gradient(color-mix(in srgb, var(--color-on-solid) var(--p-alpha-16), var(--color-solid-hover)), var(--color-solid-hover), var(--color-solid-hover));
-  --button-raised-solid-edge: color-mix(in srgb, var(--p-black) var(--p-alpha-64), var(--color-solid));
+  --button-raised-solid-edge: var(--p-black);
   --button-raised-solid-shadow:
     inset 0 var(--border-strong) 0 color-mix(in srgb, var(--color-on-solid) var(--p-alpha-16), transparent),
-    0 var(--space-1) 0 var(--button-raised-solid-edge),
-    0 var(--space-1-5) var(--space-1-5) color-mix(in srgb, var(--p-black) var(--p-alpha-16), transparent);
+    inset 0 calc(var(--border-strong) * -1) 0 color-mix(in srgb, var(--p-black) var(--p-alpha-16), transparent),
+    0 calc(var(--space-1) + var(--border)) 0 var(--button-raised-solid-edge),
+    0 calc(var(--space-1-5) + var(--border)) var(--space-1-5) color-mix(in srgb, var(--p-black) var(--p-alpha-16), transparent);
   --button-raised-solid-shadow-pressed:
     inset 0 var(--border-strong) 0 color-mix(in srgb, var(--color-on-solid) var(--p-alpha-16), transparent),
+    inset 0 calc(var(--border-strong) * -1) 0 color-mix(in srgb, var(--p-black) var(--p-alpha-16), transparent),
     0 0 0 var(--button-raised-solid-edge),
     0 var(--border) var(--space-0-5) color-mix(in srgb, var(--p-black) var(--p-alpha-8), transparent);
 }
