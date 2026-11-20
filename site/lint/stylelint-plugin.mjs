@@ -51,7 +51,7 @@ function literalsIn(value, { insideMath = true } = {}) {
           found.push(valueParser.stringify(n));
           continue;
         }
-        const math = n.value === "calc";
+        const math = /^(calc|min|max)$/.test(n.value);
         if (math && !insideMath) continue;
         if (n.value === "steps") continue;
         walk(n.nodes, inMath || math);
@@ -207,6 +207,9 @@ const rawValueRule = rule("raw-value", ({ root, file, say }) => {
       if (unit && unit.unit === "" && unit.number === "1" && unitless1.test(d.prop)) continue;
       if (unit && unit.unit === "%" && percentOk.test(d.prop)) continue;
       if (unit && unit.unit === "fr") continue;
+      // A size may be a whole number of the element's own lines, or the full height of the window.
+      if (unit && unit.unit === "lh" && Number.isInteger(Number(unit.number)) && percentOk.test(d.prop)) continue;
+      if ((lit === "100vh" || lit === "100dvh") && percentOk.test(d.prop)) continue;
       say(d, `${d.prop} holds the raw value ${lit}. Use a token`);
     }
   });
@@ -224,23 +227,25 @@ const mediaRule = rule("media-width", ({ root, say }) => {
   });
 });
 
-// Rule 8. calc() holds only tokens, 100%, 100vw, 100vh, 100dvh and the multiplier -1.
+// Rule 8. calc(), min() and max() hold only tokens, 100%, 100vw, 100vh, 100dvh and the multiplier -1,
+// and in a size, the percentages rule 6 allows there.
 // primitives.css is where raw values live, so its arithmetic is raw material too, and rule 1 closes that file.
 const calcRule = rule("calc", ({ root, file, say }) => {
   if (file === primitivesFile) return;
   root.walkDecls((d) => {
     valueParser(d.value).walk((n) => {
-      if (n.type !== "function" || n.value !== "calc") return;
+      if (n.type !== "function" || !/^(calc|min|max)$/.test(n.value)) return;
       const bad = [];
+      const sizePercent = percentOk.test(d.prop);
       const walk = (nodes) => {
         for (const x of nodes) {
           if (x.type === "function" && x.value === "var") continue;
           if (x.type === "function") walk(x.nodes);
-          else if (x.type === "word" && !/^(100%|100vw|100vh|100dvh|-1|[-+*/])$/.test(x.value)) bad.push(x.value);
+          else if (x.type === "word" && !/^(100%|100vw|100vh|100dvh|-1|[-+*/])$/.test(x.value) && !(sizePercent && /^\d+(\.\d+)?%$/.test(x.value))) bad.push(x.value);
         }
       };
       walk(n.nodes);
-      for (const b of bad) say(d, `calc() holds ${b}. Only tokens, 100%, 100vw, 100vh, 100dvh and the multiplier -1 may appear`);
+      for (const b of bad) say(d, `${n.value}() holds ${b}. Only tokens, 100%, 100vw, 100vh, 100dvh and the multiplier -1 may appear`);
       return false;
     });
   });

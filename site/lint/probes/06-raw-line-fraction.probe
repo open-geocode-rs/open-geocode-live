@@ -1,0 +1,2 @@
+probe {"rule": "og/raw-value", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    min-block-size: 1.5lh;
