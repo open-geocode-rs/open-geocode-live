@@ -73,11 +73,20 @@ try {
         },
         { selector: row.selector, limit: count, bands: row.bands ?? null },
       );
+      // The pointer goes in a straight line from the centre of one target to the centre of the next, so it crosses
+      // the gap between neighbours side by side and stacked alike.
       const steps = 8;
+      const from = { x: a.x + a.width / 2, y: a.y + a.height / 2 };
+      const to = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+      let at = from;
       for (let s = 1; s <= steps; s++) {
-        await tab.mouse.move(a.x + a.width / 2 + ((b.x + b.width / 2 - (a.x + a.width / 2)) * s) / steps, a.y + a.height / 2);
+        at = { x: from.x + ((to.x - from.x) * s) / steps, y: from.y + ((to.y - from.y) * s) / steps };
+        await tab.mouse.move(at.x, at.y);
         await tab.waitForTimeout(30);
       }
+      // A sweep that ends anywhere but on the neighbour tested nothing.
+      const reached = await tab.locator(row.selector).nth(i + 1).evaluate((e, p) => e.contains(document.elementFromPoint(p.x, p.y)), at);
+      if (!reached) problems.push(`${row.name}: the pointer never reached target ${i + 2}`);
       await tab.waitForTimeout(400);
       const frames = await tab.evaluate(() => {
         const w = /** @type {Window & { __frames: { fills: string[]; shown: number }[]; __sampling: boolean }} */ (window);
