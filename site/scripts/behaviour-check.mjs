@@ -56,6 +56,18 @@ async function search(tab, term) {
   await tab.locator("[data-search-input]").fill(term);
 }
 const more = (/** @type {Page} */ tab) => tab.locator("[data-search-more] button");
+/**
+ * Serves the search index's script with code put in at the start of one of its functions.
+ * @param {Page} tab
+ * @param {string} at The text that opens the function.
+ * @param {string} code
+ */
+const patchIndex = (tab, at, code) =>
+  tab.route("**/pagefind/pagefind.js", async (route) => {
+    const body = await (await route.fetch()).text();
+    if (!body.includes(at)) throw new Error(`the search index's script has no ${at}`);
+    await route.fulfill({ body: body.replace(at, at + code), contentType: "text/javascript" });
+  });
 
 /** The first rows of a query, loaded one batch at a time with nothing in the way. */
 async function rowsInOrder(/** @type {string} */ term, /** @type {number} */ batches) {
@@ -146,6 +158,47 @@ const cases = {
     });
     return [...enter, ...load];
   },
+
+  /** An index that fails to start is started again on the next keystroke, so search works once it can. */
+  "search starts again after the index failed": () =>
+    visit(
+      "/docs/quickstart/",
+      desktop,
+      async (tab) => {
+        await search(tab, "geocode");
+        await tab.waitForTimeout(1000);
+        await tab.locator("[data-search-input]").press("End");
+        await tab.keyboard.type("s");
+        await rowsReach(tab, 1).catch(() => undefined);
+        const rows = await tab.locator("[data-search-results] > li").count();
+        return rows ? [] : ["after the index failed once, no later search showed results"];
+      },
+      // The index fails the first time it is set up, as when a file of it does not arrive.
+      (tab) => patchIndex(tab, "var options=async(new_options)=>{", "if(!globalThis.__ogFailed){globalThis.__ogFailed=true;throw new Error(\"index failed\")}"),
+    ),
+
+  /** A batch whose query is cleared while the index is dropped adds nothing to the cleared list. */
+  "search drops a batch of a cleared query": () =>
+    visit(
+      "/docs/quickstart/",
+      desktop,
+      async (tab) => {
+        await search(tab, "geocode");
+        await rowsReach(tab, 5);
+        let seen = 0;
+        await tab.route(FRAGMENTS, (route) => (++seen === 2 ? route.abort() : route.continue()));
+        await more(tab).click();
+        // Cleared while the failed batch drops the index.
+        await tab.waitForTimeout(300);
+        await tab.locator("[data-search-input]").fill("");
+        await tab.waitForTimeout(1500);
+        const rows = await tab.locator("[data-search-results] > li").count();
+        const shown = await more(tab).isVisible();
+        return rows || shown ? [`the cleared search shows ${rows} rows${shown ? " and Load more" : ""}`] : [];
+      },
+      // Dropping the index takes a while, as it may on a slow device.
+      (tab) => patchIndex(tab, "var destroy=async()=>{", "await new Promise((r)=>setTimeout(r,1000));"),
+    ),
 
   // Theme.
 
@@ -265,6 +318,91 @@ const cases = {
       await tab.waitForTimeout(PAST_FEEDBACK);
       const after = await tab.screenshot({ clip: box });
       return during.equals(after) ? [] : ["the hidden panel painted over the shown one while its code block said Copied!"];
+    }),
+
+  /** Tabs inside underline tabs keep their own look. */
+  "underline tabs leave nested tabs alone": () =>
+    visit("/docs/api/operations/create/", desktop, async (tab) => {
+      const looks = await tab.evaluate(() => {
+        const outer = document.querySelector('[data-tabs][data-variant="underline"]');
+        if (!outer) return undefined;
+        // The same tabs set as default, once on their own and once inside the underline tabs' first panel.
+        const plain = () => {
+          const copy = /** @type {HTMLElement} */ (outer.cloneNode(true));
+          for (const e of [copy, ...copy.querySelectorAll("[data-variant]")]) e.setAttribute("data-variant", "default");
+          return copy;
+        };
+        const alone = plain();
+        document.body.append(alone);
+        const nested = plain();
+        outer.querySelector('[role="tabpanel"]')?.append(nested);
+        const look = (/** @type {Element} */ root) =>
+          [...root.querySelectorAll('[role="tab"]')].slice(0, 2).map((t) => {
+            const c = getComputedStyle(t);
+            return [c.font, c.padding, c.borderBottomColor, c.marginBottom].join(" ");
+          });
+        return { alone: look(alone), nested: look(nested) };
+      });
+      if (!looks) return ["no underline tabs on the page"];
+      return JSON.stringify(looks.alone) === JSON.stringify(looks.nested) ? [] : [`default tabs inside underline tabs look ${JSON.stringify(looks.nested)}, on their own ${JSON.stringify(looks.alone)}`];
+    }),
+
+  // Buttons.
+
+  /** A button joined to the next control has no end edge or end corners, whatever its variant. */
+  "joined buttons keep their joined edge": () =>
+    visit("/docs/quickstart/", desktop, async (tab) => {
+      const edges = await tab.evaluate(() => {
+        const joined = document.querySelector('.button[data-join="start"]');
+        if (!joined) return undefined;
+        return ["solid", "outline", "ghost", "pill", "raised", "raised-solid"].map((variant) => {
+          const copy = /** @type {HTMLElement} */ (joined.cloneNode(true));
+          copy.setAttribute("data-variant", variant);
+          joined.after(copy);
+          const c = getComputedStyle(copy);
+          const edge = [c.borderInlineEndWidth, c.borderStartEndRadius, c.borderEndEndRadius];
+          copy.remove();
+          return { variant, edge };
+        });
+      });
+      if (!edges) return ["no joined button on the page"];
+      return edges.filter((e) => e.edge.some((v) => v !== "0px")).map((e) => `a joined ${e.variant} button keeps its end edge, ${e.edge.join(" ")}`);
+    }),
+
+  // Landing.
+
+  /** Enter after an input method's composition searches at once, and only the Enter that confirms the characters is held. */
+  "enter after a composition searches": () =>
+    visit("/", desktop, async (tab) => {
+      let searches = 0;
+      await tab.route("**/api/geocode**", (route) => {
+        searches++;
+        return route.fulfill({ json: [] });
+      });
+      const send = (/** @type {string[]} */ events) =>
+        tab.locator("og-address-morph input").first().evaluate((input, list) => {
+          const el = /** @type {HTMLInputElement} */ (input);
+          el.readOnly = false;
+          el.value = "東京都千代田区";
+          for (const e of list) {
+            if (e === "start") el.dispatchEvent(new CompositionEvent("compositionstart", { data: "" }));
+            else if (e === "end") el.dispatchEvent(new CompositionEvent("compositionend", { data: "東京" }));
+            // The Enter that confirms the characters, which some browsers send just after the composition ends.
+            else if (e === "confirm") el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: 229, bubbles: true }));
+            else el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: 13, bubbles: true }));
+          }
+        }, events);
+      const problems = [];
+      // Characters picked with the pointer: the composition ends with no key at all.
+      await send(["start", "end", "enter"]);
+      await tab.waitForTimeout(500);
+      if (searches !== 1) problems.push(`after a composition ended by the pointer, the first Enter made ${searches} searches, expected 1`);
+      await tab.reload({ waitUntil: "networkidle" });
+      searches = 0;
+      await send(["start", "end", "confirm"]);
+      await tab.waitForTimeout(500);
+      if (searches !== 0) problems.push(`the Enter that confirmed the characters made ${searches} searches, expected none`);
+      return problems;
     }),
 };
 

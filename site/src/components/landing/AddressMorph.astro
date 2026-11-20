@@ -124,10 +124,9 @@ const { examples, placeholder } = Astro.props;
     #measure?: CanvasRenderingContext2D;
     #searching = false;
     // An input method (Japanese, Chinese, Korean and others) confirms its characters with Enter. That Enter is part of
-    // typing, not a search. Some browsers send it while the composition runs, others just after it ends, and the next
-    // key up closes that window either way.
+    // typing, not a search. Some browsers send it while the composition runs, others just after it ends with the key
+    // code 229 that input methods use, so only that key is held, and a composition ended by the pointer holds nothing.
     #composing = false;
-    #justComposed = false;
     #resume?: () => void;
     #examples: string[][] = [];
     #text!: HTMLElement;
@@ -158,17 +157,9 @@ const { examples, placeholder } = Astro.props;
       });
       this.#input.addEventListener("compositionend", () => {
         this.#composing = false;
-        this.#justComposed = true;
-      });
-      this.#input.addEventListener("keyup", () => {
-        this.#justComposed = false;
       });
       this.#input.addEventListener("keydown", (event) => {
-        if (event.isComposing || this.#composing) return;
-        if (this.#justComposed && event.key === "Enter") {
-          this.#justComposed = false;
-          return;
-        }
+        if (event.isComposing || this.#composing || event.keyCode === 229) return;
         if (event.key === "Enter") this.geocode();
         // Esc presses Clear while it shows; with nothing to clear it leaves search.
         if (event.key === "Escape" && !this.#searching) {

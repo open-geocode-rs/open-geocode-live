@@ -27,7 +27,8 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
 ---
 
 <div class="tabs" data-tabs data-variant={variant}>
-  <div class="tabs-list" role="tablist" aria-label={label}>
+  {/* The list and each tab carry the variant too, so its styles reach only these tabs and never tabs nested in a panel. */}
+  <div class="tabs-list" role="tablist" aria-label={label} data-variant={variant}>
     {
       tabs.map((t) => (
         <button
@@ -39,6 +40,7 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
           aria-selected={t.id === current ? "true" : "false"}
           tabindex={t.id === current ? 0 : -1}
           data-state={t.state && t.state !== "rest" ? t.state : undefined}
+          data-variant={variant}
         >
           {t.label}
         </button>
@@ -171,12 +173,12 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
   }
 
   /* The current tab's mark lies on the list's rule, so the rule runs on under it. */
-  .tabs[data-variant="underline"] .tabs-list {
+  .tabs-list[data-variant="underline"] {
     border-block-end: var(--border-strong) solid var(--color-border-control);
     gap: 0;
   }
 
-  .tabs[data-variant="underline"] .tabs-tab {
+  .tabs-tab[data-variant="underline"] {
     block-size: auto;
     border-radius: 0;
     font: var(--type-tab);
@@ -184,7 +186,7 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
     padding: var(--space-1) var(--space-5);
   }
 
-  .tabs[data-variant="underline"] [aria-selected="true"] {
+  .tabs-tab[data-variant="underline"][aria-selected="true"] {
     border-block-end-color: var(--color-accent);
     font: var(--type-tab-current);
   }
