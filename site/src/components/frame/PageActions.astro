@@ -31,8 +31,18 @@ const items = [
     const rest = label.textContent;
     let cancel = () => {};
     button.addEventListener("click", async () => {
-      const text = await (await fetch(button.dataset.copyMarkdown!)).text();
-      await navigator.clipboard.writeText(text);
+      // The copy starts inside the click, which some browsers require of a clipboard write, and takes the page's
+      // Markdown once it arrives. A failed request leaves the clipboard as it was and the label unchanged, so the
+      // button can be pressed again.
+      const markdown = fetch(button.dataset.copyMarkdown!).then((response) => {
+        if (!response.ok) throw new Error(`Markdown request failed with ${response.status}`);
+        return response.blob();
+      });
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "text/plain": markdown.then((blob) => new Blob([blob], { type: "text/plain" })) })]);
+      } catch {
+        return;
+      }
       label.textContent = "Copied";
       cancel();
       // The message stays for the feedback duration, then clears.
