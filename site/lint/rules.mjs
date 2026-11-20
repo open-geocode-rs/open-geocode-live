@@ -20,23 +20,34 @@ const isStyle = (node) => node?.type === "MemberExpression" && !node.computed &&
  * A sum or product is written through an object only when every part that holds a number is, so `SHOW.pause + 900`
  * counts as a number written in the file.
  */
-function numberIn(constInit, node) {
-  if (!node) return undefined;
+function numberIn(constInit, node, active = new Set()) {
+  if (!node || active.has(node)) return undefined;
+  active.add(node);
+  try {
+    return numberWithin(constInit, node, active);
+  } finally {
+    active.delete(node);
+  }
+}
+
+function numberWithin(constInit, node, active) {
   if (node.type === "Literal" && typeof node.value === "number") return { via: undefined };
-  if (node.type === "UnaryExpression" && node.argument.type === "Literal") return { via: undefined };
+  if (node.type === "UnaryExpression") {
+    return node.argument.type === "Literal" ? { via: undefined } : numberIn(constInit, node.argument, active);
+  }
   if (node.type === "Identifier") {
     const init = constInit(node, node);
-    return init ? numberIn(constInit, init) : undefined;
+    return numberIn(constInit, init, active);
   }
   if (node.type === "MemberExpression" && node.object.type === "Identifier" && !node.computed) {
     const init = constInit(node, node.object);
     if (init?.type !== "ObjectExpression") return undefined;
     const prop = init.properties.find((p) => p.type === "Property" && (p.key.name ?? p.key.value) === node.property.name);
-    return prop && numberIn(constInit, prop.value) ? { via: node.object.name } : undefined;
+    return prop && numberIn(constInit, prop.value, active) ? { via: node.object.name } : undefined;
   }
   if (node.type === "BinaryExpression") {
-    const left = numberIn(constInit, node.left);
-    const right = numberIn(constInit, node.right);
+    const left = numberIn(constInit, node.left, active);
+    const right = numberIn(constInit, node.right, active);
     if (!left || !right) return left ?? right;
     return left.via === right.via ? left : { via: undefined };
   }
