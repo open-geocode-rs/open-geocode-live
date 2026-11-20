@@ -432,11 +432,27 @@ export function operationContent(op: ApiOperation): OperationContent {
   const docs = isNode(op.node.externalDocs)
     ? { href: String(op.node.externalDocs.url), label: str(op.node.externalDocs.description) ?? "More information" }
     : undefined;
-  return {
+  const content = {
     description: op.description,
     docs,
     parameters: parametersOf(op),
     requestBody: requestBodyOf(op),
     responses: responsesOf(op),
   };
+  uniqueIds([content.parameters, content.requestBody, content.responses]);
+  return content;
+}
+
+// Each section's heading is an anchor on the page, so its id is unique there. Several responses can each have a
+// Headers section, so a repeated id takes the count of earlier uses, as headers-1, and the first keeps its own.
+function uniqueIds(sections: (Section | undefined)[]) {
+  const taken = new Set<string>();
+  const visit = (section: Section) => {
+    let id = section.id;
+    for (let n = 1; taken.has(id); n++) id = `${section.id}-${n}`;
+    taken.add(id);
+    section.id = id;
+    section.sections?.forEach(visit);
+  };
+  sections.forEach((s) => s && visit(s));
 }
