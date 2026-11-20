@@ -20,7 +20,8 @@ type Operation = {
 // `alias` is a second method the operation answers the same, shown beside `method`.
 export type ApiOperation = Operation & { method: string; alias?: string; path: string };
 
-const OPERATIONS_BASE = "docs/api/operations/";
+const API_BASE = "docs/api";
+const OPERATIONS_BASE = `${API_BASE}/operations/`;
 
 // OpenAPI 3.1 has no QUERY, so the engine documents a QUERY batch on its POST alias
 // and marks it with the Accept-Query header. The site shows it as the QUERY it is.
@@ -42,6 +43,11 @@ export function allOperations(): ApiOperation[] {
 
 export function operationFor(id: string): ApiOperation | undefined {
   return id.startsWith(OPERATIONS_BASE) ? operations.get(id.slice(OPERATIONS_BASE.length)) : undefined;
+}
+
+/** Whether a page is one of the API reference pages the OpenAPI document makes. */
+export function isApiPage(id: string): boolean {
+  return id === API_BASE || id.startsWith(`${API_BASE}/`);
 }
 
 // getEntry would warn on every generated API page, so look ids up in one set.

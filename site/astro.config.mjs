@@ -81,9 +81,7 @@ export default defineConfig({
         "./src/styles/tokens/roles.css",
         "./src/styles/tokens/components.css",
         "./src/styles/tokens/host.css",
-        "./src/styles/type.css",
-        "./src/styles/starlight.css",
-        "./src/styles/layout.css",
+        "./src/styles/global.css",
         "./src/styles/api.css",
       ],
       // The docs frame is our own components. The frame keeps its routing, page data, content and scripts.

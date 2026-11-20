@@ -1,3 +1,144 @@
+/*
+ * The API pages still render inside the frame's own content wrapper, and read these values and rules,
+ * moved here from type.css, starlight.css and layout.css when the docs prose moved onto the design system.
+ * They go with this file when the API pages move.
+ */
+:root {
+  --type-family-body: var(--font-body), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* Matched to the reference by width/cap ratio 7.48 and stem weight. */
+  --type-family-heading: var(--font-display), 'Archivo Narrow', ui-sans-serif, system-ui, sans-serif;
+  --type-family-code: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --weight-semibold: 600;
+  /* 550, since its stems match the reference and 700 is too heavy. */
+  --type-display-weight: 550;
+
+  --line-height-article-h2-sm: 1.1;
+  --line-height-article-h3-sm: 1.2;
+  --line-height-snug: 1.35;
+  --letter-spacing-tighter: -0.01em;
+
+  --type-body-leading: 1.7;
+  --type-body-tracking: 0em;
+  --type-code-leading: 1.5;
+}
+
+:root {
+  --sl-font: var(--type-family-body);
+  --sl-font-mono: var(--type-family-code);
+  --sl-text-h1: 1.8125rem;
+  --sl-text-h2: 1.5rem;
+  --sl-text-h3: 1.25rem;
+  --sl-text-h4: 1.125rem;
+  --sl-text-h5: 1rem;
+}
+
+@media (min-width: 50em) {
+  :root {
+    --sl-text-h1: 2.625rem;
+    --sl-text-h2: 2.1875rem;
+    --sl-text-h3: 1.8125rem;
+    --sl-text-h4: 1.5rem;
+    --sl-text-h5: 1.25rem;
+  }
+}
+
+.sl-markdown-content :is(h1, h2, h3):not(:where(.not-content *)) {
+  font-family: var(--type-family-heading);
+  font-weight: var(--type-display-weight);
+}
+
+.sl-markdown-content :is(h1, h2):not(:where(.not-content *)) {
+  letter-spacing: -0.02em;
+  line-height: var(--line-height-article-h2-sm);
+}
+
+.sl-markdown-content h3:not(:where(.not-content *)) {
+  letter-spacing: -0.015em;
+  line-height: var(--line-height-article-h3-sm);
+}
+
+.sl-markdown-content :is(h4, h5, h6):not(:where(.not-content *)) {
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--letter-spacing-tighter);
+  line-height: var(--line-height-snug);
+}
+
+.sl-markdown-content table {
+  font-variant-numeric: tabular-nums;
+}
+
+:root {
+  --og-control-bg: rgb(255 255 255 / 0.04);
+  --og-control-border: rgb(255 255 255 / 0.16);
+  --og-code-bg: rgb(255 255 255 / 0.16);
+
+  --sl-line-height: var(--type-body-leading);
+}
+
+:root[data-theme="light"] {
+  --og-control-bg: rgb(0 0 0 / 0.03);
+  --og-control-border: rgb(0 0 0 / 0.14);
+  --og-code-bg: rgb(0 0 0 / 0.08);
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: var(--type-body-tracking);
+}
+
+/* Code blocks share the controls' 8px radius. */
+.expressive-code {
+  --ec-brdRad: 8px;
+}
+
+/* Inline code on a light tint, 4px radius. System mono sets small beside Inter's tall
+   x-height, so it runs at 0.875em. */
+.sl-markdown-content code:not(:where(.not-content *)) {
+  background: var(--og-code-bg);
+  border-radius: 4px;
+  font-size: 0.875em;
+  letter-spacing: normal;
+  line-height: var(--type-code-leading);
+  padding: 0 4px;
+}
+
+/* A flag broken mid-word reads as two flags. */
+.sl-markdown-content td code:not(:where(.not-content *)) {
+  white-space: nowrap;
+}
+
+/* Heading anchor icons sit 0.4em clear of the text; Starlight's 0.25em reads cramped. */
+.sl-markdown-content .sl-heading-wrapper {
+  --sl-anchor-icon-gap: 0.4em;
+}
+
+/* Note and tip asides as neutral cards with an accent icon, like the page's other
+   panels; Starlight's blue and purple fills clash with the brand. Caution and
+   danger keep their colour, since it carries the warning. */
+.starlight-aside:is(.starlight-aside--note, .starlight-aside--tip) {
+  --sl-color-asides-text-accent: var(--sl-color-white);
+  background: var(--og-control-bg);
+  border: 1px solid var(--og-control-border);
+  border-radius: 8px;
+}
+
+.starlight-aside:is(.starlight-aside--note, .starlight-aside--tip) .starlight-aside__icon {
+  color: var(--sl-color-accent);
+}
+
+.starlight-aside__title {
+  font-size: 1rem;
+}
+
+/* A flag as a heading (`### --bind`) reads as the heading, not as a chip inside it. */
+.sl-markdown-content :is(h2, h3, h4) code:not(:where(.not-content *)) {
+  background: none;
+  font-size: 0.8em;
+  font-weight: 600;
+  padding: 0;
+}
+
 :root {
   --og-method-fg: #49a782;
   --og-method-bg: rgb(73 167 130 / 0.16);

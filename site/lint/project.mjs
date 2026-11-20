@@ -16,6 +16,10 @@ export const include = [
   "src/layouts/Landing.astro",
   "src/components/landing/**",
   "src/components/frame/**",
+  "src/components/prose/**",
+  "src/components/MarkdownContent.astro",
+  "src/lib/prose.ts",
+  "src/styles/global.css",
 ];
 
 export const tokenDir = "src/styles/tokens/";

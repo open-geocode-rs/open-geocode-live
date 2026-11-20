@@ -1,0 +1,72 @@
+---
+import type { Tone } from "../../lib/prose";
+import Icon, { type IconName } from "../ui/Icon.astro";
+
+export interface Props {
+  tone: Tone;
+  title: string;
+}
+
+const { tone, title } = Astro.props;
+const icons: Record<Tone, IconName> = {
+  accent: "info",
+  success: "lightbulb",
+  warning: "triangle-alert",
+  danger: "octagon-alert",
+};
+---
+
+<aside class="aside" data-tone={tone} aria-label={title}>
+  <p class="aside-title" aria-hidden="true">
+    <span class="aside-mark"><Icon name={icons[tone]} size="lg" /></span>
+    <strong>{title}</strong>
+  </p>
+  <div class="aside-content prose-flow"><slot /></div>
+</aside>
+
+<style>
+  .aside {
+    background-color: var(--color-control);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4);
+  }
+
+  .aside[data-tone="warning"] {
+    background-color: var(--color-warning-subtle);
+  }
+
+  .aside[data-tone="danger"] {
+    background-color: var(--color-danger-subtle);
+  }
+
+  .aside-title {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .aside-mark {
+    display: flex;
+  }
+
+  .aside[data-tone="accent"] .aside-mark {
+    color: var(--color-accent);
+  }
+
+  .aside[data-tone="success"] .aside-mark {
+    color: var(--color-success);
+  }
+
+  .aside[data-tone="warning"] .aside-mark {
+    color: var(--color-warning);
+  }
+
+  .aside[data-tone="danger"] .aside-mark {
+    color: var(--color-danger);
+  }
+</style>

@@ -3,7 +3,10 @@ import tseslint from "typescript-eslint";
 import og from "./lint/eslint-plugin.mjs";
 import { include } from "./lint/project.mjs";
 
-const files = include.flatMap((p) => (p.endsWith("**") ? [`${p}/*.astro`, `${p}/*.ts`, `${p}/*.mjs`, `${p}/*.astro/*.ts`] : [p, `${p}/*.ts`]));
+// A style file holds no script or markup, so only the script and markup files of the include list are given to it.
+const files = include
+  .filter((p) => p.endsWith("**") || /\.(astro|ts|mjs)$/.test(p))
+  .flatMap((p) => (p.endsWith("**") ? [`${p}/*.astro`, `${p}/*.ts`, `${p}/*.mjs`, `${p}/*.astro/*.ts`] : [p, `${p}/*.ts`]));
 const rules = { "og/scripts": "error", "og/markup": "error" };
 
 export default [

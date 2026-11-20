@@ -41,19 +41,25 @@ const menu = Astro.locals.t("menuButton.accessibleLabel");
 <script>
   const wide = matchMedia("(min-width: 50rem)");
 
+  // While the menu is open, only the header and the menu take focus, and the page behind it holds still.
+  function menuOpen(open: boolean) {
+    for (const el of document.querySelectorAll<HTMLElement>(".frame-main, .sl-skip-link")) el.inert = open;
+    for (const toggle of document.querySelectorAll<HTMLElement>("og-menu-toggle")) toggle.toggleAttribute("data-open", open);
+    document.documentElement.toggleAttribute("data-menu-open", open);
+  }
+
   // On a phone the sidebar is a popover menu. From the sidebar breakpoint up it is always shown, so it is no popover.
   class SidebarPane extends HTMLElement {
     connectedCallback() {
       const reset = () => {
+        // Taking the popover away closes an open menu without a toggle event, so the page is let go here.
+        if (wide.matches) menuOpen(false);
         this.popover = wide.matches ? null : "auto";
       };
       reset();
       wide.addEventListener("change", reset);
       this.addEventListener("toggle", (event) => {
-        const open = event instanceof ToggleEvent && event.newState === "open";
-        // While the menu is open, only the header and the menu take focus.
-        for (const el of document.querySelectorAll<HTMLElement>(".frame-main, .sl-skip-link")) el.inert = open;
-        for (const toggle of document.querySelectorAll<HTMLElement>("og-menu-toggle")) toggle.toggleAttribute("data-open", open);
+        menuOpen(event instanceof ToggleEvent && event.newState === "open");
       });
     }
   }
@@ -74,6 +80,10 @@ const menu = Astro.locals.t("menuButton.accessibleLabel");
 </script>
 
 <style>
+  :global(:root[data-menu-open]) {
+    overflow: hidden;
+  }
+
   .frame {
     display: flex;
     flex-direction: column;

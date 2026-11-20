@@ -9,10 +9,11 @@ const expand = (exts) => include.flatMap((p) => (p.endsWith("**") ? exts.map((e)
 /** The command line of each linter, run in a site directory. Extra arguments go before the files. */
 export function commands(extra = { style: [], script: [] }) {
   const styles = expand(["css", "astro"]).filter((p) => /\.(css|astro)$/.test(p));
+  const scripts = expand(["astro", "ts", "mjs"]).filter((p) => /\.(astro|ts|mjs)$/.test(p));
   return {
     style: ["node_modules/.bin/stylelint", ["--max-warnings", "0", "--allow-empty-input", ...extra.style, ...styles]],
     usage: ["node_modules/.bin/stylelint", ["--max-warnings", "0", "--allow-empty-input", "--config", "lint/usage.config.mjs", ...extra.style, ...styles]],
-    script: ["node_modules/.bin/eslint", ["--max-warnings", "0", "--no-error-on-unmatched-pattern", ...extra.script, ...expand(["astro", "ts", "mjs"])]],
+    script: ["node_modules/.bin/eslint", ["--max-warnings", "0", "--no-error-on-unmatched-pattern", ...extra.script, ...scripts]],
   };
 }
 
