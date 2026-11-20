@@ -5,6 +5,8 @@
 const colourLiteral = /#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|hwb|oklch|oklab|lab|lch)\(/i;
 const timers = new Set(["setTimeout", "setInterval"]);
 const waits = new Set(["wait", "sleep", "delay", "pause"]);
+// Methods of a style declaration that only read it.
+const styleReads = new Set(["getPropertyValue", "getPropertyPriority", "item"]);
 const landing = (file) => /(^|\/)src\/components\/landing\//.test(file);
 const ui = (file) => /(^|\/)src\/components\/ui\//.test(file);
 const SHOW_LIMIT = 6;
@@ -69,7 +71,7 @@ export function scriptVisitors({ file, say, constInit }) {
     CallExpression(node) {
       const name = nameOf(node.callee);
       const callee = node.callee;
-      if (callee.type === "MemberExpression" && isStyle(callee.object)) {
+      if (callee.type === "MemberExpression" && isStyle(callee.object) && !styleReads.has(name)) {
         const first = node.arguments[0];
         if (!(name === "setProperty" && first?.type === "Literal" && first.value === "--value")) {
           report(node, "A write to .style. Only setProperty(\"--value\", n) is allowed");
