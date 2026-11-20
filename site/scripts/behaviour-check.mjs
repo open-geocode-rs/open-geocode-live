@@ -416,6 +416,11 @@ const cases = {
         await input.press("Enter");
         await tab.locator("og-address-morph input[data-answer]").waitFor();
         if ((await input.inputValue()) !== "48.86914, 2.33130") notes.push("the coordinates did not replace the address");
+        const hasFocusOutline = await input.evaluate((el) => {
+          const style = getComputedStyle(el);
+          return el === document.activeElement && style.outlineStyle === "solid" && parseFloat(style.outlineWidth) > 0;
+        });
+        if (!hasFocusOutline) notes.push("the coordinates have no visible keyboard focus indicator");
         const clear = morph.getByRole("button", { name: "Clear esc" });
         await clear.getByText("esc", { exact: true }).waitFor();
         await clear.click();

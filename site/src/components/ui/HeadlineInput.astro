@@ -32,6 +32,11 @@ const { "aria-label": label, placeholder } = Astro.props;
     caret-color: transparent;
   }
 
+  .headline-input:where([data-answer]):focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
   @media (forced-colors: active) {
     .headline-input:focus-visible {
       outline: var(--border-strong) solid Highlight;
