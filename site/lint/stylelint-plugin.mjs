@@ -131,7 +131,7 @@ const table = [
   [/^(border|outline)(-(top|right|bottom|left|block|inline|block-start|block-end|inline-start|inline-end))?$/, [...widths, ...colour]],
   [/^(border(-[a-z]+)*-width|outline-width|stroke-width|text-decoration-thickness)$/, widths],
   [/^box-shadow$/, ["shadow", "own"]],
-  [/^(color|background|background-color|border(-[a-z]+)*-color|outline-color|fill|stroke|text-decoration-color|caret-color|accent-color)$/, colour],
+  [/^(color|background|background-color|border(-[a-z]+)*-color|outline-color|fill|stroke|text-decoration-color|caret-color|accent-color|scrollbar-color)$/, colour],
   [/^(transition|animation)$/, ["duration", "ease"]],
   [/^(transition|animation)-(duration|delay)$/, ["duration"]],
   [/^(transition|animation)-timing-function$/, ["ease"]],
