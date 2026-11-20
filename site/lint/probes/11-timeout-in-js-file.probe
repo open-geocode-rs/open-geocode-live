@@ -1,0 +1,2 @@
+probe {"rule": "og/scripts", "file": "src/lib/probe.js", "create": true}
+setTimeout(() => document.body.focus(), 1500);

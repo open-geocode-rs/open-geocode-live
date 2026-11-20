@@ -2,7 +2,7 @@
 // A probe marked "pass" must find nothing new, so a rule that grows to catch what it should allow fails here too.
 // Prints one line per probe. Exits 1 if any probe gives the wrong result, so a rule that stops working fails here.
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { commands } from "./run.mjs";
@@ -47,14 +47,15 @@ try {
   const originals = new Map();
   const edit = (file, fn) => {
     const path = join(work, file);
-    if (!originals.has(file)) originals.set(file, readFileSync(path, "utf8"));
-    const before = readFileSync(path, "utf8");
+    if (!originals.has(file)) originals.set(file, existsSync(path) ? readFileSync(path, "utf8") : undefined);
+    const before = existsSync(path) ? readFileSync(path, "utf8") : undefined;
     const after = fn(before);
     if (after === before) throw new Error(`probe edit did not apply to ${file}`);
     writeFileSync(path, after);
   };
   const apply = (e, text) =>
     edit(e.file, (s) => {
+      if (e.create) return text;
       if (e.remove) return s.replace(text, "");
       if (e.replace) return s.replace(e.replace, text);
       const at = s.indexOf(e.after);
@@ -82,7 +83,7 @@ try {
       wrong++;
       console.log(`${p.name}: PASSES the lint. Expected ${p.head.rule}. New findings: ${fresh.join("; ") || "none"}`);
     }
-    for (const [file, text] of originals) writeFileSync(join(work, file), text);
+    for (const [file, text] of originals) text === undefined ? rmSync(join(work, file)) : writeFileSync(join(work, file), text);
     originals.clear();
   }
   console.log(`${probes.length} probes, ${probes.length - wrong} give the result they should, rules covered ${covered.size}: ${[...covered].sort().join(", ")}`);
