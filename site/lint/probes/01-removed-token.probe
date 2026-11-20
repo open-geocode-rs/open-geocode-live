@@ -1,0 +1,2 @@
+probe {"rule": "og/budget", "file": "src/styles/tokens/primitives.css", "remove": true}
+  --space-24: 6rem;

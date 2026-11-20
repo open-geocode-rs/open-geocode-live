@@ -1,0 +1,2 @@
+probe {"rule": "og/selector", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    color: var(--color-foreground) !important;

@@ -1,0 +1,2 @@
+probe {"rule": "og/scripts", "file": "src/components/ui/Tabs.astro", "after": "<script>\n"}
+  document.body.style.opacity = "0.5";

@@ -1,0 +1,2 @@
+probe {"rule": "og/token-kind", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    padding: var(--radius-md);

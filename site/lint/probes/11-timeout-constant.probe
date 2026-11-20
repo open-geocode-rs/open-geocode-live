@@ -1,0 +1,3 @@
+probe {"rule": "og/scripts", "file": "src/components/ui/Tabs.astro", "after": "<script>\n"}
+  const HOLD = 2200;
+  setTimeout(() => document.body.focus(), HOLD);

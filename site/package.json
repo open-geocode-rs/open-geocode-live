@@ -5,9 +5,11 @@
   "scripts": {
     "sync": "node scripts/sync-engine.mjs",
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "npm run lint && astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "lint": "node lint/run.mjs",
+    "lint:probes": "node lint/probes.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "0.4.5",
@@ -26,7 +28,14 @@
     "@astrojs/check": "0.9.12",
     "@types/d3-geo": "3.1.1",
     "@types/topojson-client": "3.1.5",
+    "astro-eslint-parser": "3.2.0",
+    "eslint": "10.15.0",
     "playwright": "1.65.1",
-    "typescript": "5.9.3"
+    "postcss-html": "2.0.1",
+    "postcss-selector-parser": "7.1.7",
+    "postcss-value-parser": "4.2.0",
+    "stylelint": "18.0.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.73.0"
   }
 }

@@ -1,0 +1,2 @@
+probe {"rule": "og/private-token", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    color: var(--p-neutral-500);
