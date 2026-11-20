@@ -1,2 +1,2 @@
 probe {"rule": "og/unread-token", "file": "lint/budget.json", "remove": true}
-    "--space-20": "src/components/frame/Search.astro",
+    "--layout-search": "src/components/frame/Search.astro",

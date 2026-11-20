@@ -378,12 +378,11 @@ const cases = {
       let searches = 0;
       await tab.route("**/api/geocode**", (route) => {
         searches++;
-        return route.fulfill({ json: [] });
+        return route.fulfill({ json: { features: [] } });
       });
       const send = (/** @type {string[]} */ events) =>
-        tab.locator("og-address-morph input").first().evaluate((input, list) => {
+        tab.getByRole("dialog", { name: "Address search" }).getByRole("combobox").evaluate((input, list) => {
           const el = /** @type {HTMLInputElement} */ (input);
-          el.readOnly = false;
           el.value = "東京都千代田区";
           for (const e of list) {
             if (e === "start") el.dispatchEvent(new CompositionEvent("compositionstart", { data: "" }));
@@ -395,11 +394,13 @@ const cases = {
         }, events);
       const problems = [];
       // Characters picked with the pointer: the composition ends with no key at all.
+      await tab.getByRole("button", { name: "Try it for free" }).click();
       await send(["start", "end", "enter"]);
       await tab.waitForTimeout(500);
       if (searches !== 1) problems.push(`after a composition ended by the pointer, the first Enter made ${searches} searches, expected 1`);
       await tab.reload({ waitUntil: "networkidle" });
       searches = 0;
+      await tab.getByRole("button", { name: "Search an address" }).press("Space");
       await send(["start", "end", "confirm"]);
       await tab.waitForTimeout(500);
       if (searches !== 0) problems.push(`the Enter that confirmed the characters made ${searches} searches, expected none`);

@@ -1,0 +1,338 @@
+---
+import Button from "../ui/Button.astro";
+import Icon from "../ui/Icon.astro";
+import Input from "../ui/Input.astro";
+
+---
+
+<dialog
+  id="address-search"
+  class="address-search"
+  aria-label="Address search"
+>
+  <div class="address-bar" data-theme="dark">
+    <Icon name="search" size="xl" />
+    <Input
+      size="lg"
+      role="combobox"
+      aria-label="Search an address"
+      aria-autocomplete="list"
+      aria-controls="address-options"
+      aria-expanded="false"
+      placeholder="Search an address…"
+      enterkeyhint="search"
+      autocomplete="off"
+      spellcheck="false"
+      dir="auto"
+      autofocus
+    />
+    <Button variant="ghost" iconOnly size="lg" icon="x" label="Close address search" data-address-search-close />
+  </div>
+  <div class="address-panel" hidden>
+    <p id="address-options-label" class="address-options-label" hidden></p>
+    <div id="address-options" role="listbox" aria-labelledby="address-options-label" hidden></div>
+    <p class="address-status" role="status"></p>
+  </div>
+  <template>
+    <div class="address-option" role="option" aria-selected="false">
+      <Icon name="map-pin" size="lg" />
+      <span class="address-label" dir="auto"></span>
+      <Icon name="arrow-right" size="lg" />
+    </div>
+  </template>
+</dialog>
+
+<script>
+  import { after } from "../../lib/motion";
+
+  type GeocodeFeature = {
+    geometry: { coordinates: [number, number] };
+    properties: { label: string; context?: Record<string, { name: string } | undefined> };
+  };
+
+  type AddressHit = { label: string; lat: number; lon: number };
+  type Lookup = "autocomplete" | "geocode";
+
+  async function lookup(kind: Lookup, query: string, signal: AbortSignal): Promise<AddressHit[]> {
+    const params = new URLSearchParams({ q: query, limit: "5" });
+    const response = await fetch(`/api/${kind}?${params}`, { signal });
+    if (!response.ok) throw new Error(`Address lookup returned ${response.status}`);
+    const { features }: { features: GeocodeFeature[] } = await response.json();
+    return features.map(({ geometry, properties }) => {
+      const [lon, lat] = geometry.coordinates;
+      const { label, context = {} } = properties;
+      const places = [context.locality?.name, context.region?.name, context.country?.name].filter(
+        (name): name is string => !!name && !label.toLowerCase().includes(name.toLowerCase()),
+      );
+      return { label: [label, ...new Set(places)].join(", "), lat, lon };
+    });
+  }
+
+  const dialog = document.querySelector<HTMLDialogElement>("#address-search")!;
+  const input = dialog.querySelector("input")!;
+  const panel = dialog.querySelector<HTMLElement>(".address-panel")!;
+  const list = dialog.querySelector<HTMLElement>("#address-options")!;
+  const heading = dialog.querySelector<HTMLElement>("#address-options-label")!;
+  const status = dialog.querySelector<HTMLElement>(".address-status")!;
+  const template = dialog.querySelector("template")!;
+
+  let cancelSuggestion: (() => void) | undefined;
+  let request: AbortController | undefined;
+  let hits: AddressHit[] = [];
+  let activeIndex = -1;
+  let composing = false;
+
+  function setActive(index: number) {
+    list.children[activeIndex]?.setAttribute("aria-selected", "false");
+    activeIndex = index;
+    const active = list.children[index];
+    if (active) {
+      active.setAttribute("aria-selected", "true");
+      input.setAttribute("aria-activedescendant", active.id);
+    } else {
+      input.removeAttribute("aria-activedescendant");
+    }
+  }
+
+  function reset() {
+    cancelSuggestion?.();
+    cancelSuggestion = undefined;
+    request?.abort();
+    request = undefined;
+    hits = [];
+    setActive(-1);
+    list.replaceChildren();
+    heading.hidden = list.hidden = panel.hidden = true;
+    input.setAttribute("aria-expanded", "false");
+    status.textContent = "";
+  }
+
+  async function search(kind: Lookup) {
+    const query = input.value.trim();
+    if (!query) return;
+    reset();
+
+    const pending = new AbortController();
+    request = pending;
+    if (kind === "geocode") {
+      panel.hidden = false;
+      status.textContent = "Searching…";
+    }
+
+    try {
+      const matches = await lookup(kind, query, pending.signal);
+      if (pending.signal.aborted || !dialog.open) return;
+
+      panel.hidden = false;
+      hits = matches;
+      status.textContent = hits.length ? "" : "No matching addresses.";
+      if (!hits.length) return;
+
+      showResults(hits);
+      if (kind === "geocode") setActive(0);
+    } catch {
+      if (!pending.signal.aborted && dialog.open) {
+        panel.hidden = false;
+        status.textContent = "Address search is unavailable. Try again.";
+      }
+    } finally {
+      if (request === pending) request = undefined;
+    }
+  }
+
+  function showResults(matches: AddressHit[]) {
+    heading.textContent = "Results";
+    const options = matches.map(({ label }, index) => {
+      const option = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
+      option.id = `address-option-${index}`;
+      option.querySelector(".address-label")!.textContent = label;
+      return option;
+    });
+    list.replaceChildren(...options);
+    heading.hidden = list.hidden = panel.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+  }
+
+  function suggest() {
+    reset();
+    if (input.value.trim()) cancelSuggestion = after("--duration-panel", () => void search("autocomplete"));
+  }
+
+  function select(index: number) {
+    const hit = hits[index];
+    if (!hit) return;
+    dialog.dispatchEvent(new CustomEvent("og-result", { bubbles: true, detail: hit }));
+    dialog.close();
+  }
+
+  function openSearch() {
+    if (dialog.open) {
+      input.focus();
+      return;
+    }
+    input.value = "";
+    reset();
+    composing = false;
+    dialog.showModal();
+  }
+
+  for (const trigger of document.querySelectorAll("[data-address-search-open]")) {
+    trigger.addEventListener("click", openSearch);
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key.toLowerCase() !== "k" || !(event.metaKey || event.ctrlKey) || event.altKey || event.isComposing) return;
+    event.preventDefault();
+    openSearch();
+  });
+
+  dialog.querySelector("[data-address-search-close]")!.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) dialog.close();
+  });
+  dialog.addEventListener("close", () => {
+    if (!dialog.open) reset();
+  });
+
+  input.addEventListener("input", () => {
+    if (!composing) suggest();
+  });
+  input.addEventListener("compositionstart", () => {
+    composing = true;
+    reset();
+  });
+  input.addEventListener("compositionend", () => {
+    composing = false;
+    suggest();
+  });
+  input.addEventListener("keydown", (event) => {
+    if (event.isComposing || composing || event.keyCode === 229) return;
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (activeIndex >= 0) select(activeIndex);
+      else void search("geocode");
+    }
+    const count = list.children.length;
+    if (!count || (event.key !== "ArrowDown" && event.key !== "ArrowUp")) return;
+
+    event.preventDefault();
+    const index = event.key === "ArrowDown"
+      ? (activeIndex + 1) % count
+      : (activeIndex <= 0 ? count : activeIndex) - 1;
+    setActive(index);
+    list.children[index]?.scrollIntoView({ block: "nearest" });
+  });
+
+  list.addEventListener("click", (event) => {
+    const option = (event.target as Element).closest("[role=option]");
+    if (option) select(Array.from(list.children).indexOf(option));
+  });
+</script>
+
+<style>
+  .address-search {
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-dialog);
+    box-sizing: border-box;
+    color: var(--color-foreground);
+    inline-size: calc(100% - var(--space-6));
+    margin: var(--space-6) auto auto;
+    max-block-size: calc(100% - var(--space-6) - var(--space-6));
+    max-inline-size: var(--layout-content-wide);
+    padding: 0;
+    text-align: start;
+  }
+
+  .address-search[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .address-search::backdrop {
+    backdrop-filter: var(--blur-backdrop);
+    background-color: var(--color-backdrop);
+  }
+
+  .address-bar {
+    align-items: center;
+    background-color: var(--color-accent);
+    color: var(--color-on-solid);
+    display: grid;
+    flex-shrink: 0;
+    gap: var(--space-4);
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: var(--space-4) var(--space-3) var(--space-4) var(--space-5);
+  }
+
+  .address-bar :global(input) {
+    background-color: transparent;
+    border: 0;
+    color: inherit;
+    font: var(--type-h3);
+    padding-inline: 0;
+  }
+
+  .address-bar :global(.input:focus-visible) {
+    outline: none;
+  }
+
+  .address-bar :global(input::placeholder),
+  .address-bar :global([data-address-search-close]) {
+    color: inherit;
+  }
+
+  .address-bar :global(input::placeholder) {
+    opacity: var(--opacity-disabled);
+  }
+
+  .address-panel {
+    overflow-y: auto;
+    padding: var(--space-2);
+  }
+
+  .address-options-label,
+  .address-status {
+    color: var(--color-foreground-muted);
+    font: var(--type-ui-sm);
+    margin: var(--space-2) var(--space-3);
+  }
+
+  .address-status:empty {
+    display: none;
+  }
+
+  .address-option {
+    align-items: center;
+    border-radius: var(--radius-md);
+    color: var(--color-foreground-secondary);
+    cursor: pointer;
+    display: grid;
+    font: var(--type-lead);
+    gap: var(--space-3);
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .address-option[aria-selected="true"] {
+    background-color: var(--color-selected);
+    color: var(--color-foreground);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .address-option:hover {
+      background-color: var(--color-selected);
+      color: var(--color-foreground);
+    }
+  }
+
+  @media (min-width: 50rem) {
+    .address-search {
+      inline-size: calc(75% - var(--space-20) - var(--space-10));
+      margin-block-start: var(--space-16);
+      max-block-size: calc(100% - var(--space-16) - var(--space-16));
+      max-inline-size: calc(var(--layout-content) + var(--space-12));
+    }
+  }
+</style>

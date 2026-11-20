@@ -1,2 +1,2 @@
-probe {"rule": "og/unread-token", "file": "lint/budget.json", "replace": "\"--type-lead\": \"src/pages/index.astro\""}
-"--type-lead": "src/components/landing/Split.astro"
+probe {"rule": "og/unread-token", "file": "lint/budget.json", "replace": "\"--control-xl\": \"src/components/ui/Button.astro\""}
+"--control-xl": "src/components/landing/Split.astro"
