@@ -49,7 +49,7 @@ const { items, nested = false } = Astro.props;
   }
 
   /* The top list's links cover its hairline, so the current marker replaces it. */
-  .toc-list:not([data-nested]) > li > .toc-link {
+  .toc-list:not([data-nested]) > * > .toc-link {
     margin-inline-start: calc(var(--space-0-5) * -1);
   }
 

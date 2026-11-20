@@ -104,7 +104,7 @@ const share = (row: Row, rows: Row[]) => Math.max(0.015, row.bar / Math.max(...r
                   <tr data-og={r.og ? "" : undefined}>
                     <th scope="row">{r.og ? <strong>{r.name}</strong> : r.name}</th>
                     <td class="og-bench-bar" aria-hidden="true">
-                      <span style={`--value: ${share(r, t.rows)}`} />
+                      <span class="og-bench-fill" style={`--value: ${share(r, t.rows)}`} />
                     </td>
                     <td class="og-bench-value">{r.og ? <strong>{r.value}</strong> : r.value}</td>
                     <td class="og-bench-extra">{r.extra}</td>
@@ -191,7 +191,7 @@ const share = (row: Row, rows: Row[]) => Math.max(0.015, row.bar / Math.max(...r
   }
 
   /* The bar's length is the row's share of the longest, passed as data. */
-  .og-bench-bar span {
+  .og-bench-fill {
     background-color: var(--color-foreground);
     block-size: var(--space-6);
     display: block;
@@ -199,7 +199,7 @@ const share = (row: Row, rows: Row[]) => Math.max(0.015, row.bar / Math.max(...r
     min-inline-size: var(--space-1);
   }
 
-  .og-bench-panel [data-og] .og-bench-bar span {
+  .og-bench-panel [data-og] .og-bench-fill {
     background-color: var(--color-success);
   }
 
@@ -209,7 +209,7 @@ const share = (row: Row, rows: Row[]) => Math.max(0.015, row.bar / Math.max(...r
     padding-block: var(--space-0-5);
   }
 
-  .og-bench-panel[data-dense] .og-bench-bar span {
+  .og-bench-panel[data-dense] .og-bench-fill {
     block-size: var(--space-3);
   }
 

@@ -332,7 +332,8 @@ const selectorRule = rule("selector", ({ root, file, say }) => {
       sels.each((sel) => {
         const [a, b, c] = specificity(sel);
         if (a > 0) say(r, `${r.selector} uses an id. Use a class`);
-        if (a > 0 || b > 3) say(r, `${sel.toString().trim()} has specificity ${a},${b},${c}, above 0,3,0`);
+        // Compared part by part, so 0,3,1 is above 0,3,0.
+        if (a > 0 || b > 3 || (b === 3 && c > 0)) say(r, `${sel.toString().trim()} has specificity ${a},${b},${c}, above 0,3,0`);
         sel.walk((n) => {
           if (n.type === "class" && !owned.has(n.value)) say(r, `.${n.value} is not a class our markup gives out. Style only markup we own`);
           if (n.type === "attribute" && n.attribute === "data-theme" && !isTokenFile(file)) say(r, `${r.selector} switches on the theme. Use the colour roles`);

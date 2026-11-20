@@ -185,7 +185,7 @@ const owned: Transformer = {
   }
 
   /* Line numbers are a guide, not text to read, so they take the faint tint of a strong border. */
-  .codeblock[data-variant="numbered"] :global(.codeblock-line)::before {
+  [data-variant="numbered"] :global(.codeblock-line)::before {
     color: var(--color-border-strong);
     content: counter(codeblock-line);
     counter-increment: codeblock-line;
