@@ -102,14 +102,19 @@
   --method-query-ink: var(--p-purple-400);
   --method-delete-ink: var(--p-red-400);
 
-  /* syntax: code colouring on a dark page. */
-  --syntax-keyword: var(--p-purple-400);
-  --syntax-string: var(--p-green);
-  --syntax-constant: var(--p-amber-400);
-  --syntax-function: var(--p-navy-tint-64);
-  --syntax-parameter: var(--color-foreground);
+  /* syntax: code colouring on a dark page. Keywords red, constants and keys a light navy, functions purple, strings
+     a pale navy, variables amber, as the original's API panel sets them. */
+  --syntax-keyword: var(--p-red-400);
+  --syntax-string: var(--p-navy-vivid-850);
+  --syntax-constant: var(--p-navy-vivid-750);
+  --syntax-function: var(--p-purple-400);
+  --syntax-parameter: var(--p-amber-400);
   --syntax-comment: var(--color-foreground-muted);
-  --syntax-punctuation: var(--color-foreground-secondary);
+  --syntax-punctuation: var(--color-foreground);
+  /* syntax-prose: code blocks in prose on a dark page, keys green, strings purple, numbers red, as the original's docs. */
+  --syntax-prose-key: var(--p-green-tint-64);
+  --syntax-prose-string: var(--p-purple-400);
+  --syntax-prose-constant: var(--p-red-400);
 }
 
 [data-theme="light"] {
@@ -123,12 +128,16 @@
   --method-query-ink: var(--p-purple-700);
   --method-delete-ink: var(--p-red-700);
 
-  /* syntax: code colouring on a light page. */
-  --syntax-keyword: var(--p-purple-700);
-  --syntax-string: var(--p-green-shade-32);
-  --syntax-constant: var(--p-amber-700);
-  --syntax-function: var(--p-navy);
-  --syntax-parameter: var(--color-foreground);
+  /* syntax: code colouring on a light page, mapped the same way. */
+  --syntax-keyword: var(--p-red-700);
+  --syntax-string: var(--p-navy);
+  --syntax-constant: var(--p-navy-vivid-500);
+  --syntax-function: var(--p-purple-700);
+  --syntax-parameter: var(--p-amber-700);
   --syntax-comment: var(--color-foreground-muted);
-  --syntax-punctuation: var(--color-foreground-secondary);
+  --syntax-punctuation: var(--color-foreground);
+  /* syntax-prose: code blocks in prose on a light page, mapped the same way. */
+  --syntax-prose-key: var(--p-green-shade-32);
+  --syntax-prose-string: var(--p-purple-700);
+  --syntax-prose-constant: var(--p-red-700);
 }

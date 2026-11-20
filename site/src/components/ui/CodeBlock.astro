@@ -335,6 +335,11 @@ const owned: Transformer = {
     color: var(--syntax-constant);
   }
 
+  /* In data, the highlighter marks a key as a keyword. A key is a name, so it takes the constants' colour. */
+  :where(.codeblock) :global([data-language="json"] [data-syntax="keyword"]) {
+    color: var(--syntax-constant);
+  }
+
   .codeblock :global([data-syntax="function"]) {
     color: var(--syntax-function);
   }
@@ -349,5 +354,18 @@ const owned: Transformer = {
 
   .codeblock :global([data-syntax="punctuation"]) {
     color: var(--syntax-punctuation);
+  }
+
+  /* A block in prose has its own colouring. Only the API panel's numbered examples keep the colouring above. */
+  :where(.codeblock:not([data-variant="numbered"])) :global([data-language="json"] [data-syntax="keyword"]) {
+    color: var(--syntax-prose-key);
+  }
+
+  .codeblock:not([data-variant="numbered"]) :global([data-syntax="string"]) {
+    color: var(--syntax-prose-string);
+  }
+
+  .codeblock:not([data-variant="numbered"]) :global([data-syntax="constant"]) {
+    color: var(--syntax-prose-constant);
   }
 </style>
