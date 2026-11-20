@@ -328,6 +328,15 @@ const selectorRule = rule("selector", ({ root, file, say }) => {
 // Rule 10. Motion.
 const timeProps = /^(transition|animation)(-duration|-delay)?$/;
 const motionProps = /^(transform|translate|rotate|scale|inset|top|right|bottom|left|inset-[a-z-]+|margin.*)$/;
+// Properties that change layout. Animating one lays the page out again on every frame, which shows as a flicker and
+// moves what is around it, so motion uses transform, opacity, clip-path and colour instead.
+const layoutProps =
+  /^(width|height|(min|max)-(width|height)|(min-|max-)?(inline|block)-size|top|right|bottom|left|inset(-[a-z-]+)?|margin(-[a-z-]+)?|padding(-[a-z-]+)?|grid-template-(rows|columns)|gap|row-gap|column-gap|flex(-basis|-grow|-shrink)?|font-size|line-height|border(-[a-z-]+)?-width)$/;
+const transitioned = (d) => {
+  if (d.prop === "transition-property") return d.value.split(",").map((x) => x.trim());
+  if (d.prop === "transition") return d.value.split(",").map((x) => x.trim().split(/\s+/)[0]);
+  return [];
+};
 const inMedia = (node, re) => {
   for (let p = node.parent; p; p = p.parent) if (p.type === "atrule" && p.name === "media" && re.test(p.params)) return true;
   return false;
@@ -337,6 +346,11 @@ const motionRule = rule("motion", ({ root, say }) => {
     if (/^transition(-property)?$/.test(d.prop) && /(^|[\s,])all([\s,]|$)/.test(d.value)) say(d, "transition: all. Name each property");
     if (/(^|[\s,])ease-in([\s,]|$)/.test(d.value)) say(d, "ease-in on UI. Use var(--ease-out)");
     if (/scale\(\s*0\s*\)/.test(d.value) || (d.prop === "scale" && d.value.trim() === "0")) say(d, "scale(0). Start from var(--scale-press) with opacity 0");
+    // An accordion is the one part whose job is to change size, so its content box may animate its height.
+    const accordion = d.parent?.type === "rule" && /::details-content$/.test(d.parent.selector);
+    for (const name of transitioned(d)) {
+      if (layoutProps.test(name) && !(accordion && name === "block-size")) say(d, `${d.prop} animates ${name}, a layout property. Animate transform, opacity or clip-path`);
+    }
     if (timeProps.test(d.prop)) {
       if (/--duration-feedback/.test(d.value)) say(d, "--duration-feedback is for scripts only. Use another --duration-*");
       const words = valueParser(d.value).nodes.filter((n) => n.type === "word" && /^-?[\d.]+m?s$/.test(n.value));
@@ -351,6 +365,7 @@ const motionRule = rule("motion", ({ root, say }) => {
     let moves = false;
     k.walkDecls((d) => {
       if (motionProps.test(d.prop)) moves = true;
+      if (layoutProps.test(d.prop) && !/^(top|right|bottom|left|inset)/.test(d.prop)) say(d, `@keyframes ${k.params} animates ${d.prop}, a layout property. Animate transform, opacity or clip-path`);
     });
     if (moves && !inMedia(k, /prefers-reduced-motion:\s*no-preference/)) say(k, `@keyframes ${k.params} moves things. Put it inside @media (prefers-reduced-motion: no-preference)`);
   });
