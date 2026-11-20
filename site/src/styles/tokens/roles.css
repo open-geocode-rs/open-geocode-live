@@ -63,7 +63,7 @@
 
 /* Each type role is one font shorthand, so a component sets size, leading, weight and family in one line. */
 :root {
-  --type-display: var(--p-weight-display) clamp(var(--p-font-size-32), var(--p-font-size-fluid), var(--p-font-size-56)) / var(--p-leading-display) var(--p-font-display);
+  --type-display: var(--p-weight-medium) clamp(var(--p-font-size-24), var(--p-font-size-fluid), var(--p-font-size-56)) / var(--p-leading-display) var(--p-font-mono);
   --type-h1: var(--p-weight-display) var(--p-font-size-32) / var(--p-leading-display) var(--p-font-display);
   --type-h2: var(--p-weight-display) var(--p-font-size-24) / var(--p-leading-heading) var(--p-font-display);
   --type-h3: var(--p-weight-display) var(--p-font-size-20) / var(--p-leading-heading) var(--p-font-display);
