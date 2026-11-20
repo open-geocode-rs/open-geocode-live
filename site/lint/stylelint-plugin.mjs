@@ -336,6 +336,13 @@ const selectorRule = rule("selector", ({ root, file, say }) => {
         if (a > 0 || b > 3 || (b === 3 && c > 0)) say(r, `${sel.toString().trim()} has specificity ${a},${b},${c}, above 0,3,0`);
         sel.walk((n) => {
           if (n.type === "class" && !owned.has(n.value)) say(r, `.${n.value} is not a class our markup gives out. Style only markup we own`);
+          // An attribute selector on class matches classes too. A whole-word or exact match names its classes, which
+          // must be ours. Any other match, or none, could reach classes we do not give out.
+          if (n.type === "attribute" && n.attribute === "class") {
+            const names = n.operator === "~=" || n.operator === "=" ? (n.value ?? "").split(/\s+/).filter(Boolean) : undefined;
+            if (!names) say(r, `${n.toString()} matches classes by part. Use a class selector for a class our markup gives out`);
+            else for (const name of names) if (!owned.has(name)) say(r, `${name} is not a class our markup gives out. Style only markup we own`);
+          }
           if (n.type === "attribute" && n.attribute === "data-theme" && !isTokenFile(file)) say(r, `${r.selector} switches on the theme. Use the colour roles`);
         });
       });
