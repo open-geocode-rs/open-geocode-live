@@ -9,7 +9,6 @@
     "preview": "astro preview",
     "check": "astro check",
     "lint": "node lint/run.mjs",
-    "lint:usage": "node lint/run.mjs --usage",
     "lint:probes": "node lint/probes.mjs"
   },
   "dependencies": {

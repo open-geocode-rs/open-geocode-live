@@ -1,9 +1,12 @@
 // Style rules 1 to 10 of the design system. Each message names what to use instead.
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import selectorParser from "postcss-selector-parser";
 import valueParser from "postcss-value-parser";
 import stylelint from "stylelint";
 import {
   budget,
+  definedNames,
   frameVariables,
   groupOf,
   groups,
@@ -13,6 +16,7 @@ import {
   primitivesFile,
   readers,
   rel,
+  root as siteRoot,
   systemFiles,
   tokenFiles,
 } from "./project.mjs";
@@ -168,11 +172,23 @@ const kindRule = rule("token-kind", ({ root, file, say }) => {
   });
 });
 
-// Rule 5. Every token is read, and every scale and role from at least two files outside the token files and the system page.
+// Rule 5. Every token is read. Every scale and role is read from at least two files outside the token files and
+// the system page, or has one owner named in the owners of lint/budget.json and is read by that file and no other.
+// A new owner is a token decision, made the same way as a new step.
+const owners = budget.owners ?? {};
 const unreadRule = rule("unread-token", ({ root, file, say }) => {
   if (!isTokenFile(file)) return;
   const who = readers();
   const frame = frameVariables();
+  if (file === primitivesFile) {
+    const defined = new Set(definedNames());
+    for (const [name, owner] of Object.entries(owners)) {
+      const kind = groupOf(name)?.kind;
+      if (!defined.has(name)) say(root, `owners names ${name}, which no token file defines. Delete the entry`);
+      else if (kind !== "scale" && kind !== "role") say(root, `owners names ${name}, which is not a scale or role token. Only scales and roles take an owner`);
+      if (!existsSync(join(siteRoot, owner))) say(root, `owners gives ${name} to ${owner}, which does not exist`);
+    }
+  }
   const seen = new Set();
   root.walkDecls(/^--/, (d) => {
     if (seen.has(d.prop)) return;
@@ -187,10 +203,14 @@ const unreadRule = rule("unread-token", ({ root, file, say }) => {
       say(d, `${d.prop} is read by no file`);
       return;
     }
-    if (g?.kind === "scale" || g?.kind === "role") {
-      const users = files.filter((f) => !tokenFiles.includes(f) && !systemFiles(f));
-      if (users.length < 2) say(d, `${d.prop} is read by ${users.length} file${users.length === 1 ? "" : "s"} outside the token files and the system page, and needs 2`);
-    }
+    if (g?.kind !== "scale" && g?.kind !== "role") return;
+    const users = files.filter((f) => !tokenFiles.includes(f) && !systemFiles(f));
+    const owner = owners[d.prop];
+    if (owner === undefined) {
+      if (users.length < 2) say(d, `${d.prop} is read by ${users.length} file${users.length === 1 ? "" : "s"} outside the token files and the system page, and needs 2, or one owner in lint/budget.json, which is a token decision`);
+    } else if (users.length === 0) say(d, `${d.prop} is owned by ${owner} but read by no file outside the token files and the system page`);
+    else if (users.length >= 2) say(d, `${d.prop} is read by ${users.length} files, so its owner entry is stale. Delete it from owners in lint/budget.json`);
+    else if (users[0] !== owner) say(d, `${d.prop} is read by ${users[0]}, not by its owner ${owner}`);
   });
 });
 
@@ -330,8 +350,5 @@ const motionRule = rule("motion", ({ root, say }) => {
     if (moves && !inMedia(k, /prefers-reduced-motion:\s*no-preference/)) say(k, `@keyframes ${k.params} moves things. Put it inside @media (prefers-reduced-motion: no-preference)`);
   });
 });
-
-/** The rule that needs the pages: rule 5, run on its own as lint:usage. */
-export const usage = [unreadRule];
 
 export default [budgetRule, rawLiteralRule, privateRule, kindRule, unreadRule, rawValueRule, mediaRule, calcRule, selectorRule, motionRule];

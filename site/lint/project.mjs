@@ -46,6 +46,11 @@ export function scriptOf(file, text = readFileSync(join(root, file), "utf8")) {
   return [front, ...[...text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1])].join("\n");
 }
 
+/** Every token name the token files define. */
+export function definedNames() {
+  return tokenFiles.flatMap((f) => [...readFileSync(join(root, f), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/(--[\w-]+)\s*:/g)].map((m) => m[1]));
+}
+
 export function groupOf(name) {
   return groups.find((g) => g.re.test(name));
 }

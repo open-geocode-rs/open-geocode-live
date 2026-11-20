@@ -32,7 +32,7 @@ const table = {
   Button: {
     variants: ["solid", "outline", "ghost", "raised"],
     sizes: ["sm", "md", "lg"],
-    states: ["rest", "hover", "focus", "pressed", "disabled", "busy"],
+    states: ["rest", "hover", "focus", "pressed", "disabled"],
     flags: ["icon-only"],
   },
   Input: { variants: ["text", "textarea"], sizes: ["md", "lg"], states: ["rest", "hover", "focus", "disabled", "invalid"] },

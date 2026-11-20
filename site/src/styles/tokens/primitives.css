@@ -72,14 +72,12 @@
   --ease-hover: ease;
 
   /* Stacking. */
-  --z-base: 0;
   --z-raised: 1;
   --z-sticky: 10;
   --z-overlay: 20;
 
   /* Opacity. */
   --opacity-disabled: 0.5;
-  --opacity-busy: 0.7;
 
   /* Press scale. */
   --scale-press: 0.97;

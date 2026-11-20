@@ -11,8 +11,8 @@
     "shadow": { "kind": "scale", "file": "primitives.css", "pattern": "^--shadow-[a-z]+$", "count": 3 },
     "duration": { "kind": "scale", "file": "primitives.css", "pattern": "^--duration-[a-z]+$", "count": 5 },
     "ease": { "kind": "scale", "file": "primitives.css", "pattern": "^--ease-[a-z-]+$", "count": 3 },
-    "z": { "kind": "scale", "file": "primitives.css", "pattern": "^--z-[a-z]+$", "count": 4 },
-    "opacity": { "kind": "scale", "file": "primitives.css", "pattern": "^--opacity-[a-z]+$", "count": 2 },
+    "z": { "kind": "scale", "file": "primitives.css", "pattern": "^--z-[a-z]+$", "count": 3 },
+    "opacity": { "kind": "scale", "file": "primitives.css", "pattern": "^--opacity-[a-z]+$", "count": 1 },
     "scale": { "kind": "scale", "file": "primitives.css", "pattern": "^--scale-press$", "count": 1 },
     "p-font-size": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-font-size-([0-9]+|inline|fluid)$", "count": 11 },
     "p-leading": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-leading-([0-9]+|[a-z]+)$", "count": 5 },
@@ -31,5 +31,19 @@
     "method": { "kind": "component", "file": "components.css", "pattern": "^--method-[a-z]+-(ink|fill)$", "count": 8, "reader": "src/components/ui/Badge.astro" },
     "button-raised": { "kind": "component", "file": "components.css", "pattern": "^--button-raised-[a-z-]+$", "count": 5, "reader": "src/components/ui/Button.astro" },
     "host": { "kind": "host", "file": "host.css", "pattern": "^--sl-[a-z0-9-]+$", "count": 41 }
+  },
+  "owners": {
+    "--space-20": "src/components/frame/Search.astro",
+    "--icon-sm": "src/components/ui/Icon.astro",
+    "--icon-md": "src/components/ui/Icon.astro",
+    "--layout-toc-width": "src/components/frame/TwoColumnContent.astro",
+    "--layout-content": "src/components/frame/ContentPanel.astro",
+    "--shadow-overlay": "src/components/frame/PageSidebar.astro",
+    "--color-solid-hover": "src/components/ui/Button.astro",
+    "--color-backdrop": "src/components/frame/Search.astro",
+    "--type-display": "src/components/landing/AddressMorph.astro",
+    "--type-h2": "src/components/prose/Heading.astro",
+    "--type-h3": "src/components/prose/Heading.astro",
+    "--type-lead": "src/pages/index.astro"
   }
 }

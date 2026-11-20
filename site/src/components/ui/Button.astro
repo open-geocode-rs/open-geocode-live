@@ -4,14 +4,13 @@ import Icon, { type IconName } from "./Icon.astro";
 
 export const buttonVariants = ["solid", "outline", "ghost", "raised"] as const;
 export const buttonSizes = ["sm", "md", "lg"] as const;
-export const buttonStates = ["rest", "hover", "focus", "pressed", "disabled", "busy"] as const;
+export const buttonStates = ["rest", "hover", "focus", "pressed", "disabled"] as const;
 
 type Base = Omit<HTMLAttributes<"button">, "class" | "class:list" | "style" | "aria-label"> & {
   variant?: (typeof buttonVariants)[number];
   size?: (typeof buttonSizes)[number];
   /** Holds a state without a pointer, for the system page. */
   state?: (typeof buttonStates)[number];
-  busy?: boolean;
   icon?: IconName;
   /** Renders a link that looks like the button, for an action that goes to another page. */
   href?: string;
@@ -25,7 +24,6 @@ const {
   variant = "solid",
   size = "md",
   state = "rest",
-  busy = false,
   icon,
   iconOnly = false,
   label,
@@ -51,10 +49,8 @@ const Tag = href ? "a" : "button";
   data-icon-only={iconOnly ? "" : undefined}
   data-state={state === "rest" ? undefined : state}
   disabled={href ? undefined : disabled || state === "disabled"}
-  aria-busy={busy || state === "busy" ? "true" : undefined}
   aria-label={iconOnly ? label : undefined}
 >
-  <span class="button-spinner"><Icon name="spinner" size={iconSize} /></span>
   {
     icon && (
       <span class="button-icon">
@@ -88,20 +84,6 @@ const Tag = href ? "a" : "button";
 
   .button-icon {
     display: inline-flex;
-  }
-
-  .button-spinner {
-    display: none;
-  }
-
-  .button[aria-busy="true"] .button-spinner,
-  .button[data-state="busy"] .button-spinner {
-    display: inline-flex;
-  }
-
-  .button[aria-busy="true"] .button-icon,
-  .button[data-state="busy"] .button-icon {
-    display: none;
   }
 
   .button[data-size="sm"] {
@@ -191,12 +173,6 @@ const Tag = href ? "a" : "button";
     opacity: var(--opacity-disabled);
   }
 
-  .button[aria-busy="true"],
-  .button[data-state="busy"] {
-    cursor: progress;
-    opacity: var(--opacity-busy);
-  }
-
   @media (prefers-reduced-motion: no-preference) {
     .button {
       transition:
@@ -206,16 +182,6 @@ const Tag = href ? "a" : "button";
         box-shadow var(--duration-press) var(--ease-out),
         transform var(--duration-press) var(--ease-out),
         translate var(--duration-press) var(--ease-out);
-    }
-
-    .button-spinner {
-      animation: button-spin var(--duration-panel) linear infinite;
-    }
-
-    @keyframes button-spin {
-      to {
-        rotate: 180deg;
-      }
     }
 
     .button:active,
