@@ -136,6 +136,7 @@ const table = [
   [/^(transition|animation)-(duration|delay)$/, ["duration"]],
   [/^(transition|animation)-timing-function$/, ["ease"]],
   [/^z-index$/, ["z"]],
+  [/^(backdrop-filter|filter)$/, ["blur"]],
   [/^opacity$/, ["opacity"]],
   [/^scale$/, ["scale"]],
   [/^transform$/, ["scale", "space", "layout"]],

@@ -265,6 +265,7 @@ const strings = {
   }
 
   .search-dialog::backdrop {
+    backdrop-filter: var(--blur-backdrop);
     background-color: var(--color-backdrop);
   }
 
@@ -388,7 +389,7 @@ const strings = {
       margin: var(--space-20) auto auto;
       max-block-size: calc(100% - var(--space-16) - var(--space-16));
       max-inline-size: var(--container-lg);
-      min-block-size: var(--container-sm);
+      min-block-size: var(--layout-search);
     }
 
     .search-frame {

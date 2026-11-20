@@ -7,9 +7,10 @@
     "control": { "kind": "scale", "file": "primitives.css", "pattern": "^--control-(sm|md|lg)$", "count": 3 },
     "icon": { "kind": "scale", "file": "primitives.css", "pattern": "^--icon-(sm|md|lg)$", "count": 3 },
     "container": { "kind": "scale", "file": "primitives.css", "pattern": "^--container-(sm|md|lg)$", "count": 3 },
-    "layout": { "kind": "scale", "file": "primitives.css", "pattern": "^--layout-[a-z-]+$", "count": 10 },
+    "layout": { "kind": "scale", "file": "primitives.css", "pattern": "^--layout-[a-z-]+$", "count": 11 },
     "shadow": { "kind": "scale", "file": "primitives.css", "pattern": "^--shadow-[a-z]+$", "count": 3 },
     "duration": { "kind": "scale", "file": "primitives.css", "pattern": "^--duration-[a-z]+$", "count": 5 },
+    "blur": { "kind": "scale", "file": "primitives.css", "pattern": "^--blur-[a-z]+$", "count": 1 },
     "ease": { "kind": "scale", "file": "primitives.css", "pattern": "^--ease-[a-z-]+$", "count": 3 },
     "z": { "kind": "scale", "file": "primitives.css", "pattern": "^--z-[a-z]+$", "count": 3 },
     "opacity": { "kind": "scale", "file": "primitives.css", "pattern": "^--opacity-[a-z]+$", "count": 1 },
@@ -49,6 +50,8 @@
     "--container-lg": "src/components/frame/Search.astro",
     "--layout-hero": "src/pages/index.astro",
     "--layout-horizon": "src/pages/index.astro",
-    "--layout-globe": "src/components/landing/DitherGlobe.astro"
+    "--layout-globe": "src/components/landing/DitherGlobe.astro",
+    "--layout-search": "src/components/frame/Search.astro",
+    "--blur-backdrop": "src/components/frame/Search.astro"
   }
 }

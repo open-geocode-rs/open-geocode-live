@@ -26,7 +26,7 @@ const ratio = (n: number | undefined) => (n === undefined ? "" : `${n.toFixed(2)
 
 const rawGroups = ["p-colour", "p-alpha", "p-font-size", "p-leading", "p-weight", "p-tracking", "p-family"];
 const componentGroups = ["map", "globe", "terminal", "syntax", "method", "button-raised", "codeblock"];
-const ladders = ["space", "radius", "border", "control", "icon", "container", "layout", "shadow", "z", "opacity", "scale"];
+const ladders = ["space", "radius", "border", "control", "icon", "container", "layout", "shadow", "blur", "z", "opacity", "scale"];
 const sample = "Forward, reverse and batch geocoding from one file";
 ---
 
@@ -104,7 +104,7 @@ const sample = "Forward, reverse and batch geocoding from one file";
     }
   </Section>
 
-  <Section title="Scales" note="Spacing, radius, border, sizes, layout, shadow, stacking, opacity and press scale as ladders.">
+  <Section title="Scales" note="Spacing, radius, border, sizes, layout, shadow, blur, stacking, opacity and press scale as ladders.">
     {
       ladders.map((g) => (
         <div class="rows">
@@ -477,6 +477,10 @@ const sample = "Forward, reverse and batch geocoding from one file";
 
   .type[data-token="--type-code-inline"] .type-sample {
     font: var(--type-code-inline);
+  }
+
+  .ladder[data-token="--blur-backdrop"] .ladder-mark {
+    backdrop-filter: var(--blur-backdrop);
   }
 
   .ladder[data-group="radius"] .ladder-mark,
