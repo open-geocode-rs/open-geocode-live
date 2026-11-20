@@ -116,7 +116,8 @@
   --p-font-display: var(--font-display), "Archivo Narrow", ui-sans-serif, system-ui, sans-serif;
   --p-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* Raw colour. Each hue outside the brand has one step for a dark page and one for a light page. */
+  /* Raw colour. Each hue outside the brand has one step for a dark page and one for a light page.
+     Navy is the brand's own hue, so it has the lighter steps the globe draws its sea with. */
   --p-white: #ffffff;
   --p-black: #000000;
   --p-neutral-50: #f5f5f5;
@@ -129,6 +130,8 @@
   --p-neutral-700: #313131;
   --p-neutral-800: #1f1f1f;
   --p-neutral-900: #181818;
+  --p-navy-300: #9fb3c8;
+  --p-navy-500: #4a6a8c;
   --p-navy-700: #0e2e54;
   --p-navy-900: #0a213d;
   --p-green-100: #dcefe6;

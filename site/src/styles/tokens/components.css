@@ -31,8 +31,8 @@
   --globe-land-lit: var(--p-green-300);
   --globe-land-peak: var(--p-white);
   --globe-ocean: var(--p-navy-700);
-  --globe-sea: var(--p-blue-700);
-  --globe-sea-lit: var(--p-blue-400);
+  --globe-sea: var(--p-navy-500);
+  --globe-sea-lit: var(--p-navy-300);
 
   /* terminal: the terminal window on the landing page, dark in both themes. */
   --terminal-background: var(--p-neutral-900);

@@ -19,7 +19,7 @@
     "p-weight": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-weight-[a-z]+$", "count": 3 },
     "p-tracking": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-tracking-[a-z]+$", "count": 2 },
     "p-family": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-font-(sans|display|mono)$", "count": 3 },
-    "p-colour": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-(white|black|(neutral|navy|green|blue|purple|red|amber)-[0-9]+)$", "count": 27 },
+    "p-colour": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-(white|black|(neutral|navy|green|blue|purple|red|amber)-[0-9]+)$", "count": 29 },
     "p-alpha": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-alpha-[0-9]+$", "count": 4 },
     "color": { "kind": "role", "file": "roles.css", "pattern": "^--color-[a-z-]+$", "count": 24 },
     "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 13 },
