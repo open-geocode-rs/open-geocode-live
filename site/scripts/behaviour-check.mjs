@@ -319,6 +319,33 @@ const cases = {
       const after = await tab.screenshot({ clip: box });
       return during.equals(after) ? [] : ["the hidden panel painted over the shown one while its code block said Copied!"];
     }),
+
+  /** Tabs inside underline tabs keep their own look. */
+  "underline tabs leave nested tabs alone": () =>
+    visit("/docs/api/operations/create/", desktop, async (tab) => {
+      const looks = await tab.evaluate(() => {
+        const outer = document.querySelector('[data-tabs][data-variant="underline"]');
+        if (!outer) return undefined;
+        // The same tabs set as default, once on their own and once inside the underline tabs' first panel.
+        const plain = () => {
+          const copy = /** @type {HTMLElement} */ (outer.cloneNode(true));
+          for (const e of [copy, ...copy.querySelectorAll("[data-variant]")]) e.setAttribute("data-variant", "default");
+          return copy;
+        };
+        const alone = plain();
+        document.body.append(alone);
+        const nested = plain();
+        outer.querySelector('[role="tabpanel"]')?.append(nested);
+        const look = (/** @type {Element} */ root) =>
+          [...root.querySelectorAll('[role="tab"]')].slice(0, 2).map((t) => {
+            const c = getComputedStyle(t);
+            return [c.font, c.padding, c.borderBottomColor, c.marginBottom].join(" ");
+          });
+        return { alone: look(alone), nested: look(nested) };
+      });
+      if (!looks) return ["no underline tabs on the page"];
+      return JSON.stringify(looks.alone) === JSON.stringify(looks.nested) ? [] : [`default tabs inside underline tabs look ${JSON.stringify(looks.nested)}, on their own ${JSON.stringify(looks.alone)}`];
+    }),
 };
 
 let failed = 0;
