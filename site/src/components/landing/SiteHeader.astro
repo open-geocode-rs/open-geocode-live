@@ -78,18 +78,15 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
 </header>
 
 <script>
-  // The nav is marked while the pointer moves from one menu to a neighbour, so the next band opens without a fade.
+  // Once the first band has opened, the nav is marked, so a neighbour's band opens whole at once. Leaving the nav
+  // clears the mark, so the next first band fades in again.
   for (const nav of document.querySelectorAll<HTMLElement>(".og-nav")) {
-    let current: Element | null = null;
-    nav.addEventListener("pointerover", (event) => {
-      const menu = (event.target as Element).closest(".og-menu");
-      if (!menu) return;
-      if (current && current !== menu) nav.dataset.swap = "";
-      current = menu;
+    nav.addEventListener("transitionend", (event) => {
+      const panel = event.target as Element;
+      if (event.propertyName === "opacity" && panel.matches(".og-menu-panel") && getComputedStyle(panel).opacity === "1") nav.dataset.swap = "";
     });
     nav.addEventListener("pointerleave", () => {
       delete nav.dataset.swap;
-      current = null;
     });
   }
 </script>
@@ -223,9 +220,9 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
       transition: none;
     }
 
-    /* Once a band is open, the neighbour's band shows whole at once, so no frame passes with no band. Only the first
-       band to open fades in. */
-    .og-nav[data-swap] .og-menu-panel {
+    /* Once a band is open, the neighbour's band shows whole at once, so no frame passes with no band, while the band
+       being left keeps its grace across the gap. Only the first band to open fades in. */
+    :where(.og-nav[data-swap]) .og-menu:hover .og-menu-panel {
       transition: none;
     }
   }
