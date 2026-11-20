@@ -10,7 +10,8 @@ import { serve } from "./serve.mjs";
 
 const site = fileURLToPath(new URL("..", import.meta.url));
 if (!process.argv.includes("--no-build")) {
-  execFileSync(fileURLToPath(new URL("../node_modules/.bin/astro", import.meta.url)), ["build"], { cwd: site, stdio: ["ignore", "ignore", "inherit"] });
+  // Astro builds on the runtime that runs this check.
+  execFileSync(process.execPath, [fileURLToPath(new URL("../node_modules/astro/bin/astro.mjs", import.meta.url)), "build"], { cwd: site, stdio: ["ignore", "ignore", "inherit"] });
 }
 
 // Rows of neighbouring hover targets, each read by its fill.

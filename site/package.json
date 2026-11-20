@@ -3,16 +3,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sync": "node scripts/sync-engine.mjs",
+    "sync": "bun scripts/sync-engine.mjs",
     "dev": "astro dev",
-    "build": "npm run lint && astro build",
+    "build": "bun run lint && astro build",
     "preview": "astro preview",
     "check": "astro check",
-    "check:hover": "node scripts/hover-check.mjs",
-    "check:behaviour": "node scripts/behaviour-check.mjs",
-    "check:reference": "node scripts/reference-check.mjs",
-    "lint": "node lint/run.mjs",
-    "lint:probes": "node lint/probes.mjs"
+    "check:hover": "bun scripts/hover-check.mjs",
+    "check:behaviour": "bun scripts/behaviour-check.mjs",
+    "check:reference": "bun scripts/reference-check.mjs",
+    "lint": "bun lint/run.mjs",
+    "lint:probes": "bun lint/probes.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "0.4.5",
@@ -46,5 +46,8 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.73.0",
     "vite": "8.3.5"
+  },
+  "overrides": {
+    "@emnapi/runtime": "1.11.3"
   }
 }

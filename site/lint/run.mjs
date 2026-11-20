@@ -5,13 +5,13 @@ import { include, root } from "./project.mjs";
 
 const expand = (exts) => include.flatMap((p) => (p.endsWith("**") ? exts.map((e) => `${p}/*.${e}`) : [p]));
 
-/** The command line of each linter, run in a site directory. Extra arguments go before the files. */
+/** The command line of each linter, run in a site directory on the runtime that runs this file. Extra arguments go before the files. */
 export function commands(extra = { style: [], script: [] }) {
   const styles = expand(["css", "astro"]).filter((p) => /\.(css|astro)$/.test(p));
   const scripts = expand(["astro", "ts", "mjs", "mdx"]).filter((p) => /\.(astro|ts|mjs|mdx)$/.test(p));
   return {
-    style: ["node_modules/.bin/stylelint", ["--max-warnings", "0", "--allow-empty-input", ...extra.style, ...styles]],
-    script: ["node_modules/.bin/eslint", ["--max-warnings", "0", "--no-error-on-unmatched-pattern", ...extra.script, ...scripts]],
+    style: [process.execPath, ["node_modules/stylelint/bin/stylelint.mjs", "--max-warnings", "0", "--allow-empty-input", ...extra.style, ...styles]],
+    script: [process.execPath, ["node_modules/eslint/bin/eslint.js", "--max-warnings", "0", "--no-error-on-unmatched-pattern", ...extra.script, ...scripts]],
   };
 }
 
