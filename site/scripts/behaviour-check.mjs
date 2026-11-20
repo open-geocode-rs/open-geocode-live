@@ -174,6 +174,28 @@ const cases = {
           };
         }),
     ),
+
+  // Code blocks.
+
+  /** A refused clipboard falls back to copying the selection, and says Copied! only when a copy worked. */
+  "copy works without the clipboard": async () => {
+    const refuse = (/** @type {Page} */ tab, /** @type {boolean} */ fallback) =>
+      tab.addInitScript((works) => {
+        navigator.clipboard.writeText = () => Promise.reject(new DOMException("denied", "NotAllowedError"));
+        const copy = document.execCommand.bind(document);
+        document.execCommand = (command, ...rest) => (command === "copy" ? works && copy(command, ...rest) : copy(command, ...rest));
+      }, fallback);
+    const press = async (/** @type {Page} */ tab) => {
+      const block = tab.locator("[data-codeblock]").first();
+      await block.hover();
+      await block.locator("[data-copy]").click();
+      await tab.waitForTimeout(300);
+      return block.locator("[data-status]").textContent();
+    };
+    const copied = await visit("/docs/quickstart/", desktop, async (tab) => ((await press(tab)) === "Copied!" ? [] : ["the fallback copy did not say Copied!"]), (tab) => refuse(tab, true));
+    const failed = await visit("/docs/quickstart/", desktop, async (tab) => ((await press(tab)) === "" ? [] : ["said Copied! when no copy worked"]), (tab) => refuse(tab, false));
+    return [...copied, ...failed];
+  },
 };
 
 let failed = 0;

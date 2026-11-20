@@ -94,6 +94,33 @@ const owned: Transformer = {
 <script>
   import { after } from "../../lib/motion";
 
+  // Copies through the clipboard, or where the browser refuses it, through a selection of the text. True when either worked.
+  async function copy(text: string, near: HTMLElement): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const holder = document.createElement("pre");
+      holder.setAttribute("aria-hidden", "true");
+      holder.textContent = text;
+      near.append(holder);
+      const selection = getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(holder);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      try {
+        // The older command is the one way left to copy when the clipboard is refused.
+        return document.execCommand("copy");
+      } catch {
+        return false;
+      } finally {
+        selection?.removeAllRanges();
+        holder.remove();
+      }
+    }
+  }
+
   for (const block of document.querySelectorAll<HTMLElement>("[data-codeblock]")) {
     const button = block.querySelector<HTMLButtonElement>("[data-copy]");
     const source = block.querySelector<HTMLTemplateElement>("template[data-code]");
@@ -101,7 +128,7 @@ const owned: Transformer = {
     if (!button || !source || !status) continue;
     let cancel = () => {};
     button.addEventListener("click", async () => {
-      await navigator.clipboard.writeText(source.content.textContent ?? "");
+      if (!(await copy(source.content.textContent ?? "", block))) return;
       cancel();
       block.dataset.state = "copied";
       status.textContent = "Copied!";
