@@ -1,7 +1,7 @@
 ---
 import Icon, { type IconName } from "./Icon.astro";
 
-export const menuVariants = ["default"] as const;
+export const menuVariants = ["default", "outline"] as const;
 export const menuSizes = ["sm", "md"] as const;
 export const menuStates = ["closed", "open", "item-hover", "item-focus", "item-current"] as const;
 
@@ -33,9 +33,11 @@ export interface Props {
   align?: "start" | "end";
   /** Holds the menu open without a pointer, for the system page. */
   state?: "closed" | "open";
+  /** The trigger's look. An outline trigger has the filled, bordered box of an outline button, for a header control. */
+  variant?: (typeof menuVariants)[number];
 }
 
-const { label, trigger, triggerIcon, iconOnly = false, items, current, size = "sm", align = "start", state = "closed" } = Astro.props;
+const { label, trigger, triggerIcon, iconOnly = false, items, current, size = "sm", align = "start", state = "closed", variant = "default" } = Astro.props;
 // A trigger with no text of its own follows the current item, so it shows what is chosen.
 const follows = trigger === undefined && items.some((i) => i.value === current);
 const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
@@ -46,6 +48,7 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
   data-menu
   data-label={label}
   data-size={size}
+  data-variant={variant}
   data-align={align}
   data-state={state === "open" ? "open" : undefined}
   open={state === "open"}
@@ -207,6 +210,11 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
     transition-property: background-color;
     transition-timing-function: var(--ease-hover);
     user-select: none;
+  }
+
+  .menu[data-variant="outline"] .menu-trigger {
+    background-color: var(--color-control);
+    border: var(--border) solid var(--color-border-strong);
   }
 
   .menu-trigger::-webkit-details-marker {

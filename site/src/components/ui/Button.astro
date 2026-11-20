@@ -35,7 +35,8 @@ const {
 
 // No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
 const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
-const iconSize = size === "lg" ? "md" : size === "sm" ? "sm" : "md";
+// An icon-only button's icon carries its whole meaning, so from the default size up it takes the large icon.
+const iconSize = size === "sm" ? "sm" : iconOnly ? "lg" : "md";
 const Tag = href ? "a" : "button";
 ---
 

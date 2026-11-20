@@ -7,7 +7,7 @@ import Icon, { iconNames } from "../ui/Icon.astro";
 import Input, { inputSizes, inputStates } from "../ui/Input.astro";
 import Kbd from "../ui/Kbd.astro";
 import Link, { linkStates, linkVariants } from "../ui/Link.astro";
-import Menu, { menuSizes } from "../ui/Menu.astro";
+import Menu, { menuSizes, menuVariants } from "../ui/Menu.astro";
 import Tabs from "../ui/Tabs.astro";
 import Cell from "./Cell.astro";
 import Matrix from "./Matrix.astro";
@@ -102,14 +102,15 @@ const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(
     </div>
   </Section>
 
-  <Section title="Menu" note="Size by state. Open menus are held open.">
+  <Section title="Menu" note="Variant and size by state. Open menus are held open.">
     {
-      menuSizes.map((size) => (
+      menuVariants.flatMap((variant) => menuSizes.map((size) => (
         <div class="grid">
           {menuCells.map((c) => (
-            <Cell component="Menu" variant="default" size={size} state={c.state} width={size === "md" ? "wider" : "wide"} tall={c.open}>
+            <Cell component="Menu" variant={variant} size={size} state={c.state} width={size === "md" ? "wider" : "wide"} tall={c.open}>
               <Menu
                 label="Theme"
+                variant={variant}
                 size={size}
                 state={c.open ? "open" : "closed"}
                 current="dark"
@@ -118,7 +119,7 @@ const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(
             </Cell>
           ))}
         </div>
-      ))
+      )))
     }
   </Section>
 

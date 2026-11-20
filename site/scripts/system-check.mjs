@@ -42,7 +42,7 @@ const table = {
     states: ["rest"],
   },
   Kbd: { variants: ["default"], sizes: ["default"], states: ["rest"] },
-  Menu: { variants: ["default"], sizes: ["sm", "md"], states: ["closed", "open", "item-hover", "item-focus", "item-current"] },
+  Menu: { variants: ["default", "outline"], sizes: ["sm", "md"], states: ["closed", "open", "item-hover", "item-focus", "item-current"] },
   Tabs: { variants: ["default"], sizes: ["md"], states: ["rest", "hover", "focus", "current"] },
   Card: { variants: ["plain", "framed"], sizes: ["default"], states: ["rest"] },
   CodeBlock: { variants: ["plain", "titled", "command"], sizes: ["default"], states: ["rest", "copied"] },
