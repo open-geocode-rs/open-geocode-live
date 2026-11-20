@@ -371,8 +371,13 @@ const transitioned = (d) => {
   // An item that names no property transitions all of them.
   return items.map((nodes) => nodes.find((n) => n.type === "word" && !valueParser.unit(n.value) && !transitionWords.test(n.value))?.value ?? "all");
 };
-const inMedia = (node, re) => {
-  for (let p = node.parent; p; p = p.parent) if (p.type === "atrule" && p.name === "media" && re.test(p.params)) return true;
+// True when an enclosing @media requires the condition in every one of its comma-separated queries. A query that holds
+// not or or could hold without the condition, so it does not count.
+const inMedia = (node, condition) => {
+  for (let p = node.parent; p; p = p.parent) {
+    if (p.type !== "atrule" || p.name !== "media") continue;
+    if (p.params.split(",").every((query) => !/\b(not|or)\b/i.test(query) && condition.test(query))) return true;
+  }
   return false;
 };
 const motionRule = rule("motion", ({ root, say }) => {
@@ -391,7 +396,7 @@ const motionRule = rule("motion", ({ root, say }) => {
       for (const w of words) say(d, `${d.prop} holds the time ${w.value}. Use var(--duration-*)`);
     }
     const rule = d.parent;
-    if (rule?.type === "rule" && /:hover/.test(rule.selector) && !inMedia(d, /hover:\s*hover/)) {
+    if (rule?.type === "rule" && /:hover/.test(rule.selector) && !inMedia(d, /\(\s*hover:\s*hover\s*\)/)) {
       say(d, `${rule.selector} styles hover outside @media (hover: hover) and (pointer: fine)`);
     }
   });
@@ -401,7 +406,7 @@ const motionRule = rule("motion", ({ root, say }) => {
       if (motionProps.test(d.prop)) moves = true;
       if (layoutProps.test(d.prop) && !/^(top|right|bottom|left|inset)/.test(d.prop)) say(d, `@keyframes ${k.params} animates ${d.prop}, a layout property. Animate transform, opacity or clip-path`);
     });
-    if (moves && !inMedia(k, /prefers-reduced-motion:\s*no-preference/)) say(k, `@keyframes ${k.params} moves things. Put it inside @media (prefers-reduced-motion: no-preference)`);
+    if (moves && !inMedia(k, /\(\s*prefers-reduced-motion:\s*no-preference\s*\)/)) say(k, `@keyframes ${k.params} moves things. Put it inside @media (prefers-reduced-motion: no-preference)`);
   });
 });
 
