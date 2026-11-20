@@ -28,7 +28,7 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
       <div class="request-controls">
         <Menu label="Language" variant="outline" items={languages} current={snippets[0].id} triggerIcon="code" size="sm" align="end" />
         <Button variant="outline" iconOnly icon="copy" label="Copy code" data-copy-request />
-        <span class="sr-only" role="status" data-copy-status></span>
+        <span class="request-copied" role="status" data-copy-status></span>
       </div>
     </div>
     {
@@ -52,6 +52,8 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
 </aside>
 
 <script>
+  import { after } from "../../lib/motion";
+
   const KEY = "og-snippet";
 
   /** Shows one language in every example on the page, and marks it in each picker. */
@@ -78,11 +80,18 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
   for (const panel of document.querySelectorAll<HTMLElement>("[data-request-example]")) {
     const button = panel.querySelector<HTMLButtonElement>("[data-copy-request]");
     const status = panel.querySelector<HTMLElement>("[data-copy-status]");
+    let cancel = () => {};
     button?.addEventListener("click", async () => {
       const shown = panel.querySelector<HTMLElement>(".request-snippet:not([hidden]) template[data-code]");
       if (!(shown instanceof HTMLTemplateElement)) return;
       await navigator.clipboard.writeText(shown.content.textContent ?? "");
-      if (status) status.textContent = "Copied";
+      if (!status) return;
+      status.textContent = "Copied!";
+      cancel();
+      // The tag stays for the feedback duration, then clears.
+      cancel = after("--duration-feedback", () => {
+        status.textContent = "";
+      });
     });
   }
 
@@ -124,6 +133,19 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
     display: flex;
     gap: var(--space-2);
     min-inline-size: 0;
+  }
+
+  /* After a copy, a filled tag beside the button says so, and it is empty, so unseen, at rest. */
+  .request-copied:empty {
+    display: none;
+  }
+
+  .request-copied {
+    background-color: var(--color-success);
+    border-radius: var(--radius-sm);
+    color: var(--color-on-solid);
+    font: var(--type-ui);
+    padding: var(--space-0-5) var(--space-2);
   }
 
   .request-summary {
