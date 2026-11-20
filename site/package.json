@@ -8,6 +8,7 @@
     "build": "npm run lint && astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "check:hover": "node scripts/hover-check.mjs",
     "lint": "node lint/run.mjs",
     "lint:probes": "node lint/probes.mjs"
   },
