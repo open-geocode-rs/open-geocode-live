@@ -12,13 +12,17 @@ type Base = Omit<HTMLAttributes<"button">, "class" | "class:list" | "style" | "a
   /** Holds a state without a pointer, for the system page. */
   state?: (typeof buttonStates)[number];
   icon?: IconName;
-  /** Renders a link that looks like the button, for an action that goes to another page. */
-  href?: string;
 };
 
-export type Props =
-  | (Base & { iconOnly?: false; label?: string })
-  | (Base & { iconOnly: true; icon: IconName; label: string });
+/** A button, or a link that looks like the button, for an action that goes to another page. A link cannot be
+    disabled, so a link button takes neither disabled nor the disabled state. */
+type Target =
+  | { href?: undefined }
+  | { href: string; disabled?: never; state?: Exclude<(typeof buttonStates)[number], "disabled"> };
+
+export type Props = Base &
+  Target &
+  ({ iconOnly?: false; label?: string } | { iconOnly: true; icon: IconName; label: string });
 
 const {
   variant = "solid",
