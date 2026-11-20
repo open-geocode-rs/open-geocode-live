@@ -13,10 +13,14 @@ export type Props = Omit<HTMLAttributes<"a">, "class" | "class:list" | "style"> 
   state?: (typeof linkStates)[number];
 };
 
-const { variant = "inline", state = "rest", href, ...attrs } = Astro.props;
+const { variant = "inline", state = "rest", href, rel: callerRel, ...attrs } = Astro.props;
 // No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
 const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
 const external = /^https?:\/\//.test(href);
+// An external link also takes noopener, beside whatever relations the caller gave it.
+const relations = new Set(String(callerRel ?? "").split(/\s+/).filter(Boolean));
+if (external) relations.add("noopener");
+const rel = relations.size > 0 ? [...relations].join(" ") : undefined;
 ---
 
 <a
@@ -25,7 +29,7 @@ const external = /^https?:\/\//.test(href);
   href={href}
   data-variant={variant}
   data-state={state === "rest" ? undefined : state}
-  rel={external ? "noopener" : undefined}
+  rel={rel}
 ><slot />{variant === "standalone" && <Icon name={external ? "arrow-up-right" : "arrow-right"} size="sm" />}</a>
 
 <style>
