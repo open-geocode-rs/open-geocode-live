@@ -1,0 +1,2 @@
+probe {"rule": "og/token-kind", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    clip-path: inset(0 0 var(--radius-md) 0);

@@ -139,6 +139,8 @@ const table = [
   [/^(transition|animation)-timing-function$/, ["ease"]],
   [/^z-index$/, ["z"]],
   [/^(backdrop-filter|filter)$/, ["blur"]],
+  // A clip is drawn in the box's own lengths, so it takes the spacing steps.
+  [/^clip-path$/, space],
   [/^opacity$/, ["opacity"]],
   [/^scale$/, ["scale"]],
   [/^transform$/, ["scale", "space", "layout"]],
@@ -228,7 +230,7 @@ const rawValueRule = rule("raw-value", ({ root, file, say }) => {
     for (const lit of literalsIn(d.value, { insideMath: false })) {
       const unit = valueParser.unit(lit);
       if (unit && unit.unit === "" && unit.number === "1" && unitless1.test(d.prop)) continue;
-      if (unit && unit.unit === "%" && percentOk.test(d.prop)) continue;
+      if (unit && unit.unit === "%" && (percentOk.test(d.prop) || d.prop === "clip-path")) continue;
       if (unit && unit.unit === "fr") continue;
       // A size may be a whole number of the element's own lines, or the full height of the window.
       if (unit && unit.unit === "lh" && Number.isInteger(Number(unit.number)) && percentOk.test(d.prop)) continue;

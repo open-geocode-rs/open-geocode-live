@@ -42,7 +42,7 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
             <Icon name="chevron-down" size="sm" />
           </Button>
           <div class="og-menu-panel">
-            <div class="og-menu-band">
+            <div>
               <div class="og-menu-items">
               {menu.items.map((item) => (
                 <Button variant="raised" size="lg" href={item.href}>
@@ -62,7 +62,7 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
         <Icon name="chevron-down" size="sm" />
       </Button>
       <div class="og-menu-panel">
-        <div class="og-menu-band">
+        <div>
           <div class="og-menu-items">
             <p class="og-pricing">
               <strong>$0.</strong> No tiers, no seats, no per-lookup fees, no sales call. It's MIT, so <Link href={REPO}>just take it</Link>.
@@ -120,14 +120,15 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     position: static;
   }
 
-  /* A full-width band just under the header's rule, which is the header's last pixel. It unrolls downward from the
-     rule, and rolls back up after a short grace, so crossing the rule on the way down does not shut it. */
+  /* A full-width band just under the header's rule, the header's last pixel. It is revealed downward from the rule by
+     its clip and fades in, and on leaving it waits a short grace before it closes, so crossing the rule or the gap to a
+     neighbour on the way does not shut it. Only the clip, the opacity and the visibility change, never the layout.
+     Open, the clip reaches past the band's foot so its shadow shows. */
   .og-menu-panel {
     background-color: var(--color-background);
     border-block-end: var(--border) dashed var(--color-border);
     box-shadow: var(--shadow-raised);
-    display: grid;
-    grid-template-rows: 0fr;
+    clip-path: inset(0 0 100% 0);
     inset-block-start: var(--layout-nav-height);
     inset-inline: 0;
     opacity: 0;
@@ -136,23 +137,17 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
   }
 
   .og-menu:focus-within .og-menu-panel {
-    grid-template-rows: 1fr;
+    clip-path: inset(0 0 calc(var(--space-12) * -1) 0);
     opacity: 1;
     visibility: visible;
   }
 
   @media (hover: hover) and (pointer: fine) {
     .og-menu:hover .og-menu-panel {
-      grid-template-rows: 1fr;
+      clip-path: inset(0 0 calc(var(--space-12) * -1) 0);
       opacity: 1;
       visibility: visible;
     }
-  }
-
-  /* The band's clipping wrapper has no padding of its own, so a rolled up band keeps no height. */
-  .og-menu-band {
-    min-block-size: 0;
-    overflow: hidden;
   }
 
   .og-menu-items {
@@ -180,31 +175,33 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     margin-inline-start: auto;
   }
 
+  /* Closing waits the grace, then clips and fades, and the band stays visible until that is done. Opening starts at
+     once. */
   @media (prefers-reduced-motion: no-preference) {
     .og-menu-panel {
       transition:
-        grid-template-rows var(--duration-panel) var(--ease-out) var(--duration-press),
-        opacity var(--duration-enter) var(--ease-out) var(--duration-press),
-        visibility var(--duration-panel) var(--ease-out) var(--duration-press);
+        clip-path var(--duration-enter) var(--ease-out) var(--duration-press),
+        opacity var(--duration-hover) var(--ease-out) var(--duration-press),
+        visibility var(--duration-enter) linear var(--duration-press);
     }
 
     .og-menu:focus-within .og-menu-panel {
       transition:
-        grid-template-rows var(--duration-panel) var(--ease-out),
+        clip-path var(--duration-panel) var(--ease-out),
         opacity var(--duration-enter) var(--ease-out),
-        visibility var(--duration-panel) var(--ease-out);
+        visibility var(--duration-enter) linear;
     }
   }
 
   @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
     .og-menu:hover .og-menu-panel {
       transition:
-        grid-template-rows var(--duration-panel) var(--ease-out),
+        clip-path var(--duration-panel) var(--ease-out),
         opacity var(--duration-enter) var(--ease-out),
-        visibility var(--duration-panel) var(--ease-out);
+        visibility var(--duration-enter) linear;
     }
 
-    /* Moving to the other menu swaps bands at once instead of stacking two. */
+    /* Moving to a neighbour swaps the bands at once instead of stacking two. */
     :where(.og-nav:has(.og-menu:hover)) .og-menu:not(:hover) .og-menu-panel {
       transition: none;
     }
