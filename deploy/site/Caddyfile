@@ -30,18 +30,16 @@ http://:8081 {
 		path /api/geocode /api/autocomplete
 	}
 	handle @address {
-		route {
-			uri strip_prefix /api
-			# Cloudflare's Add visitor location headers transform supplies the coarse
-			# coordinates. This listener only receives Cloudflare Tunnel traffic.
-			@visitor_location {
-				header_regexp latitude CF-IPLatitude ^(-?(?:[0-8]?[0-9](?:\.[0-9]+)?|90(?:\.0+)?))$
-				header_regexp longitude CF-IPLongitude ^(-?(?:(?:1[0-7][0-9]|[0-9]?[0-9])(?:\.[0-9]+)?|180(?:\.0+)?))$
-			}
-			rewrite * {path}?q={query.q}&limit=5
-			rewrite @visitor_location {path}?q={query.q}&limit=5&focus={http.regexp.longitude.1},{http.regexp.latitude.1}
-			reverse_proxy 127.0.0.1:8090
+		# Cloudflare's Add visitor location headers transform supplies the coarse
+		# coordinates. This listener only receives Cloudflare Tunnel traffic.
+		@visitor_location {
+			header_regexp latitude CF-IPLatitude ^(-?(?:[0-8]?[0-9](?:\.[0-9]+)?|90(?:\.0+)?))$
+			header_regexp longitude CF-IPLongitude ^(-?(?:(?:1[0-7][0-9]|[0-9]?[0-9])(?:\.[0-9]+)?|180(?:\.0+)?))$
 		}
+		rewrite @visitor_location {path}?q={query.q}&limit=5&focus={http.regexp.longitude.1},{http.regexp.latitude.1}
+		rewrite * {path}?q={query.q}&limit=5
+		uri strip_prefix /api
+		reverse_proxy 127.0.0.1:8090
 	}
 
 	@legacy_search {
