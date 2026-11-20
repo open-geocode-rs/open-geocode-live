@@ -368,6 +368,42 @@ const cases = {
       if (!edges) return ["no joined button on the page"];
       return edges.filter((e) => e.edge.some((v) => v !== "0px")).map((e) => `a joined ${e.variant} button keeps its end edge, ${e.edge.join(" ")}`);
     }),
+
+  // Landing.
+
+  /** Enter after an input method's composition searches at once, and only the Enter that confirms the characters is held. */
+  "enter after a composition searches": () =>
+    visit("/", desktop, async (tab) => {
+      let searches = 0;
+      await tab.route("**/api/geocode**", (route) => {
+        searches++;
+        return route.fulfill({ json: [] });
+      });
+      const send = (/** @type {string[]} */ events) =>
+        tab.locator("og-address-morph input").first().evaluate((input, list) => {
+          const el = /** @type {HTMLInputElement} */ (input);
+          el.readOnly = false;
+          el.value = "東京都千代田区";
+          for (const e of list) {
+            if (e === "start") el.dispatchEvent(new CompositionEvent("compositionstart", { data: "" }));
+            else if (e === "end") el.dispatchEvent(new CompositionEvent("compositionend", { data: "東京" }));
+            // The Enter that confirms the characters, which some browsers send just after the composition ends.
+            else if (e === "confirm") el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: 229, bubbles: true }));
+            else el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", keyCode: 13, bubbles: true }));
+          }
+        }, events);
+      const problems = [];
+      // Characters picked with the pointer: the composition ends with no key at all.
+      await send(["start", "end", "enter"]);
+      await tab.waitForTimeout(500);
+      if (searches !== 1) problems.push(`after a composition ended by the pointer, the first Enter made ${searches} searches, expected 1`);
+      await tab.reload({ waitUntil: "networkidle" });
+      searches = 0;
+      await send(["start", "end", "confirm"]);
+      await tab.waitForTimeout(500);
+      if (searches !== 0) problems.push(`the Enter that confirmed the characters made ${searches} searches, expected none`);
+      return problems;
+    }),
 };
 
 let failed = 0;
