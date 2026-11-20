@@ -194,7 +194,11 @@ function valueBlocks(schema: Node, ctx: Context): Block[] {
     const values = tagsOf(allowed);
     if (values.length > 0) out.push({ kind: "tags", label: "Allowed values:", tags: values });
   }
-  if (items && isObjectSchema(items)) out.push(...schemaBlocks(items, { ...ctx, nested: true, parents: [...ctx.parents, schema] }));
+  const inner = { ...ctx, nested: true, parents: [...ctx.parents, schema] };
+  if (items && isObjectSchema(items)) out.push(...schemaBlocks(items, inner));
+  // Items of a plain type show in the type line, so their own blocks are not drawn. They are still walked, to stop the
+  // build on what they use that the reference cannot draw.
+  else if (items) valueBlocks(items, inner);
   return out;
 }
 

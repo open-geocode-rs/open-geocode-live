@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "check:hover": "node scripts/hover-check.mjs",
+    "check:reference": "node scripts/reference-check.mjs",
     "lint": "node lint/run.mjs",
     "lint:probes": "node lint/probes.mjs"
   },
@@ -42,6 +43,7 @@
     "postcss-value-parser": "4.2.0",
     "stylelint": "18.0.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.73.0"
+    "typescript-eslint": "8.73.0",
+    "vite": "8.3.5"
   }
 }
