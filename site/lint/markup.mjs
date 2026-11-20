@@ -71,15 +71,45 @@ function markdown(file, text, say) {
   visit(markdownToMdast(text, { features: { frontmatter: true, gfm: true } }));
 }
 
-/** The JSX written in an MDX doc, outside code. An expression is read with Astro's parser, as in an Astro file. */
+// Docs prose draws only these components from the frame and only under their original names.
+const proseParts = new Set(["Tabs", "TabItem"]);
+const frameComponents = "@astrojs/starlight/components";
+
+/** The imports, JSX and style expressions written in an MDX doc, outside code. */
 function mdx(file, text, say) {
   const visit = (node) => {
+    if (node.type === "mdxjsEsm") {
+      const { ast } = parse(`---
+${node.value}
+---`);
+      for (const declaration of ast.frontmatter?.program?.body ?? []) {
+        if (declaration.type !== "ImportDeclaration") continue;
+        const line = node.position.start.line + lineAt(node.value, declaration.start - 4) - 1;
+        const source = declaration.source.value;
+        if (source !== frameComponents) {
+          say("og/content", line, `An MDX page imports from ${source}. Docs content takes only the frame's ${[...proseParts].join(", ")}, which the docs prose draws through the system`);
+          continue;
+        }
+        for (const specifier of declaration.specifiers) {
+          const { imported, local } = specifier;
+          if (!proseParts.has(local.name) || imported?.name !== local.name) {
+            say("og/content", line, `An MDX page imports ${local.name}, which the docs prose cannot draw. Use ${[...proseParts].join(", ")} or Markdown`);
+          }
+        }
+      }
+    }
     if (node.type === "mdxJsxFlowElement" || node.type === "mdxJsxTextElement") {
       const line = node.position.start.line;
       const control = rawControl(node.name, file);
       if (control) say("og/markup", line, control);
+      if (node.name && !proseParts.has(node.name)) {
+        if (/^[a-z]/.test(node.name)) say("og/content", line, `An MDX page writes the element <${node.name}>. Write Markdown, so the docs prose draws it through the system`);
+        else say("og/content", line, `An MDX page uses <${node.name}>, which the docs prose cannot draw. Use ${[...proseParts].join(", ")} or Markdown`);
+      }
       for (const a of node.attributes ?? []) {
-        if (a.type !== "mdxJsxAttribute" || a.name !== "style") continue;
+        if (a.type !== "mdxJsxAttribute") continue;
+        if (["style", "class", "className"].includes(a.name)) say("og/content", line, `An MDX page sets a look on <${node.name}> with an attribute. Style lives in the system's components`);
+        if (a.name !== "style") continue;
         let value = { type: "Literal", value: a.value ?? "" };
         if (typeof a.value === "object" && a.value !== null) {
           const el = parse(`<p style={${a.value.value}} />`).ast.body[0];
@@ -91,33 +121,6 @@ function mdx(file, text, say) {
     for (const c of node.children ?? []) visit(c);
   };
   visit(mdxToMdast(text, { features: { frontmatter: true, gfm: true } }));
-}
-
-// An MDX page is docs content. The docs prose reads the frame's rendered markup and draws each part through the
-// system, so a page may use only the parts it knows how to draw, and no markup of its own that sets a look.
-// The parts it draws, by the name a page imports them under from the frame's components.
-const proseParts = new Set(["Tabs", "TabItem"]);
-const frameComponents = "@astrojs/starlight/components";
-
-/** The imports and elements of an MDX doc, outside its code blocks. */
-function content(text, say) {
-  const at = (index) => lineAt(text, index);
-  // Code blocks are content, so what they show is not checked.
-  const prose = text.replace(/^(```|~~~)[\s\S]*?^\1/gm, (block) => block.replace(/[^\n]/g, " "));
-  for (const m of prose.matchAll(/^import\s+(.+?)\s+from\s+["']([^"']+)["'];?\s*$/gm)) {
-    if (m[2] !== frameComponents) {
-      say("og/content", at(m.index), `An MDX page imports from ${m[2]}. Docs content takes only the frame's ${[...proseParts].join(", ")}, which the docs prose draws through the system`);
-      continue;
-    }
-    const names = m[1].replace(/[{}]/g, "").split(",").map((n) => n.trim()).filter(Boolean);
-    for (const n of names) if (!proseParts.has(n)) say("og/content", at(m.index), `An MDX page imports ${n}, which the docs prose cannot draw. Use ${[...proseParts].join(", ")} or Markdown`);
-  }
-  for (const m of prose.matchAll(/<([A-Za-z][\w.]*)([^>]*)>/g)) {
-    const [, tag, attrs] = m;
-    if (/^[A-Z]/.test(tag) && !proseParts.has(tag)) say("og/content", at(m.index), `An MDX page uses <${tag}>, which the docs prose cannot draw. Use ${[...proseParts].join(", ")} or Markdown`);
-    if (/^[a-z]/.test(tag)) say("og/content", at(m.index), `An MDX page writes the element <${tag}>. Write Markdown, so the docs prose draws it through the system`);
-    if (/\b(style|class|className)\s*=/.test(attrs)) say("og/content", at(m.index), `An MDX page sets a look on <${tag}> with an attribute. Style lives in the system's components`);
-  }
 }
 
 const directive = /\b(?:oxlint|eslint)-disable\b/g;
@@ -133,10 +136,7 @@ export function check(files = includedFiles()) {
     }
     if (file.endsWith(".astro")) astro(file, text, say);
     else if (file.endsWith(".md")) markdown(file, text, say);
-    else if (file.endsWith(".mdx")) {
-      mdx(file, text, say);
-      content(text, say);
-    }
+    else if (file.endsWith(".mdx")) mdx(file, text, say);
   }
   return out;
 }

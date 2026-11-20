@@ -1,0 +1,4 @@
+probe {"rule": "og/content", "file": "src/content/docs/benchmarks.mdx", "after": "import { Tabs, TabItem } from \"@astrojs/starlight/components\";\n"}
+import {
+  Other,
+} from "./other.astro";
