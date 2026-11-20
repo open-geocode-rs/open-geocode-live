@@ -93,13 +93,27 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
 </script>
 
 <style>
+  /* Every panel sits in the one cell under the list, so the tabs are as tall as the tallest panel
+     and choosing a tab never moves what follows. */
   .tabs {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: var(--space-4);
+    grid-template-areas: "list" "panel";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tabs-panel {
+    grid-area: panel;
+    min-inline-size: 0;
+  }
+
+  .tabs-panel[hidden] {
+    display: block;
+    visibility: hidden;
   }
 
   .tabs-list {
+    grid-area: list;
     border-block-end: var(--border) solid var(--color-border);
     display: flex;
     gap: var(--space-1);

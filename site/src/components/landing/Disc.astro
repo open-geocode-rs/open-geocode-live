@@ -1,0 +1,41 @@
+---
+// A solid disc holding one icon, the mark on the landing page's keys and menu links.
+import Icon, { type IconName } from "../ui/Icon.astro";
+
+interface Props {
+  icon: IconName;
+  size?: "sm" | "md";
+  /** Sits at the end of a raised button, close to its edge as a key's mark is. */
+  end?: boolean;
+}
+
+const { icon, size = "sm", end = false } = Astro.props;
+---
+
+<span class="disc" data-size={size} data-end={end ? "" : undefined} aria-hidden="true"><Icon name={icon} size="md" /></span>
+
+<style>
+  .disc {
+    align-items: center;
+    background-color: var(--color-solid);
+    border-radius: var(--radius-full);
+    color: var(--color-on-solid);
+    display: inline-flex;
+    flex: none;
+    justify-content: center;
+  }
+
+  .disc[data-size="sm"] {
+    block-size: var(--control-sm);
+    inline-size: var(--control-sm);
+  }
+
+  .disc[data-size="md"] {
+    block-size: var(--control-md);
+    inline-size: var(--control-md);
+  }
+
+  .disc[data-end] {
+    margin-inline-end: calc(var(--space-4) * -1);
+  }
+</style>

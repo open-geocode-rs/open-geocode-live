@@ -12,6 +12,9 @@ export const include = [
   "src/components/ui/**",
   "src/components/system/**",
   "src/pages/system.astro",
+  "src/pages/index.astro",
+  "src/layouts/Landing.astro",
+  "src/components/landing/**",
 ];
 
 export const tokenDir = "src/styles/tokens/";

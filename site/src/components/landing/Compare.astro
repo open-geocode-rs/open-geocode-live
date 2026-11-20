@@ -1,5 +1,8 @@
 ---
-type Mark = "yes" | "part" | "no";
+import Icon from "../ui/Icon.astro";
+import Split from "./Split.astro";
+
+type Mark = "yes" | "no";
 type Cell = Mark | { mark: Mark; note: string };
 type Row = { title: string; sub: string; og: Cell; commercial: Cell; open: Cell };
 
@@ -23,37 +26,28 @@ const rows: Row[] = [
   { title: "Open source", sub: "MIT licensed, open data", og: "yes", commercial: "no", open: "yes" },
 ];
 
-const label: Record<Mark, string> = { yes: "Yes", part: "Partly", no: "No" };
-const path: Record<Mark, string> = { yes: "M5 12.5 10 17l9-10", part: "M6 12h12", no: "M7 7l10 10M17 7 7 17" };
+const label: Record<Mark, string> = { yes: "Yes", no: "No" };
 ---
 
-<section class="og-cmp" aria-labelledby="og-cmp-title">
-  <div class="og-cmp-box">
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <div class="og-bench-copy">
-      <p class="og-walk-eyebrow">Compare</p>
-      <h2 id="og-cmp-title">No API bills, no database, no cluster to run.</h2>
-      <p>Commercial APIs are quick to start with, but bill every lookup and see every address.</p>
-      <p>
-        Open-source geocoders keep the data in-house, but need a database or search cluster. og keeps it in-house and
-        runs from one file.
-      </p>
-    </div>
-    <div class="og-cmp-table">
-      <table>
-        <thead>
-          <tr>
-            <th scope="col">Feature</th>
-            <th scope="col" class="og-cmp-og">og</th>
-            <th scope="col">Commercial</th>
-            <th scope="col">Open source</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
+<Split id="og-cmp-title" eyebrow="Compare" title="No API bills, no database, no cluster to run.">
+  <p>Commercial APIs are quick to start with, but bill every lookup and see every address.</p>
+  <p>
+    Open-source geocoders keep the data in-house, but need a database or search cluster. og keeps it in-house and runs
+    from one file.
+  </p>
+  <div class="og-cmp" slot="aside">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Feature</th>
+          <th scope="col"><strong>og</strong></th>
+          <th scope="col">Commercial</th>
+          <th scope="col">Open source</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          rows.map((r) => (
             <tr>
               <th scope="row">
                 <span class="og-cmp-title">{r.title}</span>
@@ -64,8 +58,8 @@ const path: Record<Mark, string> = { yes: "M5 12.5 10 17l9-10", part: "M6 12h12"
                 const note = typeof cell === "string" ? undefined : cell.note;
                 return (
                   <td>
-                    <span class:list={["og-cmp-mark", `og-cmp-mark--${m}`]}>
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d={path[m]} /></svg>
+                    <span class="og-cmp-mark" data-mark={m}>
+                      <Icon name={m === "yes" ? "check" : "x"} size="sm" />
                       <span class="sr-only">{label[m]}</span>
                     </span>
                     {note && <span class="og-cmp-note">{note}</span>}
@@ -73,12 +67,117 @@ const path: Record<Mark, string> = { yes: "M5 12.5 10 17l9-10", part: "M6 12h12"
                 );
               })}
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <p class="og-bench-note">
-        Open source: Nominatim, Pelias and Photon. Commercial: Google, HERE, Mapbox and others.
-      </p>
-    </div>
+          ))
+        }
+      </tbody>
+    </table>
+    <p class="og-cmp-foot">Open source: Nominatim, Pelias and Photon. Commercial: Google, HERE, Mapbox and others.</p>
   </div>
-</section>
+</Split>
+
+<style>
+  .og-cmp {
+    padding-block-end: var(--space-5);
+  }
+
+  .og-cmp table {
+    border-collapse: collapse;
+    inline-size: 100%;
+    table-layout: fixed;
+  }
+
+  .og-cmp thead th {
+    background-color: var(--color-surface);
+    border-block-end: var(--border) solid var(--color-border);
+    color: var(--color-foreground-muted);
+    font: var(--type-label);
+    padding: var(--space-3) var(--space-2);
+    text-align: center;
+  }
+
+  .og-cmp thead strong {
+    color: var(--color-foreground);
+  }
+
+  .og-cmp thead th:first-child {
+    inline-size: 38%;
+    padding-inline-start: var(--space-5);
+    text-align: start;
+  }
+
+  .og-cmp tbody tr + tr {
+    border-block-start: var(--border) solid var(--color-border);
+  }
+
+  .og-cmp tbody th {
+    font: var(--type-ui);
+    padding: var(--space-3) var(--space-2) var(--space-3) var(--space-5);
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .og-cmp-title {
+    display: block;
+    font: var(--type-ui-strong);
+  }
+
+  .og-cmp-sub {
+    color: var(--color-foreground-muted);
+    display: block;
+    font: var(--type-caption);
+  }
+
+  /* Marks line up across a row whatever the notes under them wrap to. */
+  .og-cmp td {
+    padding: var(--space-3) var(--space-1-5);
+    text-align: center;
+    vertical-align: top;
+  }
+
+  .og-cmp-mark {
+    align-items: center;
+    block-size: var(--control-sm);
+    border-radius: var(--radius-full);
+    display: inline-flex;
+    inline-size: var(--control-sm);
+    justify-content: center;
+  }
+
+  .og-cmp-mark[data-mark="yes"] {
+    background-color: var(--color-success-subtle);
+    color: var(--color-success);
+  }
+
+  .og-cmp-mark[data-mark="no"] {
+    background-color: var(--color-control);
+    color: var(--color-foreground-muted);
+  }
+
+  /* Detail under a mark where yes or no alone would mislead. */
+  .og-cmp-note {
+    color: var(--color-foreground-muted);
+    display: block;
+    font: var(--type-caption);
+    margin-block-start: var(--space-1);
+    text-wrap: balance;
+  }
+
+  .og-cmp-foot {
+    border-block-start: var(--border) solid var(--color-border);
+    color: var(--color-foreground-muted);
+    font: var(--type-caption);
+    margin: 0;
+    padding: var(--space-3) var(--space-5) 0;
+  }
+
+  @media (min-width: 72rem) {
+    .og-cmp thead th:first-child,
+    .og-cmp tbody th {
+      padding-inline-start: var(--space-6);
+    }
+
+    .og-cmp-foot {
+      padding-inline: var(--space-6);
+    }
+  }
+</style>

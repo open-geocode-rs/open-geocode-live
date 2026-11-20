@@ -1,5 +1,5 @@
 <og-dither-globe class="og-globe">
-  <canvas aria-hidden="true"></canvas>
+  <canvas width="1" height="1" aria-hidden="true"></canvas>
 </og-dither-globe>
 
 <script>
@@ -20,13 +20,13 @@
   const MASK_H = 512;
   const CELL = 3; // CSS px per dither dot
   const TILT = (-22 * Math.PI) / 180;
-  const SPEED = 0.12; // radians per second
+  // Frame timings of the globe. Radians it turns a second, and milliseconds to turn to a place.
+  const SHOW = { spin: 0.12, turn: 1400 };
   const LIGHT = normalize([-0.35, 0.7, 0.62]);
   const TAU = Math.PI * 2;
   // The card shows only the top of the disc: down to about 0.5 of the radius on wide
   // screens, 0.35 on phones. A found place turns to this height, inside both.
   const PLACE_Y = 0.72;
-  const FLY = 1400; // ms to turn to a place
 
   function normalize([x, y, z]: number[]) {
     const l = Math.hypot(x, y, z);
@@ -45,7 +45,7 @@
     const projection = geoEquirectangular()
       .scale(MASK_W / (2 * Math.PI))
       .translate([MASK_W / 2, MASK_H / 2]);
-    ctx.fillStyle = "#fff";
+    // The default fill is opaque, and only its alpha is read back.
     ctx.beginPath();
     geoPath(projection, ctx)(feature(topo, topo.objects.land));
     ctx.fill();
@@ -144,13 +144,13 @@
       const readColours = () => {
         const style = getComputedStyle(this);
         const colour = (name: string) => rgba(style.getPropertyValue(name));
-        landShadow = colour("--og-globe-land-shadow");
-        land = colour("--og-globe-land");
-        landLit = colour("--og-globe-land-lit");
-        landPeak = colour("--og-globe-land-peak");
-        ocean = colour("--og-globe-ocean");
-        sea = colour("--og-globe-sea");
-        seaLit = colour("--og-globe-sea-lit");
+        landShadow = colour("--globe-land-shadow");
+        land = colour("--globe-land");
+        landLit = colour("--globe-land-lit");
+        landPeak = colour("--globe-land-peak");
+        ocean = colour("--globe-ocean");
+        sea = colour("--globe-sea");
+        seaLit = colour("--globe-sea-lit");
       };
       readColours();
 
@@ -219,7 +219,7 @@
       // Only redraws while something moves: a settled globe costs nothing.
       const step = (now: number, dt: number) => {
         if (fly) {
-          const t = Math.min(1, (now - fly.start) / FLY);
+          const t = Math.min(1, (now - fly.start) / SHOW.turn);
           const e = ease(t);
           spin = fly.spin0 + (fly.spin1 - fly.spin0) * e;
           tilt = fly.tilt0 + (fly.tilt1 - fly.tilt0) * e;
@@ -228,7 +228,7 @@
           return true;
         }
         if (held) return false;
-        spin += dt * SPEED;
+        spin += dt * SHOW.spin;
         return true;
       };
       const tick = (now: number) => {
@@ -247,3 +247,19 @@
 
   customElements.define("og-dither-globe", DitherGlobe);
 </script>
+
+<style>
+  .og-globe {
+    block-size: fit-content;
+    display: block;
+    flex-shrink: 0;
+    inline-size: min(var(--layout-content-wide), 150%);
+  }
+
+  /* The canvas holds one pixel per dither dot. Scaling it up unsmoothed is the effect. */
+  .og-globe canvas {
+    display: block;
+    image-rendering: pixelated;
+    inline-size: 100%;
+  }
+</style>

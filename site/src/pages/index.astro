@@ -8,6 +8,10 @@ import Benchmarks from "../components/landing/Benchmarks.astro";
 import Compare from "../components/landing/Compare.astro";
 import Faq from "../components/landing/Faq.astro";
 import Walkthrough from "../components/landing/Walkthrough.astro";
+import Corners from "../components/landing/Corners.astro";
+import Disc from "../components/landing/Disc.astro";
+import Button from "../components/ui/Button.astro";
+import Icon, { type IconName } from "../components/ui/Icon.astro";
 
 // The street addresses of public landmarks, so no example points at someone's
 // home, each in its own language and script. Coordinates are og's own /geocode
@@ -25,21 +29,21 @@ const examples: [string, string][] = [
   ["Av. Atlântica 1702, Rio de Janeiro", "-22.96701, -43.17919"],
 ];
 
-const features = [
+const features: { title: string; text: string; icon: IconName }[] = [
   {
     title: "Self-hosted",
     text: "og runs on your own hardware. No address leaves your network, and there is no per\u2011lookup fee.",
-    icon: "M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01",
+    icon: "server",
   },
   {
     title: "Fast",
     text: "0.72\u00a0ms a query and 14,087 queries a second on the Netherlands: 6× Photon and Pelias.",
-    icon: "M13 2 4 14h7l-1 8 9-12h-7z",
+    icon: "zap",
   },
   {
     title: "Lightweight",
     text: "One binary, one file, no database. The whole Netherlands fits in 337\u00a0MB.",
-    icon: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5",
+    icon: "file",
   },
 ];
 
@@ -55,16 +59,18 @@ const description =
       <StreetMap />
       <h1 class="sr-only">OpenGeocode: free, open-source, self-hosted geocoding</h1>
       <div class="og-copy" data-mode="examples">
-        <button type="button" class="og-try">
-          <span class="og-try-label">Try it for free</span>
-          <span class="og-try-arrow" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-          </span>
-        </button>
+        <span class="og-try">
+          <Button variant="raised" size="lg">
+            Try it for free
+            <Disc icon="arrow-right" end />
+          </Button>
+        </span>
         <AddressMorph examples={examples} placeholder="100 Queen St W, Toronto" />
         <p class="og-result" dir="auto" aria-live="polite" hidden></p>
         <p class="og-sub">Fast, lightweight, self-hosted geocoding engine in pure Rust.</p>
-        <a class="og-cta" href="/docs/quickstart/">Get started</a>
+        <span class="og-cta">
+          <Button variant="solid" size="lg" href="/docs/quickstart/">Get started</Button>
+        </span>
       </div>
       <div class="og-horizon">
         <DitherGlobe />
@@ -76,14 +82,11 @@ const description =
         <p>Forward, reverse and batch geocoding built from OpenStreetMap and OpenAddresses, served from your own hardware.</p>
       </div>
       <div class="og-features-box">
-        <span class="og-corner" aria-hidden="true"></span>
-        <span class="og-corner" aria-hidden="true"></span>
-        <span class="og-corner" aria-hidden="true"></span>
-        <span class="og-corner" aria-hidden="true"></span>
+        <Corners />
         <ul class="og-features-grid">
           {features.map((f) => (
             <li>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d={f.icon} /></svg>
+              <Icon name={f.icon} size="lg" />
               <h3>{f.title}</h3>
               <p>{f.text}</p>
             </li>
@@ -99,7 +102,7 @@ const description =
   <script>
     // The pill or a click on the example starts typing in the headline.
     const copy = document.querySelector<HTMLElement>(".og-copy")!;
-    const pill = copy.querySelector<HTMLButtonElement>(".og-try")!;
+    const pill = copy.querySelector<HTMLButtonElement>(".og-try button")!;
     const result = copy.querySelector<HTMLElement>(".og-result")!;
     const line = copy.querySelector("og-address-morph") as HTMLElement & {
       startEditing(): void;
@@ -170,3 +173,173 @@ const description =
     });
   </script>
 </Landing>
+
+<style>
+  .og-hero {
+    padding: var(--space-2);
+  }
+
+  /* The hero card holds the halftone and the street map behind the copy, and the globe's horizon cut off by the card's
+     bottom edge. */
+  .og-card {
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-xl);
+    color: var(--color-foreground);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 1fr auto;
+    isolation: isolate;
+    margin-inline: auto;
+    max-inline-size: var(--layout-page-max);
+    min-block-size: var(--container-lg);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Copy centred in the space above the horizon, so the gaps above and below it stay equal. */
+  .og-copy {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--space-12) var(--space-6);
+  }
+
+  .og-try {
+    margin-block-end: var(--space-10);
+  }
+
+  /* Hidden, not removed, so the headline holds its place while typing. */
+  .og-copy[data-mode="edit"] .og-try {
+    visibility: hidden;
+  }
+
+  /* One line between the headline and the subtitle. A longer match is cut short, and the full text is its title. */
+  .og-result {
+    block-size: 1lh;
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui);
+    margin: var(--space-2) 0 0;
+    max-inline-size: 100%;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The hint says what to type. It is not an answer, so it is quieter. */
+  .og-result[data-hint] {
+    color: var(--color-foreground-muted);
+  }
+
+  /* Hidden but still in place, so a result appearing never moves the page. */
+  .og-result[hidden] {
+    display: block;
+    visibility: hidden;
+  }
+
+  .og-sub {
+    color: var(--color-foreground-secondary);
+    font: var(--type-lead);
+    margin: var(--space-4) 0 0;
+    text-align: center;
+  }
+
+  .og-cta {
+    margin-block-start: var(--space-12);
+  }
+
+  /* The horizon is a fixed slice at the bottom of the card. The globe inside is wider than most screens and runs past
+     the card's bottom edge, which cuts it off. */
+  .og-horizon {
+    block-size: var(--container-sm);
+    display: flex;
+    justify-content: center;
+  }
+
+  /* A column framed by dashed lines that end at the feature grid, whose border has a small square on each corner. */
+  .og-features {
+    background-color: var(--color-background);
+    border-inline: var(--border) dashed var(--color-border);
+    margin: 0 auto var(--space-16);
+    max-inline-size: var(--layout-content-wide);
+    padding-block-start: var(--space-16);
+  }
+
+  .og-features-head {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: 0 var(--space-6) var(--space-16);
+    text-align: center;
+  }
+
+  .og-features-head h2 {
+    font: var(--type-h1);
+    letter-spacing: var(--tracking-tight);
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .og-features-head p {
+    color: var(--color-foreground-secondary);
+    font: var(--type-body);
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .og-features-box {
+    background-color: var(--color-background);
+    border-block: var(--border) solid var(--color-border);
+    position: relative;
+  }
+
+  .og-features-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .og-features-grid li {
+    align-items: flex-start;
+    border-inline: var(--border) solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-6);
+  }
+
+  .og-features-grid li + li {
+    border-block-start: var(--border) solid var(--color-border);
+  }
+
+  .og-features-grid h3 {
+    font: var(--type-body);
+    margin: var(--space-4) 0 var(--space-1);
+  }
+
+  .og-features-grid p {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui);
+    margin: 0;
+  }
+
+  @media (min-width: 50rem) {
+    .og-features {
+      margin-block-end: var(--space-24);
+      padding-block-start: var(--space-24);
+    }
+
+    .og-features-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    .og-features-grid li + li {
+      border-block-start: 0;
+      border-inline-start: 0;
+    }
+  }
+</style>

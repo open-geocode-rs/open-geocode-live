@@ -1,100 +1,89 @@
 ---
+import CodeBlock from "../ui/CodeBlock.astro";
+import Link from "../ui/Link.astro";
+import Tabs from "../ui/Tabs.astro";
+import Split from "./Split.astro";
+
 // Steps of the replayed terminal. Screens are built in the script below; stage names
 // are og's own, from its build view.
-const INSTALL = "cargo install --locked --git https://github.com/open-geocode-rs/open-geocode open-geocode --features tui";
+const REPO = "https://github.com/open-geocode-rs/open-geocode";
+const INSTALL = `cargo install --locked --git ${REPO} open-geocode --features tui`;
 
 const steps = [
-  { title: "Pick a region", cmd: "og", text: "The interactive interface: pick any region of the catalog." },
+  { id: "pick", label: "Pick", title: "Pick a region", cmd: "og", text: "The interactive interface: pick any region of the catalog." },
   {
+    id: "build",
+    label: "Build",
     title: "Build its Pack",
     cmd: "og build --region canada/ontario",
     text: "Downloads the extract and builds one file in about a minute.",
   },
-  { title: "Search it", cmd: "og", text: "Typo-tolerant search with ranked answers, in the terminal." },
+  { id: "search", label: "Search", title: "Search it", cmd: "og", text: "Typo-tolerant search with ranked answers, in the terminal." },
   {
+    id: "serve",
+    label: "Serve",
     title: "Serve the API",
     cmd: "og serve canada-ontario",
     text: "Forward, autocomplete and reverse over HTTP, in GeoJSON.",
   },
-  { title: "Geocode a CSV", cmd: "og", text: "A CSV in, the same CSV back with coordinates." },
+  { id: "batch", label: "Batch", title: "Geocode a CSV", cmd: "og", text: "A CSV in, the same CSV back with coordinates." },
 ];
 ---
 
-<section class="og-walk" aria-labelledby="og-walk-title">
-  <div class="og-walk-box">
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <div class="og-walk-copy">
-      <div class="og-walk-top">
-        <p class="og-walk-eyebrow">Quickstart</p>
-        <a class="og-install-link" href="https://github.com/open-geocode-rs/open-geocode">Pre-release, from main ↗</a>
-      </div>
-      <h2 id="og-walk-title">From an extract to answers in one binary.</h2>
-      <og-install class="og-install">
-        <div class="og-install-box">
-          <code><span class="og-install-prompt">$</span> <span class="og-install-cmd">{INSTALL}</span></code>
-          <button type="button" class="og-install-copy" aria-label="Copy install command">
-            <svg class="og-install-icon-copy" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" /></svg>
-            <svg class="og-install-icon-done" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
-          </button>
-        </div>
-      </og-install>
-      <div class="og-walk-tabs">
-        <span class="og-corner" aria-hidden="true"></span>
-        <span class="og-corner" aria-hidden="true"></span>
-        <span class="og-corner" aria-hidden="true"></span>
-        <span class="og-corner" aria-hidden="true"></span>
-        <ol class="og-walk-steps">
-        {steps.map((s, i) => (
-          <li>
-            <button type="button" data-step={i} aria-current={i === 0 ? "step" : undefined}>
-              <span class="og-walk-num">{String(i + 1).padStart(2, "0")}</span>
-              <span class="og-walk-body">
-                <span class="og-walk-title">{s.title}</span>
-                <code>$ {s.cmd}</code>
-                <span class="og-walk-more"><span><span class="og-walk-text">{s.text}</span></span></span>
-              </span>
-              <span class="og-walk-progress" aria-hidden="true"></span>
-            </button>
-          </li>
-        ))}
-        </ol>
-      </div>
-    </div>
-    <div class="og-walk-stage">
-      <og-walkthrough class="og-term" data-steps={JSON.stringify(steps.map((s) => s.cmd))}>
-        <div class="og-term-bar">
-          <span class="og-term-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-          <span class="og-term-path">og — ~/packs — 80×24</span>
-          <span class="og-term-count">01 / 05</span>
-        </div>
-        <div class="og-term-screen" aria-live="off"></div>
-      </og-walkthrough>
-    </div>
+<Split id="og-walk-title" eyebrow="Quickstart" title="From an extract to answers in one binary.">
+  <span class="og-walk-pre" slot="top"><Link variant="standalone" href={REPO}>Pre-release, from main</Link></span>
+  <div class="og-walk-install" data-theme="dark">
+    <CodeBlock code={INSTALL} lang="bash" />
   </div>
-</section>
+  <Tabs id="og-walk" label="Quickstart steps" tabs={steps.map((s) => ({ id: s.id, label: s.label }))}>
+    {
+      steps.map((s, i) => (
+        <div class="og-walk-step" slot={s.id}>
+          <p class="og-walk-head">
+            <span class="og-walk-num">{String(i + 1).padStart(2, "0")}</span>
+            <span class="og-walk-title">{s.title}</span>
+            <code class="og-walk-cmd">$ {s.cmd}</code>
+          </p>
+          <p class="og-walk-text">{s.text}</p>
+          <span class="og-walk-progress" aria-hidden="true" />
+        </div>
+      ))
+    }
+  </Tabs>
+  <div class="og-walk-stage" slot="aside">
+    <og-walkthrough class="og-term" data-steps={JSON.stringify(steps.map((s) => s.cmd))}>
+      <div class="og-term-bar">
+        <span class="og-term-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="og-term-path">og — ~/packs — 80×24</span>
+        <span class="og-term-count">01 / 05</span>
+      </div>
+      <div class="og-term-screen" aria-live="off"></div>
+    </og-walkthrough>
+  </div>
+</Split>
 
 <script>
-  type Line = { html: string; delay?: number };
-  const HOLD = 3200;
-  const TYPE = 38;
+  // A line of a screen. A paused line waits longer before it shows, as if the work behind it took time.
+  type Line = { html: string; pause?: boolean };
+  // Frame timings of the terminal, in milliseconds. A typed character, a printed line, a line that pauses, how long
+  // a finished screen holds, how often the hold advances, and half the caret's blink.
+  const SHOW = { type: 38, line: 90, pause: 320, hold: 3200, tick: 100, blink: 500 };
 
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
-  const c = (cls: string, text: string) => `<span class="${cls}">${text}</span>`;
-  const dim = (t: string) => c("t-dim", t);
-  const ok = (t: string) => `${c("t-ok", "✓")} ${t}`;
+  const c = (kind: string, text: string) => `<span data-t="${kind}">${text}</span>`;
+  const bold = (text: string) => `<strong>${text}</strong>`;
+  const dim = (t: string) => c("dim", t);
+  const ok = (t: string) => `${c("ok", "✓")} ${t}`;
 
   // Panels are drawn in box characters at a fixed width, as og's own interface is.
   const W = 54;
   const visible = (html: string) => html.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").length;
   const pad = (html: string, width: number) => html + " ".repeat(Math.max(0, width - visible(html)));
-  const top = (title: string) => dim("╭─ ") + c("t-bold", title) + dim(" " + "─".repeat(W - title.length - 5) + "╮");
+  const top = (title: string) => dim("╭─ ") + bold(title) + dim(" " + "─".repeat(W - title.length - 5) + "╮");
   const mid = (html = "") => dim("│ ") + pad(html, W - 3) + dim("│");
   const bottom = () => dim("╰" + "─".repeat(W - 2) + "╯");
   const panel = (title: string, rows: string[]): Line[] => [top(title), ...rows.map(mid), bottom()].map((html) => ({ html }));
-  const bar = (cells: number) => c("t-ok", "█".repeat(cells)) + dim("░".repeat(20 - cells));
+  const bar = (cells: number) => c("ok", "█".repeat(cells)) + dim("░".repeat(20 - cells));
 
   const STAGES = [
     "Scanning OSM objects",
@@ -113,38 +102,38 @@ const steps = [
   const screens: (() => Line[])[] = [
     () => [
       ...panel("og", [dim("Build and search geocoding Packs from open data")]),
-      { html: "", delay: 150 },
+      { html: "", pause: true },
       ...panel("Build a Pack", [
         dim("  Africa"),
         dim("  Asia"),
         dim("  Europe"),
         "  North America " + dim("›") + " Canada",
-        c("t-rev", pad("❯ Ontario", 21)) + dim("  2,032,851 addresses"),
+        c("rev", pad("❯ Ontario", 21)) + dim("  2,032,851 addresses"),
         dim("  Quebec"),
       ]),
-      { html: ` ${c("t-bold", "enter")} ${dim("build")}  ${c("t-bold", "/")} ${dim("search")}  ${c("t-bold", "q")} ${dim("quit")}` },
+      { html: ` ${bold("enter")} ${dim("build")}  ${bold("/")} ${dim("search")}  ${bold("q")} ${dim("quit")}` },
     ],
     () => [
-      { html: c("t-bold", "Building Ontario") },
+      { html: bold("Building Ontario") },
       { html: "" },
-      ...STAGES.map((s, i) => ({ html: `${ok(esc(s.padEnd(WIDTH)))}  ${bar(20)} ${dim("100%")}`, delay: i === 0 ? 300 : 240 })),
+      ...STAGES.map((s) => ({ html: `${ok(esc(s.padEnd(WIDTH)))}  ${bar(20)} ${dim("100%")}`, pause: true })),
       { html: "" },
-      { html: `${c("t-ok", "Pack ready")}  canada-ontario ${dim("· 324 MB · 1 file")}`, delay: 400 },
+      { html: `${c("ok", "Pack ready")}  canada-ontario ${dim("· 324 MB · 1 file")}`, pause: true },
     ],
     () => [
-      ...panel("Search · canada-ontario", [c("t-ok", "›") + " 10 king st w toronto" + c("t-caret", " ")]),
-      { html: "", delay: 300 },
+      ...panel("Search · canada-ontario", [c("ok", "›") + " 10 king st w toronto" + c("caret", " ")]),
+      { html: "", pause: true },
       ...panel("Results", [
         dim(pad("Address", 32) + pad("Match", 11) + "Score"),
-        c("t-rev", pad("10 King Street West, Toronto", 32) + pad("rooftop", 11) + "0.98"),
+        c("rev", pad("10 King Street West, Toronto", 32) + pad("rooftop", 11) + "0.98"),
         pad("10 King Street East, Toronto", 32) + dim(pad("rooftop", 11) + "0.71"),
         pad("King Street West, Toronto", 32) + dim(pad("street", 11) + "0.52"),
       ]),
-      { html: ` ${c("t-bold", "enter")} ${dim("GeoJSON")}  ${c("t-bold", "esc")} ${dim("back")}` },
+      { html: ` ${bold("enter")} ${dim("GeoJSON")}  ${bold("esc")} ${dim("back")}` },
     ],
     () => [
       { html: ok(`Pack canada-ontario ${dim("opened")}`) },
-      { html: ok(`Listening on ${c("t-link", "http://127.0.0.1:8080")}`), delay: 300 },
+      { html: ok(`Listening on ${c("link", "http://127.0.0.1:8080")}`), pause: true },
       { html: "" },
       ...[
         ["/geocode?q=10+King+St+W", "1.0"],
@@ -152,8 +141,8 @@ const steps = [
         ["/reverse?lon=-79.38&lat=43.65", "1.0"],
         ["/geocode?address=1+Yonge+St", "1.1"],
       ].map(([path, ms]) => ({
-        html: `${dim("GET")} ${esc(path.padEnd(31))}${c("t-ok", "200")} ${dim(ms + " ms")}`,
-        delay: 500,
+        html: `${dim("GET")} ${esc(path.padEnd(31))}${c("ok", "200")} ${dim(ms + " ms")}`,
+        pause: true,
       })),
     ],
     () => [
@@ -162,31 +151,37 @@ const steps = [
         dim("Columns ") + "street, city",
         dim("Output  ") + "customers-geocoded.csv",
       ]),
-      { html: "", delay: 200 },
-      { html: `Geocoding  ${bar(20)} ${dim("4,000 / 4,000")}`, delay: 700 },
+      { html: "", pause: true },
+      { html: `Geocoding  ${bar(20)} ${dim("4,000 / 4,000")}`, pause: true },
       { html: "" },
-      { html: ok(`4,000 of 4,000 rows ${dim("matched, lat/lon added")}`), delay: 500 },
+      { html: ok(`4,000 of 4,000 rows ${dim("matched, lat/lon added")}`), pause: true },
     ],
   ];
 
   const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // Replays the chosen step's screen, then moves the steps' tabs on to the next one.
   class Walkthrough extends HTMLElement {
     #run = 0;
     #paused = false;
     #cmds: string[] = [];
-    #buttons: HTMLButtonElement[] = [];
+    #tabs: HTMLElement[] = [];
+    #progress: HTMLElement[] = [];
 
     connectedCallback() {
       this.#cmds = JSON.parse(this.dataset.steps ?? "[]");
       const section = this.closest("section")!;
-      this.#buttons = [...section.querySelectorAll<HTMLButtonElement>("[data-step]")];
-      section.addEventListener("click", (e) => {
-        const target = (e.target as HTMLElement).closest<HTMLButtonElement>("button");
-        if (!target) return;
-        if (target.dataset.step) this.show(Number(target.dataset.step));
-      });
+      const list = section.querySelector<HTMLElement>('[role="tablist"]')!;
+      this.#tabs = [...list.querySelectorAll<HTMLElement>('[role="tab"]')];
+      this.#progress = [...section.querySelectorAll<HTMLElement>(".og-walk-progress")];
+      // Whichever way a tab is chosen, by pointer, keys or the replay itself, its screen plays.
+      new MutationObserver((records) => {
+        const tab = records.map((r) => r.target as HTMLElement).find((t) => t.getAttribute("aria-selected") === "true");
+        if (tab) this.show(this.#tabs.indexOf(tab));
+      }).observe(list, { attributeFilter: ["aria-selected"], subtree: true });
+      const screen = this.querySelector<HTMLElement>(".og-term-screen")!;
+      if (!still) setInterval(() => screen.toggleAttribute("data-blink"), SHOW.blink);
       this.addEventListener("mouseenter", () => (this.#paused = true));
       this.addEventListener("mouseleave", () => (this.#paused = false));
       // Starts when first scrolled into view, unless a step was already picked.
@@ -201,12 +196,8 @@ const steps = [
       const run = ++this.#run;
       const screen = this.querySelector<HTMLElement>(".og-term-screen")!;
       this.querySelector(".og-term-count")!.textContent = `${String(step + 1).padStart(2, "0")} / 05`;
-      for (const b of this.#buttons) {
-        if (Number(b.dataset.step) === step) b.setAttribute("aria-current", "step");
-        else b.removeAttribute("aria-current");
-        b.style.setProperty("--og-progress", "0");
-      }
-      const active = this.#buttons[step];
+      for (const bar of this.#progress) bar.style.setProperty("--value", "0");
+      const active = this.#progress[step];
 
       const prompt = document.createElement("div");
       prompt.className = "t-line";
@@ -214,15 +205,15 @@ const steps = [
       const cmd = this.#cmds[step];
       for (let i = 0; i <= cmd.length; i++) {
         if (run !== this.#run) return;
-        prompt.innerHTML = `<span class="t-prompt">~/packs $</span> ${esc(cmd.slice(0, i))}<span class="t-caret"> </span>`;
-        if (!still) await wait(TYPE);
+        prompt.innerHTML = `${c("prompt", "~/packs $")} ${esc(cmd.slice(0, i))}${c("caret", " ")}`;
+        if (!still) await wait(SHOW.type);
       }
-      prompt.innerHTML = `<span class="t-prompt">~/packs $</span> ${esc(cmd)}`;
-      await wait(still ? 0 : 350);
+      prompt.innerHTML = `${c("prompt", "~/packs $")} ${esc(cmd)}`;
+      if (!still) await wait(SHOW.pause);
 
       for (const line of screens[step]()) {
         if (run !== this.#run) return;
-        if (!still) await wait(line.delay ?? 90);
+        if (!still) await wait(line.pause ? SHOW.pause : SHOW.line);
         const el = document.createElement("div");
         el.className = "t-line";
         el.innerHTML = line.html || "&nbsp;";
@@ -231,30 +222,186 @@ const steps = [
 
       // Hold on the finished screen, filling the step's progress line, then move on.
       let held = 0;
-      while (held < HOLD) {
+      while (held < SHOW.hold) {
         if (run !== this.#run) return;
-        await wait(100);
-        if (!this.#paused && !still) held += 100;
-        active.style.setProperty("--og-progress", String(held / HOLD));
+        await wait(SHOW.tick);
+        if (!this.#paused && !still) held += SHOW.tick;
+        active.style.setProperty("--value", String(held / SHOW.hold));
       }
-      if (!still && run === this.#run) this.show((step + 1) % 5);
+      if (!still && run === this.#run) this.#tabs[(step + 1) % this.#tabs.length].click();
     }
   }
 
   customElements.define("og-walkthrough", Walkthrough);
+</script>
 
-  // The install box: the button copies the command.
-  class Install extends HTMLElement {
-    connectedCallback() {
-      const cmd = this.querySelector<HTMLElement>(".og-install-cmd")!;
-      const copy = this.querySelector<HTMLButtonElement>(".og-install-copy")!;
-      copy.addEventListener("click", async () => {
-        await navigator.clipboard.writeText(cmd.textContent ?? "");
-        copy.dataset.copied = "";
-        setTimeout(() => delete copy.dataset.copied, 1500);
-      });
-    }
+<style>
+  .og-walk-pre {
+    font: var(--type-caption);
   }
 
-  customElements.define("og-install", Install);
-</script>
+  .og-walk-install {
+    margin-block-end: var(--space-5);
+  }
+
+  .og-walk-step {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .og-walk-head {
+    align-items: baseline;
+    display: flex;
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  .og-walk-num {
+    color: var(--color-success);
+    font: var(--type-code);
+  }
+
+  .og-walk-title {
+    flex: none;
+    font: var(--type-ui-strong);
+  }
+
+  .og-walk-cmd {
+    color: var(--color-foreground-secondary);
+    font: var(--type-code);
+    margin-inline-start: auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .og-walk-text {
+    color: var(--color-foreground-secondary);
+    font: var(--type-caption);
+    margin: 0;
+  }
+
+  /* The step's line fills as its screen holds, then the next step opens. */
+  .og-walk-progress {
+    block-size: 0;
+    border-block-start: var(--border) solid var(--color-success);
+    display: block;
+    inline-size: calc(var(--value, 0) * 100%);
+    margin-block-start: var(--space-2);
+  }
+
+  .og-walk-stage {
+    display: flex;
+    padding: var(--space-10) var(--space-5);
+  }
+
+  /* A plain terminal window, a title bar with the three window buttons, and the interface drawn in text. */
+  .og-term {
+    background-color: var(--terminal-background);
+    border: var(--border) solid var(--terminal-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-dialog);
+    color: var(--terminal-text);
+    display: flex;
+    flex-direction: column;
+    font: var(--type-code);
+    inline-size: 100%;
+    overflow: hidden;
+  }
+
+  .og-term-bar {
+    align-items: center;
+    background-color: var(--terminal-bar);
+    border-block-end: var(--border) solid var(--terminal-border);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .og-term-dots {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .og-term-dots i {
+    block-size: var(--space-3);
+    border-radius: var(--radius-full);
+    inline-size: var(--space-3);
+  }
+
+  .og-term-dots i:nth-child(1) {
+    background-color: var(--terminal-dot-close);
+  }
+
+  .og-term-dots i:nth-child(2) {
+    background-color: var(--terminal-dot-minimize);
+  }
+
+  .og-term-dots i:nth-child(3) {
+    background-color: var(--terminal-dot-zoom);
+  }
+
+  .og-term-path {
+    color: var(--terminal-muted);
+    font: var(--type-caption);
+  }
+
+  .og-term-count {
+    color: var(--terminal-muted);
+    font: var(--type-caption);
+    justify-self: end;
+  }
+
+  /* As tall as the longest screen, so the box never changes height while a screen draws. */
+  .og-term-screen {
+    block-size: var(--container-md);
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: var(--space-3);
+    white-space: pre;
+  }
+
+  /* The lines are drawn by the script, so these reach the spans it writes. */
+  .og-term-screen :global([data-t="prompt"]) {
+    color: var(--terminal-prompt);
+  }
+
+  .og-term-screen :global([data-t="ok"]) {
+    color: var(--terminal-success);
+  }
+
+  .og-term-screen :global([data-t="dim"]) {
+    color: var(--terminal-muted);
+  }
+
+  .og-term-screen :global(strong) {
+    color: var(--terminal-text);
+  }
+
+  .og-term-screen :global([data-t="link"]) {
+    color: var(--terminal-prompt);
+    text-decoration-line: underline;
+  }
+
+  /* Reverse video, as a terminal draws a selected row. */
+  .og-term-screen :global([data-t="rev"]) {
+    background-color: var(--terminal-success);
+    color: var(--terminal-background);
+  }
+
+  .og-term-screen :global([data-t="caret"]) {
+    background-color: var(--terminal-text);
+  }
+
+  .og-term-screen[data-blink] :global([data-t="caret"]) {
+    background-color: transparent;
+  }
+
+  @media (min-width: 72rem) {
+    .og-walk-stage {
+      padding: var(--space-8) var(--space-6);
+    }
+  }
+</style>

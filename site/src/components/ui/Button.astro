@@ -13,6 +13,8 @@ type Base = Omit<HTMLAttributes<"button">, "class" | "class:list" | "style" | "a
   state?: (typeof buttonStates)[number];
   busy?: boolean;
   icon?: IconName;
+  /** Renders a link that looks like the button, for an action that goes to another page. */
+  href?: string;
 };
 
 export type Props =
@@ -29,23 +31,26 @@ const {
   label,
   type = "button",
   disabled,
+  href,
   ...attrs
 } = Astro.props;
 
 // No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
 const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
 const iconSize = size === "lg" ? "md" : size === "sm" ? "sm" : "md";
+const Tag = href ? "a" : "button";
 ---
 
-<button
+<Tag
   {...own(attrs)}
   class="button"
-  type={type}
+  href={href}
+  type={href ? undefined : type}
   data-variant={variant}
   data-size={size}
   data-icon-only={iconOnly ? "" : undefined}
   data-state={state === "rest" ? undefined : state}
-  disabled={disabled || state === "disabled"}
+  disabled={href ? undefined : disabled || state === "disabled"}
   aria-busy={busy || state === "busy" ? "true" : undefined}
   aria-label={iconOnly ? label : undefined}
 >
@@ -58,7 +63,7 @@ const iconSize = size === "lg" ? "md" : size === "sm" ? "sm" : "md";
     )
   }
   {!iconOnly && <slot />}
-</button>
+</Tag>
 
 <style>
   .button {
@@ -73,6 +78,7 @@ const iconSize = size === "lg" ? "md" : size === "sm" ? "sm" : "md";
     gap: var(--space-2);
     justify-content: center;
     padding-block: 0;
+    text-decoration: none;
     transition-duration: var(--duration-hover);
     transition-property: background-color, border-color, color;
     transition-timing-function: var(--ease-hover);

@@ -1,4 +1,9 @@
 ---
+import Button from "../ui/Button.astro";
+import Input from "../ui/Input.astro";
+import Kbd from "../ui/Kbd.astro";
+import Disc from "./Disc.astro";
+
 interface Props {
   examples: [address: string, coordinates: string][];
   placeholder: string;
@@ -11,12 +16,10 @@ const { examples, placeholder } = Astro.props;
   <span class="sr-only">{examples.map(([address, coordinates]) => `${address} geocodes to ${coordinates}.`).join(" ")}</span>
   <span class="og-morph-text" aria-hidden="true">{examples[0][0]}</span>
   <span class="og-morph-line" hidden>
-    <span class="og-morph-field" data-value={placeholder}>
-      <input
-        class="og-morph-input"
-        type="text"
+    <span class="og-morph-field">
+      <Input
+        size="lg"
         dir="auto"
-        size="1"
         aria-label="Type a street address, then press Enter"
         autocomplete="off"
         spellcheck="false"
@@ -24,24 +27,26 @@ const { examples, placeholder } = Astro.props;
       />
     </span>
     <span class="og-keys">
-      <button type="button" class="og-key og-enter" disabled>
-        Search
-        <span class="og-key-disc" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="m9 10-5 5 5 5M20 4v7a4 4 0 0 1-4 4H4" /></svg>
-        </span>
-      </button>
-      <button type="button" class="og-key og-clear" hidden>
-        Clear
-        <span class="og-key-disc"><kbd>esc</kbd></span>
-      </button>
+      <span class="og-enter">
+        <Button variant="raised" size="lg" disabled>
+          Search
+          <Disc icon="enter" end />
+        </Button>
+      </span>
+      <span class="og-clear" hidden>
+        <Button variant="raised" size="lg">
+          Clear
+          <Kbd>esc</Kbd>
+        </Button>
+      </span>
     </span>
   </span>
 </og-address-morph>
 
 <script>
-  const HOLD = 2200;
-  const STAGGER = 28;
-  const SETTLE = 380;
+  // Frame timings of the headline, in milliseconds. How long each address shows, the delay from one character's
+  // scramble to the next, and how long a character scrambles before it settles.
+  const SHOW = { hold: 2200, stagger: 28, settle: 380 };
   const GLYPHS = "0123456789.,-/abcdefghijklmnopqrstuvwxyz";
   // Hebrew, Arabic, Syriac, Thaana and N'Ko, and their presentation forms.
   const RTL = /[\u0590-\u07FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
@@ -60,8 +65,8 @@ const { examples, placeholder } = Astro.props;
         const lines = rows.map(([f, g]) => {
           let out = "";
           for (let i = 0; i < Math.max(f.length, g.length); i++) {
-            const at = (offset + i) * STAGGER;
-            if (t >= at + SETTLE) out += g[i] ?? "";
+            const at = (offset + i) * SHOW.stagger;
+            if (t >= at + SHOW.settle) out += g[i] ?? "";
             else if (t >= at) out += g[i] === " " ? " " : GLYPHS[(Math.random() * GLYPHS.length) | 0];
             else out += f[i] ?? "";
           }
@@ -69,7 +74,7 @@ const { examples, placeholder } = Astro.props;
           return out.trimEnd();
         });
         set(lines.join("\n").trimEnd());
-        if (t < (length - 1) * STAGGER + SETTLE) requestAnimationFrame(step);
+        if (t < (length - 1) * SHOW.stagger + SHOW.settle) requestAnimationFrame(step);
         else {
           set(to.join("\n"));
           done();
@@ -111,8 +116,8 @@ const { examples, placeholder } = Astro.props;
   }
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Cycles address, coordinates, next address... In editing mode the same line becomes
-  // an input in the same type, and Enter morphs what was typed into its coordinates.
+  // Cycles address, coordinates, next address... In editing mode the line becomes an
+  // input, and Enter morphs what was typed into its coordinates.
   class AddressMorph extends HTMLElement {
     #editing = false;
     #morphing = false;
@@ -122,18 +127,20 @@ const { examples, placeholder } = Astro.props;
     #examples: string[][] = [];
     #text!: HTMLElement;
     #line!: HTMLElement;
-    #field!: HTMLElement;
     #input!: HTMLInputElement;
+    #enterKey!: HTMLElement;
+    #clearKey!: HTMLElement;
     #enter!: HTMLButtonElement;
     #clear!: HTMLButtonElement;
 
     connectedCallback() {
       this.#text = this.querySelector<HTMLElement>(".og-morph-text")!;
       this.#line = this.querySelector<HTMLElement>(".og-morph-line")!;
-      this.#field = this.querySelector<HTMLElement>(".og-morph-field")!;
-      this.#input = this.querySelector<HTMLInputElement>(".og-morph-input")!;
-      this.#enter = this.querySelector<HTMLButtonElement>(".og-enter")!;
-      this.#clear = this.querySelector<HTMLButtonElement>(".og-clear")!;
+      this.#input = this.querySelector<HTMLInputElement>(".og-morph-field input")!;
+      this.#enterKey = this.querySelector<HTMLElement>(".og-enter")!;
+      this.#clearKey = this.querySelector<HTMLElement>(".og-clear")!;
+      this.#enter = this.#enterKey.querySelector("button")!;
+      this.#clear = this.#clearKey.querySelector("button")!;
       this.#examples = JSON.parse(this.dataset.examples ?? "[]");
       const cancel = () => this.dispatchEvent(new CustomEvent("og-cancel", { bubbles: true }));
       this.#text.addEventListener("click", () => this.dispatchEvent(new CustomEvent("og-edit", { bubbles: true })));
@@ -148,7 +155,7 @@ const { examples, placeholder } = Astro.props;
         if (event.key === "Enter") this.geocode();
         // Esc presses Clear while it shows; with nothing to clear it leaves search.
         if (event.key === "Escape" && !this.#searching) {
-          if (this.#clear.hidden) cancel();
+          if (this.#clearKey.hidden) cancel();
           else this.clear();
         }
       });
@@ -158,7 +165,6 @@ const { examples, placeholder } = Astro.props;
         if (!("answer" in this.#input.dataset)) return false;
         delete this.#input.dataset.answer;
         this.#input.value = "";
-        this.#fit();
         this.#setReady(false);
         return true;
       };
@@ -168,7 +174,6 @@ const { examples, placeholder } = Astro.props;
         if (clearAnswer() && event.inputType.startsWith("delete")) event.preventDefault();
       });
       this.#input.addEventListener("input", () => {
-        this.#fit();
         this.#setReady(!!this.#input.value.trim());
         this.#showClear(false);
       });
@@ -185,7 +190,6 @@ const { examples, placeholder } = Astro.props;
       this.#text.hidden = true;
       this.#line.hidden = false;
       this.#input.value = "";
-      this.#fit();
       delete this.#input.dataset.answer;
       this.#setReady(false);
       this.#showClear(false);
@@ -224,7 +228,6 @@ const { examples, placeholder } = Astro.props;
       if (hit) {
         const set = (text: string) => {
           this.#input.value = text;
-          this.#fit();
         };
         if (still) set(hit.coordinates);
         else await morph(set, [this.#input.value], [hit.coordinates]);
@@ -240,7 +243,6 @@ const { examples, placeholder } = Astro.props;
       if (this.#searching) return;
       this.#input.value = "";
       delete this.#input.dataset.answer;
-      this.#fit();
       this.#setReady(false);
       this.#showClear(false);
       this.dispatchEvent(new CustomEvent("og-clear", { bubbles: true }));
@@ -254,13 +256,8 @@ const { examples, placeholder } = Astro.props;
     // Search and Clear take turns in one spot: Clear once a search lands, Search again
     // on the next keystroke.
     #showClear(show: boolean) {
-      this.#clear.hidden = !show;
-      this.#enter.hidden = show;
-    }
-
-    // The field's hidden twin of the text sizes it, so the key follows the text.
-    #fit() {
-      this.#field.dataset.value = this.#input.value || this.#input.placeholder;
+      this.#clearKey.hidden = !show;
+      this.#enterKey.hidden = show;
     }
 
     // Where the text would wrap at the headline's width: one line if it fits, else two
@@ -310,7 +307,7 @@ const { examples, placeholder } = Astro.props;
         if (!this.#morphing) set((shown = this.#lines(shown.join(" "))).join("\n"));
       }).observe(this);
       for (let i = 0; this.isConnected && steps.length > 1; i = (i + 1) % steps.length) {
-        await wait(HOLD);
+        await wait(SHOW.hold);
         if (this.#editing) await new Promise<void>((r) => (this.#resume = r));
         const next = this.#lines(steps[(i + 1) % steps.length]);
         direct(steps[(i + 1) % steps.length]);
@@ -325,3 +322,89 @@ const { examples, placeholder } = Astro.props;
 
   customElements.define("og-address-morph", AddressMorph);
 </script>
+
+<style>
+  /* Two lines reserved on narrow screens, so a longer address never shifts the page. One-line text sits at the
+     bottom of the two, against the result line under it. */
+  .og-morph {
+    display: flex;
+    flex-direction: column;
+    font: var(--type-display);
+    inline-size: 100%;
+    justify-content: flex-end;
+    letter-spacing: var(--tracking-tight);
+    min-block-size: 2lh;
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  /* Kept as written, since the script breaks the lines itself. */
+  .og-morph-text {
+    cursor: text;
+    white-space: pre;
+  }
+
+  /* The input and its key, centred together on the headline's line, the key under the input on a phone. */
+  .og-morph-line {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    justify-content: center;
+  }
+
+  .og-morph-line[hidden],
+  .og-morph-text[hidden] {
+    display: none;
+  }
+
+  .og-morph-field {
+    inline-size: min(var(--container-md), 100%);
+  }
+
+  /* Search and Clear after the input, one at a time in the same spot. */
+  .og-keys {
+    align-items: center;
+    display: inline-flex;
+    flex: none;
+  }
+
+  /* Clear slides in where Search stood once a search lands. */
+  .og-clear {
+    display: inline-flex;
+  }
+
+  .og-clear[hidden] {
+    display: none;
+    opacity: 0;
+    translate: calc(var(--space-3) * -1) 0;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .og-clear {
+      transition:
+        opacity var(--duration-enter) var(--ease-out),
+        translate var(--duration-enter) var(--ease-out),
+        display var(--duration-enter) allow-discrete;
+    }
+
+    @starting-style {
+      .og-clear {
+        opacity: 0;
+        translate: calc(var(--space-3) * -1) 0;
+      }
+    }
+  }
+
+  @media (min-width: 50rem) {
+    .og-morph {
+      display: block;
+      min-block-size: 1lh;
+    }
+
+    .og-morph-line {
+      flex-direction: row;
+      gap: var(--space-4);
+    }
+  }
+</style>

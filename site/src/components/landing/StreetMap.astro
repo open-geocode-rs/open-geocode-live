@@ -6,26 +6,31 @@
 <script>
   import { VectorTile } from "@mapbox/vector-tile";
   import { PbfReader } from "pbf";
+  import { after, type Duration } from "../../lib/motion";
 
   const TILEJSON = "https://tiles.openfreemap.org/planet";
   const Z = 14; // the tiles' most detailed level: streets, buildings, house numbers
   const TILE = 3200; // CSS px per tile: about half a metre a pixel, a few blocks across
 
-  // Bottom to top. All in the page's ink, navy and green at low alpha: a backdrop, not
-  // a map to read.
-  type Paint = { layer: string; classes?: string[]; fill?: string; stroke?: string; width?: number; dash?: number[] };
+  // Bottom to top, each layer's colour named by the map group of tokens. All faint, a backdrop and not a map to read.
+  type Colour = "water" | "waterway" | "green" | "building" | "building-edge" | "road";
+  type Paint = { layer: string; classes?: string[]; fill?: Colour; stroke?: Colour; width?: number; dash?: number[] };
   const PAINT: Paint[] = [
-    { layer: "water", fill: "rgb(14 46 84 / 0.08)" },
-    { layer: "park", fill: "rgb(73 167 130 / 0.1)" },
-    { layer: "landcover", classes: ["grass", "wood", "farmland"], fill: "rgb(73 167 130 / 0.08)" },
-    { layer: "waterway", stroke: "rgb(14 46 84 / 0.18)", width: 1 },
-    { layer: "building", fill: "rgb(22 22 22 / 0.045)", stroke: "rgb(22 22 22 / 0.09)", width: 0.5 },
-    { layer: "transportation", classes: ["path", "track"], stroke: "rgb(22 22 22 / 0.16)", width: 1, dash: [1, 3] },
-    { layer: "transportation", classes: ["rail", "transit"], stroke: "rgb(22 22 22 / 0.2)", width: 1, dash: [6, 4] },
-    { layer: "transportation", classes: ["minor", "service"], stroke: "rgb(22 22 22 / 0.16)", width: 1.25 },
-    { layer: "transportation", classes: ["secondary", "tertiary"], stroke: "rgb(22 22 22 / 0.22)", width: 2 },
-    { layer: "transportation", classes: ["motorway", "trunk", "primary"], stroke: "rgb(22 22 22 / 0.28)", width: 2.75 },
+    { layer: "water", fill: "water" },
+    { layer: "park", fill: "green" },
+    { layer: "landcover", classes: ["grass", "wood", "farmland"], fill: "green" },
+    { layer: "waterway", stroke: "waterway", width: 1 },
+    { layer: "building", fill: "building", stroke: "building-edge", width: 0.5 },
+    { layer: "transportation", classes: ["path", "track"], stroke: "road", width: 1, dash: [1, 3] },
+    { layer: "transportation", classes: ["rail", "transit"], stroke: "road", width: 1, dash: [6, 4] },
+    { layer: "transportation", classes: ["minor", "service"], stroke: "road", width: 1.25 },
+    { layer: "transportation", classes: ["secondary", "tertiary"], stroke: "road", width: 2 },
+    { layer: "transportation", classes: ["motorway", "trunk", "primary"], stroke: "road", width: 2.75 },
   ];
+
+  // The faded edge. The map shows fully near the place and fades out toward an ellipse this share of the box wide
+  // and high, so it reads as a backdrop.
+  const FADE = { width: 0.6, height: 0.65, solid: 0.25 };
 
   // A slow tile server never holds a request open: past this the map is skipped.
   const TIMEOUT = 8000;
@@ -107,7 +112,7 @@
     return out;
   }
 
-  const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const wait = (name: Duration) => new Promise<void>((r) => after(name, r));
 
   // The streets around a found place, faint behind the hero.
   class StreetMap extends HTMLElement {
@@ -156,7 +161,7 @@
             }),
           ),
           // Lets the last map fade out before the next is drawn over it.
-          fading ? wait(300) : null,
+          fading ? wait("panel") : null,
         ]);
         await document.fonts.ready;
         if (request !== this.#request) return;
@@ -184,8 +189,8 @@
       const [ax, ay] = this.#anchor();
       const ox = ax - this.#centre[0] * TILE;
       const oy = ay - this.#centre[1] * TILE;
-      this.style.setProperty("--og-map-x", `${ax}px`);
-      this.style.setProperty("--og-map-y", `${ay}px`);
+      const style = getComputedStyle(this);
+      const colour = (name: Colour) => style.getPropertyValue(`--map-${name}`).trim();
       for (const { x, y, paths } of this.#tiles) {
         ctx.save();
         ctx.translate(ox + x * TILE, oy + y * TILE);
@@ -196,11 +201,11 @@
         ctx.clip();
         PAINT.forEach((paint, i) => {
           if (paint.fill) {
-            ctx.fillStyle = paint.fill;
+            ctx.fillStyle = colour(paint.fill);
             ctx.fill(paths[i]);
           }
           if (paint.stroke) {
-            ctx.strokeStyle = paint.stroke;
+            ctx.strokeStyle = colour(paint.stroke);
             ctx.lineWidth = paint.width ?? 1;
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
@@ -211,12 +216,30 @@
         ctx.restore();
       }
       this.#label(ctx, ox, oy, width, height);
+      this.#fade(ctx, ax, ay, width, height);
+    }
+
+    // Keeps the map only where an elliptical fade around the place says, so its edges dissolve into the card.
+    #fade(ctx: CanvasRenderingContext2D, ax: number, ay: number, width: number, height: number) {
+      const solid = getComputedStyle(this).getPropertyValue("--map-label-halo").trim();
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.translate(ax, ay);
+      ctx.scale(FADE.width * width, FADE.height * height);
+      const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 1);
+      gradient.addColorStop(FADE.solid, solid);
+      gradient.addColorStop(1, "transparent");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(-width, -height, width * 2, height * 2);
+      ctx.restore();
     }
 
     // Over every tile at once, since a tile's margin repeats its neighbours' names:
     // a name already placed nearby is skipped, as is one that would overlap another.
     #label(ctx: CanvasRenderingContext2D, ox: number, oy: number, width: number, height: number) {
-      const family = getComputedStyle(this).fontFamily;
+      // Neighbourhoods in small capitals, streets in caption text, both from the type roles.
+      const style = getComputedStyle(this);
+      const role = (name: string) => style.getPropertyValue(name).trim();
       const all = this.#tiles
         .flatMap(({ x, y, labels }) =>
           labels.map((label) => ({ ...label, x: ox + x * TILE + label.x, y: oy + y * TILE + label.y })),
@@ -231,8 +254,8 @@
       ctx.setLineDash([]);
       for (const label of all) {
         const place = label.rank === 0;
-        ctx.font = `${place ? 500 : 400} ${place ? 11 : label.rank === 1 ? 12 : 11}px ${family}`;
-        ctx.letterSpacing = place ? "0.18em" : "0px";
+        ctx.font = role(place ? "--type-label" : "--type-caption");
+        ctx.letterSpacing = place ? role("--tracking-caps") : "normal";
         const w = ctx.measureText(label.name).width;
         if (w + 24 > label.room) continue;
         if (placed.some((p) => p.name === label.name && Math.hypot(p.x - label.x, p.y - label.y) < 480)) continue;
@@ -246,10 +269,10 @@
         ctx.save();
         ctx.translate(label.x, label.y);
         ctx.rotate(label.angle);
-        ctx.strokeStyle = "rgb(255 255 255 / 0.85)";
+        ctx.strokeStyle = role("--map-label-halo");
         ctx.lineWidth = 3;
         ctx.strokeText(label.name, 0, 0);
-        ctx.fillStyle = place ? "rgb(22 22 22 / 0.32)" : "rgb(22 22 22 / 0.42)";
+        ctx.fillStyle = role("--map-label");
         ctx.fillText(label.name, 0, 0);
         ctx.restore();
       }
@@ -258,3 +281,42 @@
 
   customElements.define("og-street-map", StreetMap);
 </script>
+
+<style>
+  /* The searched place's streets, over the halftone and under everything else. */
+  .og-street-map {
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: calc(var(--z-raised) * -1);
+  }
+
+  .og-street-map[data-shown] {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .og-street-map {
+      transition: opacity var(--duration-panel) var(--ease-out);
+    }
+  }
+
+  .og-street-map canvas {
+    block-size: 100%;
+    display: block;
+    inline-size: 100%;
+  }
+
+  /* Required by the tiles' and the map data's licences whenever the map shows. */
+  .og-street-map-credit {
+    color: var(--color-foreground-muted);
+    font: var(--type-caption);
+    inset-block-start: var(--space-3);
+    inset-inline: var(--space-4);
+    margin: 0;
+    pointer-events: auto;
+    position: absolute;
+    text-align: end;
+  }
+</style>

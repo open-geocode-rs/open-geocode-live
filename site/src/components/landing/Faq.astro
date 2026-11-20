@@ -1,48 +1,130 @@
-<section class="og-faq" aria-labelledby="og-faq-title">
-  <div class="og-faq-box">
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <div class="og-bench-copy">
-      <p class="og-walk-eyebrow">FAQ</p>
-      <h2 id="og-faq-title">Questions, answered.</h2>
-      <p>Common questions about hosting OpenGeocode, what it costs, and how accurate it is.</p>
-      <a class="og-bench-link" href="/docs/">Read the documentation</a>
-    </div>
-    <div class="og-faq-list">
-      <details>
-        <summary>How do I use OpenGeocode?</summary>
-        <p>Build a Pack with <code>og build</code>, then <code>og serve</code> it. See the <a href="/docs/quickstart/">quickstart</a>.</p>
-      </details>
-      <details>
-        <summary>What hardware do I need to host it?</summary>
-        <p>Very little. This page's search serves the whole planet, a 27.7&nbsp;GB Pack, on 2 CPU cores with about 0.2&nbsp;GB of memory of its own. The operating system's page cache holds the parts of the Pack that get used.</p>
-      </details>
-      <details>
-        <summary>How much does OpenGeocode cost?</summary>
-        <p>Nothing. No API key, quota or per-lookup fee; you only pay for your machine.</p>
-      </details>
-      <details>
-        <summary>Does it work offline?</summary>
-        <p>Yes. It only needs a connection to download data when building a Pack.</p>
-      </details>
-      <details>
-        <summary>Can I geocode a whole CSV?</summary>
-        <p>Yes, with <code>open-geocode geocode batch</code>. See <a href="/docs/guides/batch-csv/">batch geocoding</a>.</p>
-      </details>
-      <details>
-        <summary>How accurate is it?</summary>
-        <p>It leads the open-source geocoders on the MESSY STREETS benchmark. See the <a href="/docs/benchmarks/">benchmarks</a>.</p>
-      </details>
-      <details>
-        <summary>What about data and privacy?</summary>
-        <p>It runs on your hardware, so no address leaves your network.</p>
-      </details>
-      <details>
-        <summary>Is OpenGeocode open source?</summary>
-        <p>Yes, MIT-licensed, on <a href="https://github.com/open-geocode-rs/open-geocode">GitHub</a>.</p>
-      </details>
-    </div>
+---
+import Icon from "../ui/Icon.astro";
+import Link from "../ui/Link.astro";
+import Split from "./Split.astro";
+---
+
+<Split id="og-faq-title" eyebrow="FAQ" title="Questions, answered.">
+  <p>Common questions about hosting OpenGeocode, what it costs, and how accurate it is.</p>
+  <Link variant="standalone" href="/docs/">Read the documentation</Link>
+  <div class="og-faq" slot="aside">
+    <details>
+      <summary><span class="og-faq-mark"><Icon name="x" size="sm" /></span>How do I use OpenGeocode?</summary>
+      <p>
+        Build a Pack with <code>og build</code>, then <code>og serve</code> it. See the <Link href="/docs/quickstart/">quickstart</Link>.
+      </p>
+    </details>
+    <details>
+      <summary><span class="og-faq-mark"><Icon name="x" size="sm" /></span>What hardware do I need to host it?</summary>
+      <p>
+        Very little. This page's search serves the whole planet, a 27.7&nbsp;GB Pack, on 2 CPU cores with about
+        0.2&nbsp;GB of memory of its own. The operating system's page cache holds the parts of the Pack that get used.
+      </p>
+    </details>
+    <details>
+      <summary><span class="og-faq-mark"><Icon name="x" size="sm" /></span>How much does OpenGeocode cost?</summary>
+      <p>Nothing. No API key, quota or per-lookup fee; you only pay for your machine.</p>
+    </details>
+    <details>
+      <summary><span class="og-faq-mark"><Icon name="x" size="sm" /></span>Does it work offline?</summary>
+      <p>Yes. It only needs a connection to download data when building a Pack.</p>
+    </details>
+    <details>
+      <summary><span class="og-faq-mark"><Icon name="x" size="sm" /></span>Can I geocode a whole CSV?</summary>
+      <p>
+        Yes, with <code>open-geocode geocode batch</code>. See <Link href="/docs/guides/batch-csv/">batch geocoding</Link>.
+      </p>
+    </details>
+    <details>
+      <summary><span class="og-faq-mark"><Icon name="x" size="sm" /></span>How accurate is it?</summary>
+      <p>
+        It leads the open-source geocoders on the MESSY STREETS benchmark. See the <Link href="/docs/benchmarks/">benchmarks</Link>.
+      </p>
+    </details>
+    <details>
+      <summary><span class="og-faq-mark"><Icon name="x" size="sm" /></span>What about data and privacy?</summary>
+      <p>It runs on your hardware, so no address leaves your network.</p>
+    </details>
+    <details>
+      <summary><span class="og-faq-mark"><Icon name="x" size="sm" /></span>Is OpenGeocode open source?</summary>
+      <p>Yes, MIT-licensed, on <Link href="https://github.com/open-geocode-rs/open-geocode">GitHub</Link>.</p>
+    </details>
   </div>
-</section>
+</Split>
+
+<style>
+  /* Each question opens in place, its plus turning to a cross. */
+  .og-faq {
+    interpolate-size: allow-keywords;
+  }
+
+  .og-faq details + details {
+    border-block-start: var(--border) solid var(--color-border);
+  }
+
+  .og-faq summary {
+    align-items: flex-start;
+    cursor: pointer;
+    display: flex;
+    font: var(--type-ui-strong);
+    gap: var(--space-3);
+    list-style: none;
+    padding: var(--space-5) var(--space-6);
+  }
+
+  .og-faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .og-faq summary:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: calc(var(--space-0-5) * -1);
+  }
+
+  /* The cross turned an eighth reads as a plus. */
+  .og-faq-mark {
+    align-items: center;
+    block-size: 1lh;
+    color: var(--color-foreground-muted);
+    display: inline-flex;
+    flex: none;
+    rotate: 45deg;
+  }
+
+  .og-faq details[open] .og-faq-mark {
+    rotate: 0deg;
+  }
+
+  .og-faq details p {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui);
+    margin: 0;
+    padding: 0 var(--space-6) var(--space-5) var(--space-12);
+  }
+
+  .og-faq code {
+    font: var(--type-code-inline);
+  }
+
+  /* Opens and closes by height where the browser can animate it, and snaps elsewhere. */
+  .og-faq details::details-content {
+    block-size: 0;
+    overflow: hidden;
+  }
+
+  .og-faq details[open]::details-content {
+    block-size: auto;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .og-faq-mark {
+      transition: rotate var(--duration-enter) var(--ease-out);
+    }
+
+    .og-faq details::details-content {
+      transition:
+        block-size var(--duration-enter) var(--ease-out),
+        content-visibility var(--duration-enter) allow-discrete;
+    }
+  }
+</style>
