@@ -177,6 +177,13 @@ const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(
           </Cell>
         ))
       }
+      {
+        codeBlockStates.map((state) => (
+          <Cell component="CodeBlock" variant="numbered" size="default" state={state} width="wider">
+            <CodeBlock variant="numbered" code={json} lang="json" state={state} />
+          </Cell>
+        ))
+      }
     </div>
   </Section>
 

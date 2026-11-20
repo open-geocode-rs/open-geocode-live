@@ -2,7 +2,7 @@
 import { exampleFor, snippetsFor } from "../../lib/api";
 import type { ApiOperation } from "../../lib/openapi";
 import Badge from "../ui/Badge.astro";
-import Card from "../ui/Card.astro";
+import Button from "../ui/Button.astro";
 import CodeBlock from "../ui/CodeBlock.astro";
 import Menu from "../ui/Menu.astro";
 
@@ -18,30 +18,37 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
 ---
 
 <aside class="request-example" aria-label="Example request" data-request-example>
-  <Card variant="framed">
+  <div class="request-card">
     <div class="request-head">
       <div class="request-title">
         <Badge variant={operation.method} />
         <span class="sr-only">{operation.method.toUpperCase()}</span>
         <h3 class="request-summary">{operation.title}</h3>
       </div>
-      <Menu label="Language" variant="outline" items={languages} current={snippets[0].id} triggerIcon="code" size="sm" align="end" />
+      <div class="request-controls">
+        <Menu label="Language" variant="outline" items={languages} current={snippets[0].id} triggerIcon="code" size="sm" align="end" />
+        <Button variant="outline" iconOnly icon="copy" label="Copy code" data-copy-request />
+        <span class="sr-only" role="status" data-copy-status></span>
+      </div>
     </div>
     {
       snippets.map((s, i) => (
         <div class="request-snippet" data-snippet={s.id} hidden={i > 0}>
-          <CodeBlock code={s.code} lang={s.lang} />
+          <CodeBlock variant="numbered" code={s.code} lang={s.lang} />
         </div>
       ))
     }
-    {
-      response && (
-        <div class="request-response">
-          <CodeBlock variant="titled" title="200 example" code={response} lang="json" />
+  </div>
+  {
+    response && (
+      <div class="request-response">
+        <p class="request-response-title">200 example</p>
+        <div class="request-response-body">
+          <CodeBlock variant="numbered" code={response} lang="json" />
         </div>
-      )
-    }
-  </Card>
+      </div>
+    )
+  }
 </aside>
 
 <script>
@@ -67,6 +74,18 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
     });
   }
 
+  // The panel's copy button copies the request in the language shown.
+  for (const panel of document.querySelectorAll<HTMLElement>("[data-request-example]")) {
+    const button = panel.querySelector<HTMLButtonElement>("[data-copy-request]");
+    const status = panel.querySelector<HTMLElement>("[data-copy-status]");
+    button?.addEventListener("click", async () => {
+      const shown = panel.querySelector<HTMLElement>(".request-snippet:not([hidden]) template[data-code]");
+      if (!(shown instanceof HTMLTemplateElement)) return;
+      await navigator.clipboard.writeText(shown.content.textContent ?? "");
+      if (status) status.textContent = "Copied";
+    });
+  }
+
   try {
     const saved = localStorage.getItem(KEY);
     if (saved) show(saved);
@@ -74,14 +93,33 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
 </script>
 
 <style>
+  /* One frame on a quiet fill. The request sits in a card with its title row, and the answer below it on the fill. */
+  .request-example {
+    background-color: var(--color-control);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-xl);
+    color: var(--color-foreground);
+    padding: var(--space-1);
+  }
+
+  .request-card {
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
   .request-head {
     align-items: center;
+    border-block-end: var(--border) solid var(--color-border);
     display: flex;
     gap: var(--space-2);
     justify-content: space-between;
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
   }
 
-  .request-title {
+  .request-title,
+  .request-controls {
     align-items: center;
     display: flex;
     gap: var(--space-2);
@@ -91,15 +129,22 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
   .request-summary {
     color: var(--color-foreground);
     font: var(--type-ui-strong);
+    margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
+  .request-response-title {
+    border-block-end: var(--border) solid var(--color-border);
+    font: var(--type-ui-strong);
+    margin: 0;
+    padding: var(--space-2) var(--space-5);
+  }
+
   /* A long answer scrolls inside the panel, so the panel stays within the window beside the page. */
-  .request-response {
-    border-radius: var(--radius-lg);
+  .request-response-body {
     max-block-size: var(--container-md);
-    overflow-y: auto;
+    overflow: auto;
   }
 </style>

@@ -4,7 +4,7 @@ import { Code } from "astro:components";
 import Button from "./Button.astro";
 import Icon from "./Icon.astro";
 
-export const codeBlockVariants = ["plain", "titled", "command"] as const;
+export const codeBlockVariants = ["plain", "titled", "command", "numbered"] as const;
 export const codeBlockSizes = ["default"] as const;
 export const codeBlockStates = ["rest", "copied"] as const;
 
@@ -18,8 +18,9 @@ type Shared = {
   state?: (typeof codeBlockStates)[number];
 };
 
-/** A command is one line of shell, set compactly after a prompt that is not copied with it. */
-export type Props = (Shared & { variant?: "plain" | "command" }) | (Shared & { variant: "titled"; title: string });
+/** A command is one line of shell, set compactly after a prompt that is not copied with it. A numbered block numbers its
+ * lines and has no box or copy button of its own, for a panel that frames it and owns the copy action. */
+export type Props = (Shared & { variant?: "plain" | "command" | "numbered" }) | (Shared & { variant: "titled"; title: string });
 
 const { code, lang = "plaintext", state = "rest", variant = "plain" } = Astro.props;
 const title = Astro.props.variant === "titled" ? Astro.props.title : undefined;
@@ -119,6 +120,33 @@ const owned: Transformer = {
     border-radius: var(--radius-md);
     grid-template-areas: "prompt body actions";
     grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .codeblock[data-variant="numbered"] {
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    grid-template-areas: "body";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .codeblock[data-variant="numbered"] .codeblock-actions {
+    display: none;
+  }
+
+  .codeblock[data-variant="numbered"] :global(.codeblock-code) {
+    counter-reset: codeblock-line;
+  }
+
+  .codeblock[data-variant="numbered"] :global(.codeblock-line)::before {
+    color: var(--color-foreground-muted);
+    content: counter(codeblock-line);
+    counter-increment: codeblock-line;
+    display: inline-block;
+    inline-size: var(--space-4);
+    margin-inline-end: var(--space-4);
+    text-align: end;
+    user-select: none;
   }
 
   .codeblock-prompt {
