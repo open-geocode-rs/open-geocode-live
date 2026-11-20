@@ -13,7 +13,16 @@
   const TILE = 3200; // CSS px per tile: about half a metre a pixel, a few blocks across
 
   // Bottom to top, each layer's colour named by the map group of tokens. All faint, a backdrop and not a map to read.
-  type Colour = "water" | "waterway" | "green" | "building" | "building-edge" | "road";
+  // Each layer reads its colour from the map group, named in full.
+  const layerColour = {
+    water: "--map-water",
+    waterway: "--map-waterway",
+    green: "--map-green",
+    building: "--map-building",
+    "building-edge": "--map-building-edge",
+    road: "--map-road",
+  } as const;
+  type Colour = keyof typeof layerColour;
   type Paint = { layer: string; classes?: string[]; fill?: Colour; stroke?: Colour; width?: number; dash?: number[] };
   const PAINT: Paint[] = [
     { layer: "water", fill: "water" },
@@ -161,7 +170,7 @@
             }),
           ),
           // Lets the last map fade out before the next is drawn over it.
-          fading ? wait("panel") : null,
+          fading ? wait("--duration-panel") : null,
         ]);
         await document.fonts.ready;
         if (request !== this.#request) return;
@@ -190,7 +199,7 @@
       const ox = ax - this.#centre[0] * TILE;
       const oy = ay - this.#centre[1] * TILE;
       const style = getComputedStyle(this);
-      const colour = (name: Colour) => style.getPropertyValue(`--map-${name}`).trim();
+      const colour = (name: Colour) => style.getPropertyValue(layerColour[name]).trim();
       for (const { x, y, paths } of this.#tiles) {
         ctx.save();
         ctx.translate(ox + x * TILE, oy + y * TILE);

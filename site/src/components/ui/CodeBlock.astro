@@ -86,7 +86,7 @@ const owned: Transformer = {
       block.dataset.state = "copied";
       status.textContent = "Copied";
       // The message stays for the feedback duration, then clears.
-      cancel = after("feedback", () => {
+      cancel = after("--duration-feedback", () => {
         block.removeAttribute("data-state");
         status.textContent = "";
       });

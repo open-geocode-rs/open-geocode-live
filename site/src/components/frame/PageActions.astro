@@ -36,7 +36,7 @@ const items = [
       label.textContent = "Copied";
       cancel();
       // The message stays for the feedback duration, then clears.
-      cancel = after("feedback", () => {
+      cancel = after("--duration-feedback", () => {
         label.textContent = rest;
       });
     });

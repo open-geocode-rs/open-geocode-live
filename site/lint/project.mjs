@@ -6,28 +6,8 @@ import { fileURLToPath } from "node:url";
 
 export const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
-/** The files the lint checks, relative to site/. Step 5 grows this to src/** and nothing else. */
-export const include = [
-  "src/styles/tokens/**",
-  "src/components/ui/**",
-  "src/components/system/**",
-  "src/pages/system.astro",
-  "src/pages/index.astro",
-  "src/layouts/Landing.astro",
-  "src/components/landing/**",
-  "src/components/frame/**",
-  "src/components/prose/**",
-  "src/components/MarkdownContent.astro",
-  "src/lib/prose.ts",
-  "src/styles/global.css",
-  "src/components/api/**",
-  "src/pages/docs/api/**",
-  "src/pages/*.md.ts",
-  "src/lib/openapi.ts",
-  "src/lib/reference.ts",
-  "src/lib/markdown.ts",
-  "src/lib/api.ts",
-];
+/** The files the lint checks, relative to site/. */
+export const include = ["src/**"];
 
 export const tokenDir = "src/styles/tokens/";
 export const tokenFiles = ["primitives.css", "roles.css", "components.css", "host.css"].map((f) => tokenDir + f);
