@@ -396,7 +396,7 @@ const motionRule = rule("motion", ({ root, say }) => {
       for (const w of words) say(d, `${d.prop} holds the time ${w.value}. Use var(--duration-*)`);
     }
     const rule = d.parent;
-    if (rule?.type === "rule" && /:hover/.test(rule.selector) && !inMedia(d, /\(\s*hover:\s*hover\s*\)/)) {
+    if (rule?.type === "rule" && /:hover/.test(rule.selector) && !(inMedia(d, /\(\s*hover:\s*hover\s*\)/) && inMedia(d, /\(\s*pointer:\s*fine\s*\)/))) {
       say(d, `${rule.selector} styles hover outside @media (hover: hover) and (pointer: fine)`);
     }
   });

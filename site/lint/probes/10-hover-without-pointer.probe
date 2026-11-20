@@ -1,0 +1,6 @@
+probe {"rule": "og/motion", "file": "src/components/ui/Badge.astro", "after": "<style>\n"}
+  @media (hover: hover) {
+    .badge:hover {
+      display: block;
+    }
+  }
