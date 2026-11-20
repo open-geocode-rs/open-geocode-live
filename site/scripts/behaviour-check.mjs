@@ -177,6 +177,29 @@ const cases = {
       (tab) => patchIndex(tab, "var options=async(new_options)=>{", "if(!globalThis.__ogFailed){globalThis.__ogFailed=true;throw new Error(\"index failed\")}"),
     ),
 
+  /** A batch whose query is cleared while the index is dropped adds nothing to the cleared list. */
+  "search drops a batch of a cleared query": () =>
+    visit(
+      "/docs/quickstart/",
+      desktop,
+      async (tab) => {
+        await search(tab, "geocode");
+        await rowsReach(tab, 5);
+        let seen = 0;
+        await tab.route(FRAGMENTS, (route) => (++seen === 2 ? route.abort() : route.continue()));
+        await more(tab).click();
+        // Cleared while the failed batch drops the index.
+        await tab.waitForTimeout(300);
+        await tab.locator("[data-search-input]").fill("");
+        await tab.waitForTimeout(1500);
+        const rows = await tab.locator("[data-search-results] > li").count();
+        const shown = await more(tab).isVisible();
+        return rows || shown ? [`the cleared search shows ${rows} rows${shown ? " and Load more" : ""}`] : [];
+      },
+      // Dropping the index takes a while, as it may on a slow device.
+      (tab) => patchIndex(tab, "var destroy=async()=>{", "await new Promise((r)=>setTimeout(r,1000));"),
+    ),
+
   // Theme.
 
   /** A chosen theme holds when the system's theme changes, even where the choice cannot be saved. */

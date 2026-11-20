@@ -243,6 +243,8 @@ const strings = {
         if (pages.length < next.length) {
           results.failed = true;
           await reset();
+          // The query may have changed while the index was dropped.
+          if (results !== current) return;
         }
         list.append(...pages.map(render));
         results.shown += pages.length;
