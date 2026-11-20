@@ -1,0 +1,6 @@
+probe {"rule": "og/media-width", "file": "src/components/ui/Badge.astro", "after": "<style>\n"}
+  @media (width >= 47rem) {
+    .badge {
+      display: block;
+    }
+  }

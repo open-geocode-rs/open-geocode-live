@@ -254,11 +254,17 @@ const rawValueRule = rule("raw-value", ({ root, file, say }) => {
 // Rule 7. Media widths come from the breakpoints in lint/budget.json, in the min-width form.
 const mediaRule = rule("media-width", ({ root, say }) => {
   root.walkAtRules("media", (a) => {
-    for (const m of a.params.matchAll(/\(\s*([a-z-]+)\s*:\s*([^)]+)\)/g)) {
-      const [, feature, value] = m;
-      if (!/width|height/.test(feature)) continue;
-      if (feature !== "min-width") say(a, `@media uses ${feature}. Use (min-width: …) with ${budget.breakpoints.join(", ")}`);
-      else if (!budget.breakpoints.includes(value.trim())) say(a, `@media width ${value.trim()} is not a breakpoint. Use ${budget.breakpoints.join(", ")}`);
+    for (const [, condition] of a.params.matchAll(/\(([^()]*)\)/g)) {
+      const colon = /^\s*([a-z-]+)\s*:\s*(.+?)\s*$/.exec(condition);
+      if (colon) {
+        const [, feature, value] = colon;
+        if (!/width|height/.test(feature)) continue;
+        if (feature !== "min-width") say(a, `@media uses ${feature}. Use (min-width: …) with ${budget.breakpoints.join(", ")}`);
+        else if (!budget.breakpoints.includes(value)) say(a, `@media width ${value} is not a breakpoint. Use ${budget.breakpoints.join(", ")}`);
+      } else if (/width|height/.test(condition) && /[<>=]/.test(condition)) {
+        // The range form, as (width >= 50rem), compares the same feature without the breakpoint check.
+        say(a, `@media uses the range form (${condition.trim()}). Use (min-width: …) with ${budget.breakpoints.join(", ")}`);
+      }
     }
   });
 });
