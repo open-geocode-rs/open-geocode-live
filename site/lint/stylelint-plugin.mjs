@@ -357,10 +357,19 @@ const motionProps = /^(transform|translate|rotate|scale|inset|top|right|bottom|l
 // moves what is around it, so motion uses transform, opacity, clip-path and colour instead.
 const layoutProps =
   /^(width|height|(min|max)-(width|height)|(min-|max-)?(inline|block)-size|top|right|bottom|left|inset(-[a-z-]+)?|margin(-[a-z-]+)?|padding(-[a-z-]+)?|grid-template-(rows|columns)|gap|row-gap|column-gap|flex(-basis|-grow|-shrink)?|font-size|line-height|border(-[a-z-]+)?-width)$/;
+// The words a transition item may hold besides its property. Times, numbers and functions, var() among them, are
+// never the property, since the duration and easing tokens are read through var().
+const transitionWords = /^(ease|ease-in|ease-out|ease-in-out|linear|step-start|step-end|normal|allow-discrete)$/;
 const transitioned = (d) => {
   if (d.prop === "transition-property") return d.value.split(",").map((x) => x.trim());
-  if (d.prop === "transition") return d.value.split(",").map((x) => x.trim().split(/\s+/)[0]);
-  return [];
+  if (d.prop !== "transition") return [];
+  const items = [[]];
+  for (const n of valueParser(d.value).nodes) {
+    if (n.type === "div" && n.value === ",") items.push([]);
+    else items.at(-1).push(n);
+  }
+  // An item that names no property transitions all of them.
+  return items.map((nodes) => nodes.find((n) => n.type === "word" && !valueParser.unit(n.value) && !transitionWords.test(n.value))?.value ?? "all");
 };
 const inMedia = (node, re) => {
   for (let p = node.parent; p; p = p.parent) if (p.type === "atrule" && p.name === "media" && re.test(p.params)) return true;
@@ -368,7 +377,7 @@ const inMedia = (node, re) => {
 };
 const motionRule = rule("motion", ({ root, say }) => {
   root.walkDecls((d) => {
-    if (/^transition(-property)?$/.test(d.prop) && /(^|[\s,])all([\s,]|$)/.test(d.value)) say(d, "transition: all. Name each property");
+    if (/^transition(-property)?$/.test(d.prop) && transitioned(d).includes("all")) say(d, "transition: all. Name each property");
     if (/(^|[\s,])ease-in([\s,]|$)/.test(d.value)) say(d, "ease-in on UI. Use var(--ease-out)");
     if (/scale\(\s*0\s*\)/.test(d.value) || (d.prop === "scale" && d.value.trim() === "0")) say(d, "scale(0). Start from var(--scale-press) with opacity 0");
     // An accordion is the one part whose job is to change size, so its content box may animate its height.
