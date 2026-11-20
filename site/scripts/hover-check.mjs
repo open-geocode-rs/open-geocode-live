@@ -18,7 +18,7 @@ const rows = [
   { page: "/docs/", name: "docs header links", selector: "header .header-link" },
   { page: "/docs/", name: "sidebar links", selector: ".nav-link", limit: 6 },
   { page: "/docs/api/operations/autocomplete/", name: "page actions", selector: "[data-copy-markdown], .actions summary" },
-  { page: "/docs/api/operations/autocomplete/", name: "request panel controls", selector: ".request-controls summary, [data-copy-request]" },
+  { page: "/docs/api/operations/autocomplete/", name: "request panel controls", selector: ".request-controls select, [data-copy-request]" },
   { page: "/", name: "landing header menus", selector: ".og-nav .og-menu > .button", bands: ".og-nav .og-menu-panel" },
 ];
 

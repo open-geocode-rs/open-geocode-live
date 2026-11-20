@@ -162,6 +162,14 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
       opacity: 1;
       visibility: visible;
     }
+
+    /* Only the band under the pointer shows. A band that focus holds open closes while the pointer is on another
+       menu, so two bands never lie over each other. */
+    :where(.og-nav:has(.og-menu:hover)) .og-menu:not(:hover) .og-menu-panel {
+      clip-path: inset(0 0 100% 0);
+      opacity: 0;
+      visibility: hidden;
+    }
   }
 
   .og-menu-items {
