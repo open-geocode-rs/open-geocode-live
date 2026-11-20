@@ -7,7 +7,7 @@
     "control": { "kind": "scale", "file": "primitives.css", "pattern": "^--control-(sm|md|lg)$", "count": 3 },
     "icon": { "kind": "scale", "file": "primitives.css", "pattern": "^--icon-(sm|md|lg)$", "count": 3 },
     "container": { "kind": "scale", "file": "primitives.css", "pattern": "^--container-(sm|md|lg)$", "count": 3 },
-    "layout": { "kind": "scale", "file": "primitives.css", "pattern": "^--layout-[a-z-]+$", "count": 7 },
+    "layout": { "kind": "scale", "file": "primitives.css", "pattern": "^--layout-[a-z-]+$", "count": 10 },
     "shadow": { "kind": "scale", "file": "primitives.css", "pattern": "^--shadow-[a-z]+$", "count": 3 },
     "duration": { "kind": "scale", "file": "primitives.css", "pattern": "^--duration-[a-z]+$", "count": 5 },
     "ease": { "kind": "scale", "file": "primitives.css", "pattern": "^--ease-[a-z-]+$", "count": 3 },
@@ -44,6 +44,10 @@
     "--type-display": "src/components/landing/AddressMorph.astro",
     "--type-h2": "src/components/prose/Heading.astro",
     "--type-h3": "src/components/prose/Heading.astro",
-    "--type-lead": "src/pages/index.astro"
+    "--type-lead": "src/pages/index.astro",
+    "--container-lg": "src/components/frame/Search.astro",
+    "--layout-hero": "src/pages/index.astro",
+    "--layout-horizon": "src/pages/index.astro",
+    "--layout-globe": "src/components/landing/DitherGlobe.astro"
   }
 }

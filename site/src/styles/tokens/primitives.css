@@ -53,6 +53,10 @@
   --layout-content-wide: 68rem;
   --layout-page-max: 90rem;
   --layout-gutter: max(var(--space-6), calc((100vw - var(--layout-page-max)) / 2));
+  /* The landing hero. The card's least height, the slice of it the globe shows, and the globe's width. */
+  --layout-hero: 37.5rem;
+  --layout-horizon: 12rem;
+  --layout-globe: min(70rem, 150vw);
 
   /* Shadow, one per height above the page. */
   --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.08), 0 4px 12px rgb(0 0 0 / 0.08);
@@ -153,4 +157,12 @@
   --p-alpha-8: 8%;
   --p-alpha-16: 16%;
   --p-alpha-64: 64%;
+}
+
+/* From the width where the docs frame shows its sidebar, the hero card and its horizon grow. */
+@media (min-width: 50rem) {
+  :root {
+    --layout-hero: 45rem;
+    --layout-horizon: 18rem;
+  }
 }
