@@ -71,8 +71,11 @@ function textAttrs({ variant, size, state, invalid, disabled, icon, ...rest }: T
     transition-timing-function: var(--ease-hover);
   }
 
+  /* The field with its icon takes the whole width it is given, as a bare field does. */
   .input-field {
     display: block;
+    flex: 1;
+    inline-size: 100%;
     position: relative;
   }
 
