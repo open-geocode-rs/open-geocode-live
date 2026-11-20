@@ -203,6 +203,50 @@ const cases = {
       const hidden = await tab.locator("[data-codeblock-float]").evaluateAll((all) => all.filter((e) => getComputedStyle(e).opacity !== "1").length);
       return hidden ? [`${hidden} copy buttons are invisible until a hover that cannot happen`] : [];
     }),
+
+  // Tabs.
+
+  /** Tabs inside a tab panel change only their own tabs and panels, and the outer tabs only theirs. */
+  "nested tabs stay apart": () =>
+    visit(
+      "/docs/api/operations/create/",
+      desktop,
+      async (tab) => {
+        const outer = tab.locator("[data-tabs]:not([data-nested-probe])").first();
+        const inner = tab.locator("[data-nested-probe]");
+        const selected = (/** @type {import("playwright").Locator} */ root) =>
+          root.evaluate((r) =>
+            [...r.querySelectorAll('[role="tab"]')].filter((t) => t.closest("[data-tabs]") === r).map((t) => t.getAttribute("aria-selected") === "true"),
+          );
+        const problems = [];
+        await inner.locator('[role="tab"]').nth(1).click();
+        const outerAfterInner = await selected(outer);
+        if (!outerAfterInner[0]) problems.push(`clicking an inner tab changed the outer tabs to ${JSON.stringify(outerAfterInner)}`);
+        await outer.locator(':scope > [role="tablist"] [role="tab"]').nth(1).click();
+        await outer.locator(':scope > [role="tablist"] [role="tab"]').nth(0).click();
+        const innerAfterOuter = await selected(inner);
+        if (!innerAfterOuter[1]) problems.push(`switching the outer tabs changed the inner tabs to ${JSON.stringify(innerAfterOuter)}`);
+        return problems;
+      },
+      // Nest a copy of the first tabs in its own first panel, with ids of its own, before the page's scripts run.
+      (tab) =>
+        tab.addInitScript(() => {
+          document.addEventListener("readystatechange", () => {
+            if (document.readyState !== "interactive") return;
+            const outer = document.querySelector("[data-tabs]");
+            if (!outer) return;
+            const copy = /** @type {HTMLElement} */ (outer.cloneNode(true));
+            copy.setAttribute("data-nested-probe", "");
+            for (const e of copy.querySelectorAll("[id], [aria-controls], [aria-labelledby]")) {
+              for (const name of ["id", "aria-controls", "aria-labelledby"]) {
+                const v = e.getAttribute(name);
+                if (v) e.setAttribute(name, `nested-${v}`);
+              }
+            }
+            outer.querySelector('[role="tabpanel"]')?.append(copy);
+          });
+        }),
+    ),
 };
 
 let failed = 0;

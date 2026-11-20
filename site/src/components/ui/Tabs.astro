@@ -60,8 +60,12 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
 </div>
 
 <script>
+  // A panel may hold tabs of its own, so each set of tabs touches only the tabs whose nearest set it is.
+  const owns = (root: HTMLElement, tab: Element | null) => !!tab && tab.closest("[data-tabs]") === root;
+  const tabsOf = (root: HTMLElement) => [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')].filter((t) => owns(root, t));
+
   function select(root: HTMLElement, tab: HTMLButtonElement, focus: boolean) {
-    for (const t of root.querySelectorAll<HTMLButtonElement>('[role="tab"]')) {
+    for (const t of tabsOf(root)) {
       const on = t === tab;
       t.setAttribute("aria-selected", String(on));
       t.tabIndex = on ? 0 : -1;
@@ -72,10 +76,10 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
   }
 
   for (const root of document.querySelectorAll<HTMLElement>("[data-tabs]")) {
-    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const tabs = tabsOf(root);
     root.addEventListener("click", (event) => {
       const tab = (event.target as Element).closest<HTMLButtonElement>('[role="tab"]');
-      if (tab && root.contains(tab)) select(root, tab, false);
+      if (tab && owns(root, tab)) select(root, tab, false);
     });
     root.addEventListener("keydown", (event) => {
       const index = tabs.indexOf(document.activeElement as HTMLButtonElement);
