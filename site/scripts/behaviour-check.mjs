@@ -418,7 +418,15 @@ const cases = {
         if ((await input.inputValue()) !== "48.86914, 2.33130") notes.push("the coordinates did not replace the address");
         const hasFocusOutline = await input.evaluate((el) => {
           const style = getComputedStyle(el);
-          return el === document.activeElement && style.outlineStyle === "solid" && parseFloat(style.outlineWidth) > 0;
+          const card = el.closest(".og-card");
+          return (
+            el === document.activeElement &&
+            style.outlineStyle === "solid" &&
+            parseFloat(style.outlineWidth) > 0 &&
+            style.outlineColor !== "rgba(0, 0, 0, 0)" &&
+            card !== null &&
+            style.outlineColor !== getComputedStyle(card).backgroundColor
+          );
         });
         if (!hasFocusOutline) notes.push("the coordinates have no visible keyboard focus indicator");
         const clear = morph.getByRole("button", { name: "Clear esc" });
