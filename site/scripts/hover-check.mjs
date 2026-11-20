@@ -55,7 +55,7 @@ try {
       // Sample every frame in the page while the pointer moves to the neighbour.
       await tab.evaluate(
         ({ selector, limit, bands }) => {
-          const w = window;
+          const w = /** @type {Window & { __frames: { fills: string[]; shown: number }[]; __sampling: boolean }} */ (window);
           w.__frames = [];
           w.__sampling = true;
           const step = () => {
@@ -80,7 +80,7 @@ try {
       }
       await tab.waitForTimeout(400);
       const frames = await tab.evaluate(() => {
-        const w = window;
+        const w = /** @type {Window & { __frames: { fills: string[]; shown: number }[]; __sampling: boolean }} */ (window);
         w.__sampling = false;
         return w.__frames;
       });

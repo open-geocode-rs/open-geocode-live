@@ -49,6 +49,8 @@ export default defineConfig({
     starlight({
       title: "OpenGeocode",
       description,
+      // The site draws its own 404 page in src/pages/404.astro, through the docs frame.
+      disable404Route: true,
       logo: {
         light: "./src/assets/logo-light.png",
         dark: "./src/assets/logo-dark.png",
