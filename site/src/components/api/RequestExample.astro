@@ -132,7 +132,15 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
     align-items: center;
     display: flex;
     gap: var(--space-2);
+  }
+
+  /* In a narrow panel the title gives way, cut short, and the controls keep their size. */
+  .request-title {
     min-inline-size: 0;
+  }
+
+  .request-controls {
+    flex-shrink: 0;
   }
 
   /* After a copy, a filled tag beside the button says so, and it is empty, so unseen, at rest. */
