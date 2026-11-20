@@ -132,9 +132,6 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
     display: inline-flex;
     font: var(--type-ui-strong);
     padding-inline: var(--space-3);
-    transition-duration: var(--duration-hover);
-    transition-property: color, border-color, background-color;
-    transition-timing-function: var(--ease-hover);
   }
 
   @media (hover: hover) and (pointer: fine) {

@@ -61,6 +61,7 @@
     "--icon-xl": "src/components/ui/Icon.astro",
     "--icon-stroke-xl": "src/components/ui/Icon.astro",
     "--type-body-strong": "src/pages/index.astro",
-    "--type-body-sm": "src/pages/index.astro"
+    "--type-body-sm": "src/pages/index.astro",
+    "--ease-hover": "src/components/ui/CodeBlock.astro"
   }
 }

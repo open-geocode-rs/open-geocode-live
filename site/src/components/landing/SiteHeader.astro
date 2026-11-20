@@ -77,6 +77,23 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
   </div>
 </header>
 
+<script>
+  // The nav is marked while the pointer moves from one menu to a neighbour, so the next band opens without a fade.
+  for (const nav of document.querySelectorAll<HTMLElement>(".og-nav")) {
+    let current: Element | null = null;
+    nav.addEventListener("pointerover", (event) => {
+      const menu = (event.target as Element).closest(".og-menu");
+      if (!menu) return;
+      if (current && current !== menu) nav.dataset.swap = "";
+      current = menu;
+    });
+    nav.addEventListener("pointerleave", () => {
+      delete nav.dataset.swap;
+      current = null;
+    });
+  }
+</script>
+
 <style>
   /* Logo and menus on the left, actions pushed to the right. Above the hero, so an open menu's band lies over it. */
   .og-header {
@@ -203,6 +220,12 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
 
     /* Moving to a neighbour swaps the bands at once instead of stacking two. */
     :where(.og-nav:has(.og-menu:hover)) .og-menu:not(:hover) .og-menu-panel {
+      transition: none;
+    }
+
+    /* Once a band is open, the neighbour's band shows whole at once, so no frame passes with no band. Only the first
+       band to open fades in. */
+    .og-nav[data-swap] .og-menu-panel {
       transition: none;
     }
   }
