@@ -372,6 +372,58 @@ const cases = {
 
   // Landing.
 
+  "address palette searches and pins coordinates to the headline": async () => {
+    const problems = [];
+    for (const viewport of [desktop.viewport, { width: 390, height: 844 }]) {
+      const found = await visit("/", { viewport, reducedMotion: "reduce" }, async (tab) => {
+        const notes = [];
+        const headline = tab.locator("og-address-morph").getByRole("button", { name: "Search an address" });
+        const dialog = tab.getByRole("dialog", { name: "Address search" });
+        const input = dialog.getByRole("combobox");
+        /** @param {string} label */
+        const response = (label) => ({
+          features: [{ geometry: { coordinates: [2.3313, 48.86914] }, properties: { label } }],
+        });
+        await tab.route("**/api/autocomplete?*", (route) =>
+          route.fulfill({ json: response("12 Rue de la Paix") }),
+        );
+        await tab.route("**/api/geocode?*", (route) =>
+          route.fulfill({ json: response("12 Rue de la Paix, Paris") }),
+        );
+
+        await headline.press("Space");
+        await dialog.waitFor();
+        if (!(await input.evaluate((el) => el === document.activeElement))) notes.push("opening the palette did not focus the search field");
+        if ((await dialog.getByRole("option").count()) !== 0) notes.push("the empty palette shows a result");
+        await input.fill("12 Rue de la Paix");
+        await dialog.getByRole("option", { name: "12 Rue de la Paix", exact: true }).waitFor();
+        await input.press("Enter");
+        await dialog.getByRole("option", { name: "12 Rue de la Paix, Paris", exact: true }).waitFor();
+        await input.press("Enter");
+        await dialog.waitFor({ state: "hidden" });
+        if ((await headline.innerText()).replace(/\s+/g, " ") !== "48.86914, 2.33130") {
+          notes.push("the selected coordinates did not replace the headline");
+        }
+        const hasFocusOutline = await headline.evaluate((el) => {
+          const style = getComputedStyle(el);
+          const card = el.closest(".og-card");
+          return (
+            el === document.activeElement &&
+            style.outlineStyle === "solid" &&
+            parseFloat(style.outlineWidth) > 0 &&
+            style.outlineColor !== "rgba(0, 0, 0, 0)" &&
+            card !== null &&
+            style.outlineColor !== getComputedStyle(card).backgroundColor
+          );
+        });
+        if (!hasFocusOutline) notes.push("the answered headline has no visible keyboard focus indicator");
+        return notes;
+      });
+      problems.push(...found.map((problem) => `${viewport.width}px: ${problem}`));
+    }
+    return problems;
+  },
+
   /** Enter after an input method's composition searches at once, and only the Enter that confirms the characters is held. */
   "enter after a composition searches": () =>
     visit("/", desktop, async (tab) => {
