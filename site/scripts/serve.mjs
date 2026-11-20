@@ -21,12 +21,23 @@ export async function serve() {
     res.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
     createReadStream(file).pipe(res);
   });
+  // One listener for the whole search, so the port read is the one the server holds, not the first one tried.
   const port = await new Promise((resolve, reject) => {
-    const tryPort = (p) => {
-      server.once("error", (e) => (e.code === "EADDRINUSE" && p < 18435 ? tryPort(p + 1) : reject(e)));
-      server.listen(p, "127.0.0.1", () => resolve(p));
+    let tried = 18385;
+    const onError = (e) => {
+      if (e.code === "EADDRINUSE" && tried < 18435) server.listen(++tried, "127.0.0.1");
+      else {
+        server.off("listening", onListening);
+        reject(e);
+      }
     };
-    tryPort(18385);
+    const onListening = () => {
+      server.off("error", onError);
+      resolve(server.address().port);
+    };
+    server.on("error", onError);
+    server.once("listening", onListening);
+    server.listen(tried, "127.0.0.1");
   });
   return { origin: `http://127.0.0.1:${port}`, stop: () => new Promise((r) => server.close(r)) };
 }
