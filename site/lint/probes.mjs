@@ -26,19 +26,20 @@ try {
 
   const findings = (which) => {
     const out = new Set();
-    const { style, script } = commands({ style: ["--formatter", "json"], script: ["--format", "json"] });
-    if (which !== "script") {
-      const r = spawnSync(style[0], style[1], { cwd: work, encoding: "utf8" });
+    const { style, usage, script } = commands({ style: ["--formatter", "json"], script: ["--format", "json"] });
+    for (const [kind, cmd] of [["style", style], ["usage", usage]]) {
+      if (which !== kind && which !== "all") continue;
+      const r = spawnSync(cmd[0], cmd[1], { cwd: work, encoding: "utf8" });
       for (const f of JSON.parse(r.stderr || r.stdout || "[]")) for (const w of f.warnings) out.add(`${w.rule}|${f.source.replace(work, "")}|${w.text}`);
     }
-    if (which !== "style") {
+    if (which === "script" || which === "all") {
       const r = spawnSync(script[0], script[1], { cwd: work, encoding: "utf8" });
       for (const f of JSON.parse(r.stdout || "[]")) for (const m of f.messages) out.add(`${m.ruleId}|${f.filePath.replace(work, "")}|${m.message}`);
     }
     return out;
   };
 
-  const standing = findings("both");
+  const standing = findings("all");
   const originals = new Map();
   const edit = (file, fn) => {
     const path = join(work, file);
@@ -61,7 +62,7 @@ try {
   for (const p of probes) {
     apply(p.head, p.body);
     for (const extra of p.head.also ?? []) apply(extra, extra.text);
-    const which = /og\/(scripts|markup)/.test(p.head.rule) ? "script" : "style";
+    const which = /og\/(scripts|markup)/.test(p.head.rule) ? "script" : p.head.rule === "og/unread-token" ? "usage" : "style";
     const fresh = [...findings(which)].filter((f) => !standing.has(f));
     const hit = fresh.filter((f) => f.startsWith(`${p.head.rule}|`));
     if (hit.length > 0) {

@@ -24,7 +24,7 @@ const textRoles = new Set([
 const markRoles = new Set(["--color-focus", "--color-border-strong"]);
 const ratio = (n: number | undefined) => (n === undefined ? "" : `${n.toFixed(2)} : 1`);
 
-const rawGroups = ["p-colour", "p-alpha", "p-font-size", "p-leading", "p-weight", "p-family"];
+const rawGroups = ["p-colour", "p-alpha", "p-font-size", "p-leading", "p-weight", "p-tracking", "p-family"];
 const componentGroups = ["map", "globe", "terminal", "syntax", "method", "button-raised"];
 const ladders = ["space", "radius", "border", "control", "icon", "container", "layout", "shadow", "z", "opacity", "scale"];
 const sample = "Forward, reverse and batch geocoding from one file";
@@ -73,6 +73,15 @@ const sample = "Forward, reverse and batch geocoding from one file";
           <div class="row type" data-token={t.name}>
             <code class="name">{t.name}</code>
             <p class="type-sample">{sample}</p>
+          </div>
+        ))
+      }
+      {
+        byGroup("tracking").map((t) => (
+          <div class="row type" data-token={t.name}>
+            <code class="name">{t.name}</code>
+            <code class="value">{written(theme, t)}</code>
+            <p class="type-sample">{t.name === "--tracking-caps" ? "SMALL CAPITALS" : sample}</p>
           </div>
         ))
       }
@@ -408,10 +417,22 @@ const sample = "Forward, reverse and batch geocoding from one file";
 
   .type[data-token="--type-display"] .type-sample {
     font: var(--type-display);
+    letter-spacing: var(--tracking-tight);
   }
 
   .type[data-token="--type-h1"] .type-sample {
     font: var(--type-h1);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .type[data-token="--tracking-tight"] .type-sample {
+    font: var(--type-h1);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .type[data-token="--tracking-caps"] .type-sample {
+    font: var(--type-label);
+    letter-spacing: var(--tracking-caps);
   }
 
   .type[data-token="--type-h2"] .type-sample {

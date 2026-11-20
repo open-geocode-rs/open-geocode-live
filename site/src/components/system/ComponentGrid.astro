@@ -81,10 +81,10 @@ const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(
     </Matrix>
   </Section>
 
-  <Section title="Badge" note="Each variant by size. A badge has one state.">
+  <Section title="Badge" note="Each variant. A badge has one size and one state.">
     <Matrix caption="rest" rows={badgeVariants} cols={badgeSizes} cell={(variant, size) => `Badge:${variant}:${size}:rest`}>
-      {(variant: (typeof badgeVariants)[number], size: (typeof badgeSizes)[number]) => (
-        <Badge variant={variant} size={size}>
+      {(variant: (typeof badgeVariants)[number]) => (
+        <Badge variant={variant}>
           {methodLabel(variant)}
         </Badge>
       )}

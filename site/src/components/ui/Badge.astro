@@ -2,15 +2,14 @@
 import Icon, { type IconName } from "./Icon.astro";
 
 export const badgeVariants = ["neutral", "accent", "success", "warning", "danger", "get", "post", "query", "delete"] as const;
-export const badgeSizes = ["sm", "md"] as const;
+export const badgeSizes = ["default"] as const;
 export const badgeStates = ["rest"] as const;
 
 export interface Props {
   variant?: (typeof badgeVariants)[number];
-  size?: (typeof badgeSizes)[number];
 }
 
-const { variant = "neutral", size = "md" } = Astro.props;
+const { variant = "neutral" } = Astro.props;
 
 // Each HTTP method carries the arrow it has across the API reference.
 const methodIcons: Partial<Record<(typeof badgeVariants)[number], IconName>> = {
@@ -22,7 +21,7 @@ const methodIcons: Partial<Record<(typeof badgeVariants)[number], IconName>> = {
 const icon = methodIcons[variant];
 ---
 
-<span class="badge" data-variant={variant} data-size={size}>
+<span class="badge" data-variant={variant}>
   {icon && <Icon name={icon} size="sm" />}
   <slot />
 </span>
@@ -30,21 +29,13 @@ const icon = methodIcons[variant];
 <style>
   .badge {
     align-items: center;
+    block-size: var(--control-sm);
     border-radius: var(--radius-sm);
     display: inline-flex;
     font: var(--type-label);
     gap: var(--space-1);
-    white-space: nowrap;
-  }
-
-  .badge[data-size="sm"] {
-    block-size: var(--icon-lg);
-    padding-inline: var(--space-1-5);
-  }
-
-  .badge[data-size="md"] {
-    block-size: var(--control-sm);
     padding-inline: var(--space-2);
+    white-space: nowrap;
   }
 
   .badge[data-variant="neutral"] {
@@ -54,7 +45,7 @@ const icon = methodIcons[variant];
 
   .badge[data-variant="accent"] {
     background-color: var(--color-accent-subtle);
-    color: var(--color-accent);
+    color: var(--color-accent-strong);
   }
 
   .badge[data-variant="success"] {

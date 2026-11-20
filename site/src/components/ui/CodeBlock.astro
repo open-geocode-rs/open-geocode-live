@@ -72,23 +72,25 @@ const owned: Transformer = {
 </div>
 
 <script>
+  import { after } from "../../lib/motion";
+
   for (const block of document.querySelectorAll<HTMLElement>("[data-codeblock]")) {
     const button = block.querySelector<HTMLButtonElement>("[data-copy]");
     const source = block.querySelector<HTMLTemplateElement>("template[data-code]");
     const status = block.querySelector<HTMLElement>("[data-status]");
     if (!button || !source || !status) continue;
-    // The message stays until the reader moves on from the button.
-    const reset = () => {
-      block.removeAttribute("data-state");
-      status.textContent = "";
-    };
+    let cancel = () => {};
     button.addEventListener("click", async () => {
       await navigator.clipboard.writeText(source.content.textContent ?? "");
+      cancel();
       block.dataset.state = "copied";
       status.textContent = "Copied";
+      // The message stays for the feedback duration, then clears.
+      cancel = after("feedback", () => {
+        block.removeAttribute("data-state");
+        status.textContent = "";
+      });
     });
-    button.addEventListener("blur", reset);
-    block.addEventListener("pointerleave", reset);
   }
 </script>
 

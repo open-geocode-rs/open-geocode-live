@@ -108,7 +108,10 @@
   --p-weight-regular: 400;
   --p-weight-medium: 500;
   --p-weight-display: 550;
-  --p-weight-strong: 600;
+
+  /* Raw tracking. */
+  --p-tracking-tight: -0.02em;
+  --p-tracking-caps: 0.06em;
 
   /* Raw family. */
   --p-font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -133,7 +136,7 @@
   --p-green-100: #dcefe6;
   --p-green-300: #a6dcc5;
   --p-green-500: #49a782;
-  --p-green-700: #2f7d5f;
+  --p-green-700: #2b7357;
   --p-green-900: #173a2d;
   --p-blue-400: #6f9ff0;
   --p-blue-700: #2c62c2;

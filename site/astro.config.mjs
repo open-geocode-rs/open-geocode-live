@@ -1,3 +1,4 @@
+import sitemap from "@astrojs/sitemap";
 import starlight from "@astrojs/starlight";
 import { fileURLToPath } from "node:url";
 import { defineConfig, fontProviders } from "astro/config";
@@ -53,6 +54,8 @@ export default defineConfig({
     },
   ],
   integrations: [
+    // Listed here so the system page, a page for the people building the site, stays out of the sitemap.
+    sitemap({ filter: (page) => new URL(page).pathname !== "/system/" }),
     starlight({
       title: "OpenGeocode",
       description,

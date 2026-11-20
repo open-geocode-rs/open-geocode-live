@@ -47,10 +47,10 @@
   --terminal-dot-zoom: var(--p-green-500);
 
   /* method: fills behind the four HTTP method badges. */
-  --method-get-fill: color-mix(in srgb, var(--p-green-500) var(--p-alpha-16), transparent);
-  --method-post-fill: color-mix(in srgb, var(--p-blue-400) var(--p-alpha-16), transparent);
-  --method-query-fill: color-mix(in srgb, var(--p-purple-400) var(--p-alpha-16), transparent);
-  --method-delete-fill: color-mix(in srgb, var(--p-red-400) var(--p-alpha-16), transparent);
+  --method-get-fill: color-mix(in srgb, var(--p-green-500) var(--p-alpha-8), transparent);
+  --method-post-fill: color-mix(in srgb, var(--p-blue-400) var(--p-alpha-8), transparent);
+  --method-query-fill: color-mix(in srgb, var(--p-purple-400) var(--p-alpha-8), transparent);
+  --method-delete-fill: color-mix(in srgb, var(--p-red-400) var(--p-alpha-8), transparent);
 }
 
 :root,

@@ -9,10 +9,12 @@
     "preview": "astro preview",
     "check": "astro check",
     "lint": "node lint/run.mjs",
+    "lint:usage": "node lint/run.mjs --usage",
     "lint:probes": "node lint/probes.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-satteri": "0.4.5",
+    "@astrojs/sitemap": "3.7.4",
     "@astrojs/starlight": "0.42.7",
     "@mapbox/vector-tile": "3.0.0",
     "astro": "7.3.8",

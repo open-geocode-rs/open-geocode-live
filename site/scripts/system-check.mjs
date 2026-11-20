@@ -1,9 +1,11 @@
 // Builds the site, then checks the system page against the token files and the component table.
-// Fails unless the page shows exactly the tokens the four token files define, and a cell for every
-// variant, size and state of every shared component.
+// Fails unless the page shows exactly the tokens the four token files define, a cell for every
+// variant, size and state of every shared component, and no sideways scroll at 390 wide.
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { chromium } from "playwright";
+import { serve } from "./serve.mjs";
 
 const site = fileURLToPath(new URL("..", import.meta.url));
 const at = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url));
@@ -36,7 +38,7 @@ const table = {
   Input: { variants: ["text", "textarea"], sizes: ["md", "lg"], states: ["rest", "hover", "focus", "disabled", "invalid"] },
   Badge: {
     variants: ["neutral", "accent", "success", "warning", "danger", "get", "post", "query", "delete"],
-    sizes: ["sm", "md"],
+    sizes: ["default"],
     states: ["rest"],
   },
   Kbd: { variants: ["default"], sizes: ["default"], states: ["rest"] },
@@ -62,6 +64,20 @@ for (const [component, t] of Object.entries(table)) {
       }
     }
   }
+}
+
+// A state grid may scroll inside its own box, but the page itself never scrolls sideways on a phone.
+const server = await serve();
+const browser = await chromium.launch();
+try {
+  const tab = await browser.newPage({ viewport: { width: 390, height: 900 } });
+  await tab.goto(`${server.origin}/system/`, { waitUntil: "networkidle" });
+  const [scroll, inner] = await tab.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+  console.log(`at 390 wide the page is ${scroll}px wide in a ${inner}px window`);
+  if (scroll > inner) problems.push(`the page scrolls sideways at 390 wide, ${scroll}px in ${inner}px`);
+} finally {
+  await browser.close();
+  await server.stop();
 }
 
 console.log(`tokens defined ${defined.size}, shown ${shown.size}`);

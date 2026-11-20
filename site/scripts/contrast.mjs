@@ -1,5 +1,6 @@
-// Prints every text role against the background and the surface in both themes, read from the token files.
-// Exits 1 when a text role is under 4.5 to 1, or the focus outline or a control's edge is under 3 to 1 on the background.
+// Prints every text role against the background and the surface in both themes, read from the token files,
+// and every badge's text on its own fill laid over the background and the surface.
+// Exits 1 when a text pair is under 4.5 to 1, or the focus outline or a control's edge is under 3 to 1 on the background.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -41,14 +42,25 @@ function resolve(vars, value, seen = new Set()) {
   });
 }
 
-function rgb(hex) {
-  const h = hex.trim().replace("#", "");
-  if (!/^[0-9a-f]{6}$/i.test(h)) throw new Error(`not a solid colour: ${hex}`);
-  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+// A colour as sRGB channels from 0 to 1 and an alpha. A tint is color-mix(in srgb, <colour> <alpha>, transparent).
+function rgba(value) {
+  const mix = /^color-mix\(in srgb, (#[0-9a-f]{6}) ([\d.]+)%, transparent\)$/i.exec(value.trim());
+  const [hex, alpha] = mix ? [mix[1], Number(mix[2]) / 100] : [value.trim(), 1];
+  const h = hex.replace("#", "");
+  if (!/^[0-9a-f]{6}$/i.test(h)) throw new Error(`not a colour: ${value}`);
+  return { channels: [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255), alpha };
 }
 
-function luminance(hex) {
-  const [r, g, b] = rgb(hex).map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+// A tint laid over a solid colour.
+function over(top, base) {
+  const t = rgba(top);
+  const b = rgba(base);
+  return { channels: t.channels.map((c, i) => c * t.alpha + b.channels[i] * (1 - t.alpha)), alpha: 1 };
+}
+
+function luminance(colour) {
+  const { channels } = typeof colour === "string" ? rgba(colour) : colour;
+  const [r, g, b] = channels.map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
@@ -71,6 +83,18 @@ const text = [
   "--method-delete-ink",
 ];
 const marks = ["--color-focus", "--color-border-strong"];
+// Each badge's text and the fill behind it, as Badge.astro pairs them.
+const badges = [
+  ["neutral", "--color-foreground-secondary", "--color-control-hover"],
+  ["accent", "--color-accent-strong", "--color-accent-subtle"],
+  ["success", "--color-success", "--color-success-subtle"],
+  ["warning", "--color-warning", "--color-warning-subtle"],
+  ["danger", "--color-danger", "--color-danger-subtle"],
+  ["get", "--method-get-ink", "--method-get-fill"],
+  ["post", "--method-post-ink", "--method-post-fill"],
+  ["query", "--method-query-ink", "--method-query-fill"],
+  ["delete", "--method-delete-ink", "--method-delete-fill"],
+];
 
 let failed = 0;
 const rows = [];
@@ -85,6 +109,16 @@ for (const theme of ["dark", "light"]) {
       const pass = r >= 4.5;
       if (!pass) failed++;
       rows.push([theme, role, fg, on, r.toFixed(2), "4.5", pass ? "pass" : "FAIL"]);
+    }
+  }
+  for (const [name, ink, fill] of badges) {
+    const fg = resolve(vars, `var(${ink})`);
+    const tint = resolve(vars, `var(${fill})`);
+    for (const [on, bg] of [["background", background], ["surface", surface]]) {
+      const r = ratio(fg, over(tint, bg));
+      const pass = r >= 4.5;
+      if (!pass) failed++;
+      rows.push([theme, `badge ${name}`, fg, `fill over ${on}`, r.toFixed(2), "4.5", pass ? "pass" : "FAIL"]);
     }
   }
   for (const role of marks) {

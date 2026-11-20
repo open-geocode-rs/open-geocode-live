@@ -225,7 +225,9 @@ const mediaRule = rule("media-width", ({ root, say }) => {
 });
 
 // Rule 8. calc() holds only tokens, 100%, 100vw, 100vh, 100dvh and the multiplier -1.
-const calcRule = rule("calc", ({ root, say }) => {
+// primitives.css is where raw values live, so its arithmetic is raw material too, and rule 1 closes that file.
+const calcRule = rule("calc", ({ root, file, say }) => {
+  if (file === primitivesFile) return;
   root.walkDecls((d) => {
     valueParser(d.value).walk((n) => {
       if (n.type !== "function" || n.value !== "calc") return;
@@ -323,5 +325,8 @@ const motionRule = rule("motion", ({ root, say }) => {
     if (moves && !inMedia(k, /prefers-reduced-motion:\s*no-preference/)) say(k, `@keyframes ${k.params} moves things. Put it inside @media (prefers-reduced-motion: no-preference)`);
   });
 });
+
+/** The rule that needs the pages: rule 5, run on its own as lint:usage. */
+export const usage = [unreadRule];
 
 export default [budgetRule, rawLiteralRule, privateRule, kindRule, unreadRule, rawValueRule, mediaRule, calcRule, selectorRule, motionRule];
