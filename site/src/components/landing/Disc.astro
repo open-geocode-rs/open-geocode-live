@@ -5,14 +5,14 @@ import Icon, { type IconName } from "../ui/Icon.astro";
 interface Props {
   icon: IconName;
   size?: "sm" | "md";
-  /** Sits at the end of a raised button, close to its edge as a key's mark is. */
-  end?: boolean;
+  /** Sits at the start or the end of a raised button, close to its edge as a key's mark is. */
+  edge?: "start" | "end";
 }
 
-const { icon, size = "sm", end = false } = Astro.props;
+const { icon, size = "sm", edge } = Astro.props;
 ---
 
-<span class="disc" data-size={size} data-end={end ? "" : undefined} aria-hidden="true"><Icon name={icon} size="md" /></span>
+<span class="disc" data-size={size} data-edge={edge} aria-hidden="true"><Icon name={icon} size="md" /></span>
 
 <style>
   .disc {
@@ -35,7 +35,11 @@ const { icon, size = "sm", end = false } = Astro.props;
     inline-size: var(--control-md);
   }
 
-  .disc[data-end] {
+  .disc[data-edge="start"] {
+    margin-inline-start: calc(var(--space-4) * -1);
+  }
+
+  .disc[data-edge="end"] {
     margin-inline-end: calc(var(--space-4) * -1);
   }
 </style>

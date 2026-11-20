@@ -45,10 +45,10 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
             <div class="og-menu-band">
               <div class="og-menu-items">
               {menu.items.map((item) => (
-                <a class="og-menu-link" href={item.href}>
-                  <Disc icon={item.icon} size="md" />
+                <Button variant="raised" size="lg" href={item.href}>
+                  <Disc icon={item.icon} edge="start" />
                   {item.label}
-                </a>
+                </Button>
               ))}
               </div>
             </div>
@@ -161,34 +161,6 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     flex-wrap: wrap;
     gap: var(--space-3) var(--space-4);
     padding: var(--space-4) var(--layout-gutter) var(--space-5);
-  }
-
-  .og-menu-link {
-    align-items: center;
-    block-size: var(--control-lg);
-    border: var(--border) solid var(--color-border);
-    border-radius: var(--radius-full);
-    color: var(--color-foreground);
-    display: inline-flex;
-    font: var(--type-ui-strong);
-    gap: var(--space-3);
-    padding-inline: var(--space-1) var(--space-4);
-    text-decoration: none;
-    transition-duration: var(--duration-hover);
-    transition-property: background-color;
-    transition-timing-function: var(--ease-hover);
-    white-space: nowrap;
-  }
-
-  .og-menu-link:focus-visible {
-    outline: var(--border-strong) solid var(--color-focus);
-    outline-offset: var(--space-0-5);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .og-menu-link:hover {
-      background-color: var(--color-control-hover);
-    }
   }
 
   .og-pricing {
