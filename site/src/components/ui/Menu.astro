@@ -117,6 +117,9 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
   type Item = HTMLButtonElement | HTMLAnchorElement;
   const items = (menu: HTMLDetailsElement) => [...menu.querySelectorAll<Item>('[role="menuitemradio"], [role="menuitem"]')];
 
+  /** A menu the system page holds open to show its open state, which nothing elsewhere on the page closes. */
+  const held = (menu: HTMLDetailsElement) => menu.dataset.state === "open";
+
   function close(menu: HTMLDetailsElement, refocus: boolean) {
     menu.open = false;
     if (refocus) menu.querySelector("summary")?.focus();
@@ -142,6 +145,12 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
       if (!menu.open) return;
       const list = items(menu);
       (list.find((i) => i.getAttribute("aria-checked") === "true") ?? list[0])?.focus();
+    });
+    // Tab from an item moves focus out of the menu, so the menu closes behind it. A press elsewhere with the pointer
+    // gives no next target in some browsers, and the document's click handler closes the menu then.
+    menu.addEventListener("focusout", (event) => {
+      const next = event.relatedTarget;
+      if (menu.open && !held(menu) && next instanceof Node && !menu.contains(next)) close(menu, false);
     });
     menu.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && menu.open) {
@@ -184,7 +193,7 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
 
   document.addEventListener("click", (event) => {
     for (const menu of document.querySelectorAll<HTMLDetailsElement>("details[data-menu][open]")) {
-      if (!menu.contains(event.target as Node)) close(menu, false);
+      if (!held(menu) && !menu.contains(event.target as Node)) close(menu, false);
     }
   });
 </script>
