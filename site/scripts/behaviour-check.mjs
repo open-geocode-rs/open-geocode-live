@@ -346,6 +346,28 @@ const cases = {
       if (!looks) return ["no underline tabs on the page"];
       return JSON.stringify(looks.alone) === JSON.stringify(looks.nested) ? [] : [`default tabs inside underline tabs look ${JSON.stringify(looks.nested)}, on their own ${JSON.stringify(looks.alone)}`];
     }),
+
+  // Buttons.
+
+  /** A button joined to the next control has no end edge or end corners, whatever its variant. */
+  "joined buttons keep their joined edge": () =>
+    visit("/docs/quickstart/", desktop, async (tab) => {
+      const edges = await tab.evaluate(() => {
+        const joined = document.querySelector('.button[data-join="start"]');
+        if (!joined) return undefined;
+        return ["solid", "outline", "ghost", "pill", "raised", "raised-solid"].map((variant) => {
+          const copy = /** @type {HTMLElement} */ (joined.cloneNode(true));
+          copy.setAttribute("data-variant", variant);
+          joined.after(copy);
+          const c = getComputedStyle(copy);
+          const edge = [c.borderInlineEndWidth, c.borderStartEndRadius, c.borderEndEndRadius];
+          copy.remove();
+          return { variant, edge };
+        });
+      });
+      if (!edges) return ["no joined button on the page"];
+      return edges.filter((e) => e.edge.some((v) => v !== "0px")).map((e) => `a joined ${e.variant} button keeps its end edge, ${e.edge.join(" ")}`);
+    }),
 };
 
 let failed = 0;

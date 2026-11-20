@@ -131,13 +131,6 @@ const Tag = href ? "a" : "button";
     padding-inline: 0;
   }
 
-  /* The first half of a split button. Its end edge is the next control's start border. */
-  .button[data-join="start"] {
-    border-end-end-radius: 0;
-    border-inline-end-width: 0;
-    border-start-end-radius: 0;
-  }
-
   .button[data-variant="solid"] {
     background-color: var(--color-solid);
     color: var(--color-on-solid);
@@ -191,6 +184,14 @@ const Tag = href ? "a" : "button";
 
   .button[data-variant="raised-solid"][data-size="xl"] {
     font: var(--type-ui-lg-strong);
+  }
+
+  /* The first half of a split button. Its end edge is the next control's start border. It comes after the variants, so
+     it wins over their borders and corners at the same specificity. */
+  .button[data-join="start"] {
+    border-end-end-radius: 0;
+    border-inline-end-width: 0;
+    border-start-end-radius: 0;
   }
 
   @media (hover: hover) and (pointer: fine) {
