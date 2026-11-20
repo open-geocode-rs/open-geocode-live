@@ -257,28 +257,28 @@ const owned: Transformer = {
     border-block-end: var(--border) solid var(--color-border);
   }
 
-  /* On a plain or terminal block the copy button lies over the code's top end, and shows while the pointer or the
-     focus is in the block, or while it says the code was copied. */
+  /* On a plain or terminal block the copy button lies over the code's top end. Where a pointer can hover, it shows
+     while the pointer or the focus is in the block, or while it says the code was copied. Elsewhere it always shows. */
   [data-codeblock-float] {
     background-color: var(--color-surface);
     inset-block-start: var(--space-2);
     inset-inline-end: 0;
-    opacity: 0;
     position: absolute;
-    transition: opacity var(--duration-hover) var(--ease-hover);
   }
 
   .codeblock[data-variant="terminal"] [data-codeblock-float] {
     inset-block-start: calc(var(--space-8) + var(--space-2));
   }
 
-  .codeblock:focus-within [data-codeblock-float],
-  .codeblock[data-state="copied"] [data-codeblock-float] {
-    opacity: 1;
-  }
-
   @media (hover: hover) and (pointer: fine) {
-    .codeblock:hover [data-codeblock-float] {
+    [data-codeblock-float] {
+      opacity: 0;
+      transition: opacity var(--duration-hover) var(--ease-hover);
+    }
+
+    .codeblock:hover [data-codeblock-float],
+    .codeblock:focus-within [data-codeblock-float],
+    .codeblock[data-state="copied"] [data-codeblock-float] {
       opacity: 1;
     }
   }

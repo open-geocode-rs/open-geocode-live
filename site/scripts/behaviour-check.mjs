@@ -196,6 +196,13 @@ const cases = {
     const failed = await visit("/docs/quickstart/", desktop, async (tab) => ((await press(tab)) === "" ? [] : ["said Copied! when no copy worked"]), (tab) => refuse(tab, false));
     return [...copied, ...failed];
   },
+
+  /** On a screen without hover, the copy button of a plain block shows without a hover. */
+  "copy button shows on touch": () =>
+    visit("/docs/quickstart/", { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }, async (tab) => {
+      const hidden = await tab.locator("[data-codeblock-float]").evaluateAll((all) => all.filter((e) => getComputedStyle(e).opacity !== "1").length);
+      return hidden ? [`${hidden} copy buttons are invisible until a hover that cannot happen`] : [];
+    }),
 };
 
 let failed = 0;
