@@ -3,6 +3,8 @@
 import { globSync, readFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import postcss from "postcss";
+import ts from "typescript";
 
 export const root = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -55,12 +57,25 @@ export function groupOf(name) {
   return groups.find((g) => g.re.test(name));
 }
 
-/** Every var() read in a file, from its style and its scripts. */
+/** Every var() read in a file, from the declarations of its style and the strings of its scripts. A name in a
+    comment is not a read, so it never counts as a reader. */
 export function readsIn(file) {
   const text = readFileSync(join(root, file), "utf8");
   const names = new Set();
-  for (const m of styleOf(file, text).matchAll(/var\(\s*(--[\w-]+)/g)) names.add(m[1]);
-  for (const m of scriptOf(file, text).matchAll(/["'`](--[\w-]+)["'`]/g)) names.add(m[1]);
+  const style = styleOf(file, text);
+  if (style.trim()) {
+    postcss.parse(style).walkDecls((d) => {
+      for (const m of d.value.matchAll(/var\(\s*(--[\w-]+)/g)) names.add(m[1]);
+    });
+  }
+  const script = scriptOf(file, text);
+  if (script.trim()) {
+    const visit = (node) => {
+      if ((ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) && /^--[\w-]+$/.test(node.text)) names.add(node.text);
+      ts.forEachChild(node, visit);
+    };
+    visit(ts.createSourceFile(file, script, ts.ScriptTarget.Latest, false, ts.ScriptKind.TS));
+  }
   return names;
 }
 

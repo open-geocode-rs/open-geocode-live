@@ -36,6 +36,7 @@
     "astro-eslint-parser": "3.2.0",
     "eslint": "10.15.0",
     "playwright": "1.65.1",
+    "postcss": "8.5.31",
     "postcss-html": "2.0.1",
     "postcss-selector-parser": "7.1.7",
     "postcss-value-parser": "4.2.0",
