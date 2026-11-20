@@ -2,7 +2,7 @@
 import Icon, { type IconName } from "./Icon.astro";
 
 export const menuVariants = ["default", "outline"] as const;
-export const menuSizes = ["sm", "md"] as const;
+export const menuSizes = ["2xs", "xs", "sm", "md"] as const;
 export const menuStates = ["closed", "open", "item-hover", "item-focus", "item-current"] as const;
 
 export interface MenuItem {
@@ -290,6 +290,14 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
     inset-inline-end: anchor(right);
     inset-inline-start: auto;
     transform-origin: top right;
+  }
+
+  .menu[data-size="2xs"] .menu-panel {
+    min-inline-size: var(--container-2xs);
+  }
+
+  .menu[data-size="xs"] .menu-panel {
+    min-inline-size: var(--container-xs);
   }
 
   .menu[data-size="sm"] .menu-panel {

@@ -40,7 +40,9 @@
   --icon-md: 1rem;
   --icon-lg: 1.25rem;
 
-  /* Container width. */
+  /* Container width. The two smallest are menus as wide as a short list needs. */
+  --container-2xs: 9rem;
+  --container-xs: 12rem;
   --container-sm: 16rem;
   --container-md: 24rem;
   --container-lg: 36rem;
