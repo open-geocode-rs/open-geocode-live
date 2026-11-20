@@ -303,6 +303,13 @@ function exampleValue(root: Node, make: boolean): unknown {
     try {
       const own = authoredValue(schema);
       if (own !== undefined) return own;
+      // The schema's own fields, then those of the objects it is built from, as its field list orders them.
+      const fields: Node = {};
+      for (const [name, property] of propertiesOf(schema)) {
+        if (make && property.readOnly === true) continue;
+        const v = visit(property);
+        if (v !== undefined) fields[name] = v;
+      }
       const parts = nodes(schema.allOf);
       if (parts.length > 0) {
         const objects: Node[] = [];
@@ -312,17 +319,15 @@ function exampleValue(root: Node, make: boolean): unknown {
           if (firstValue === undefined && value !== undefined) firstValue = value;
           if (isObjectSchema(part) && isNode(value)) objects.push(value);
         }
-        if (objects.length > 0) return Object.assign({}, ...objects);
-        if (firstValue !== undefined) return firstValue;
+        if (objects.length > 0) {
+          const value: Node = { ...fields };
+          for (const [name, v] of Object.entries(Object.assign({}, ...objects))) if (!Object.hasOwn(value, name)) value[name] = v;
+          return value;
+        }
+        if (firstValue !== undefined && Object.keys(fields).length === 0) return firstValue;
       }
       if (isObjectSchema(schema)) {
-        const value: Node = {};
-        for (const [name, property] of propertiesOf(schema)) {
-          if (make && property.readOnly === true) continue;
-          const v = visit(property);
-          if (v !== undefined) value[name] = v;
-        }
-        if (Object.keys(value).length > 0) return value;
+        if (Object.keys(fields).length > 0) return fields;
         return make ? {} : undefined;
       }
       if (isArrayType(schema.type)) {

@@ -41,6 +41,19 @@ try {
   }
   // Arrays of a plain type still draw.
   operationContent(answering({ type: "object", properties: { tags: { type: "array", items: { type: "string", enum: ["a", "b"] } } } }));
+
+  // A schema's own fields join those of the schemas it is built from, as its field list does, in authored and made examples.
+  const authored = exampleOf({
+    type: "object",
+    properties: { tenant: { type: "string", example: "acme" } },
+    allOf: [{ type: "object", properties: { id: { type: "string", example: "x1" } } }],
+  });
+  if (!same(authored, { tenant: "acme", id: "x1" })) problems.push(`authored example of own fields and allOf is ${JSON.stringify(authored)}`);
+  const made = exampleOf({ type: "object", properties: { tenant: { type: "string" } }, allOf: [{ type: "object", properties: { id: { type: "string" } } }] });
+  if (!same(made, { tenant: "example", id: "example" })) problems.push(`made example of own fields and allOf is ${JSON.stringify(made)}`);
+  // An allOf alone keeps its example.
+  const parts = exampleOf({ allOf: [{ type: "object", properties: { id: { type: "string", example: "x1" } } }] });
+  if (!same(parts, { id: "x1" })) problems.push(`example of an allOf alone is ${JSON.stringify(parts)}`);
 } finally {
   await vite.close();
 }
