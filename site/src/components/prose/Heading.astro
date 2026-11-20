@@ -18,7 +18,7 @@ const Tag = `h${level}` as const;
 
 <div class="prose-heading" data-look={look}>
   <Tag class="heading-text" id={id}><slot /></Tag>
-  <a class="heading-anchor" href={`#${id}`}><Icon name="link" label={label} /></a>
+  <a class="heading-anchor" href={`#${id}`}><Icon name="link" /><span class="sr-only" data-pagefind-ignore>{label}</span></a>
 </div>
 
 <style>

@@ -55,21 +55,23 @@ const owned: Transformer = {
 };
 ---
 
-<div class="codeblock" data-codeblock data-variant={variant} data-state={state === "copied" ? "copied" : undefined}>
+<figure class="codeblock" data-codeblock data-variant={variant} data-state={state === "copied" ? "copied" : undefined}>
   {
     title && (
-      <div class="codeblock-bar">
+      <figcaption class="codeblock-bar">
         <span class="codeblock-title">{title}</span>
-      </div>
+      </figcaption>
     )
   }
   {
+    /* The bar names the block for a screen reader, so a reader hears that it is typed in a terminal. */
     variant === "terminal" && (
-      <div class="codeblock-bar" aria-hidden="true">
-        <span class="codeblock-dot" />
-        <span class="codeblock-dot" />
-        <span class="codeblock-dot" />
-      </div>
+      <figcaption class="codeblock-bar">
+        <span class="codeblock-dot" aria-hidden="true" />
+        <span class="codeblock-dot" aria-hidden="true" />
+        <span class="codeblock-dot" aria-hidden="true" />
+        <span class="sr-only">Terminal window</span>
+      </figcaption>
     )
   }
   {variant === "command" && <span class="codeblock-prompt" aria-hidden="true">$</span>}
@@ -87,7 +89,7 @@ const owned: Transformer = {
     <Code code={code} lang={lang} theme="css-variables" wrap={null} transformers={[owned]} />
   </div>
   <template data-code>{code}</template>
-</div>
+</figure>
 
 <script>
   import { after } from "../../lib/motion";
@@ -121,6 +123,7 @@ const owned: Transformer = {
     display: grid;
     grid-template-areas: "bar actions" "body body";
     grid-template-columns: minmax(0, 1fr) auto;
+    margin: 0;
     position: relative;
   }
 
@@ -171,17 +174,19 @@ const owned: Transformer = {
     display: none;
   }
 
-  /* A numbered block is an example in the API panel, set tighter than prose. */
+  /* A numbered block is an example in the API panel, set tighter than prose. The panel pads it. */
   .codeblock[data-variant="numbered"] :global(.codeblock-pre) {
     font: var(--type-code);
+    padding: 0;
   }
 
   .codeblock[data-variant="numbered"] :global(.codeblock-code) {
     counter-reset: codeblock-line;
   }
 
+  /* Line numbers are a guide, not text to read, so they take the faint tint of a strong border. */
   .codeblock[data-variant="numbered"] :global(.codeblock-line)::before {
-    color: var(--color-foreground-muted);
+    color: var(--color-border-strong);
     content: counter(codeblock-line);
     counter-increment: codeblock-line;
     display: inline-block;
@@ -278,7 +283,7 @@ const owned: Transformer = {
     font: var(--type-code-block);
     margin: 0;
     overflow-x: auto;
-    padding: var(--space-4);
+    padding: var(--space-3) var(--space-4);
   }
 
   .codeblock[data-variant="command"] :global(.codeblock-pre) {

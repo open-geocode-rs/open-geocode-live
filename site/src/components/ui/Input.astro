@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from "astro/types";
 import Icon, { type IconName } from "./Icon.astro";
 
-export const inputVariants = ["text", "textarea"] as const;
+export const inputVariants = ["text", "textarea", "select"] as const;
 export const inputSizes = ["md", "lg"] as const;
 export const inputStates = ["rest", "hover", "focus", "disabled", "invalid"] as const;
 
@@ -17,8 +17,12 @@ type Omitted = "class" | "class:list" | "style" | "size";
 /** A text field may lead with an icon that says what it is for, such as search. */
 type TextProps = Omit<HTMLAttributes<"input">, Omitted> & Shared & { variant?: "text"; icon?: IconName };
 type TextareaProps = Omit<HTMLAttributes<"textarea">, Omitted> & Shared & { variant: "textarea"; value?: string };
+/** A choice among a few options, set in a control's box, with the platform's own list so it is never cut off. Its
+ * options are choices, not page text, so search leaves them out. */
+type SelectProps = Omit<HTMLAttributes<"select">, Omitted> &
+  Shared & { variant: "select"; icon?: IconName; options: { value: string; label: string }[]; value?: string };
 
-export type Props = TextProps | TextareaProps;
+export type Props = TextProps | TextareaProps | SelectProps;
 
 const props = Astro.props;
 const { size = "md", state = "rest", invalid = false } = props;
@@ -39,10 +43,22 @@ function textareaAttrs({ variant, size, state, invalid, disabled, value, ...rest
 function textAttrs({ variant, size, state, invalid, disabled, icon, ...rest }: TextProps) {
   return own(rest);
 }
+
+function selectAttrs({ variant, size, state, invalid, disabled, icon, options, value, ...rest }: SelectProps) {
+  return own(rest);
+}
 ---
 
 {
-  props.variant === "textarea" ? (
+  props.variant === "select" ? (
+    <span class="input-field" data-select data-pagefind-ignore>
+      {props.icon && <span class="input-icon"><Icon name={props.icon} size="md" /></span>}
+      <select {...selectAttrs(props)} {...shared} class="input" data-variant="select" data-icon={props.icon ? "" : undefined}>
+        {props.options.map((o) => <option value={o.value} selected={o.value === props.value}>{o.label}</option>)}
+      </select>
+      <span class="input-chevron"><Icon name="chevrons-up-down" size="md" /></span>
+    </span>
+  ) : props.variant === "textarea" ? (
     <textarea {...textareaAttrs(props).attrs} {...shared} class="input" data-variant="textarea">{textareaAttrs(props).value}</textarea>
   ) : (
     props.icon ? (
@@ -100,6 +116,36 @@ function textAttrs({ variant, size, state, invalid, disabled, icon, ...rest }: T
 
   .input[data-variant="text"][data-size="lg"] {
     block-size: var(--control-lg);
+  }
+
+  /* A select sizes to its choice, with the chevrons at its end, and fills like a control. */
+  .input-field[data-select] {
+    display: inline-block;
+    flex: none;
+    inline-size: auto;
+  }
+
+  .input[data-variant="select"] {
+    appearance: none;
+    background-color: var(--color-control);
+    block-size: var(--control-md);
+    cursor: pointer;
+    field-sizing: content;
+    font: var(--type-ui-strong);
+    padding-inline-end: var(--space-8);
+  }
+
+  .input[data-variant="select"][data-size="lg"] {
+    block-size: var(--control-lg);
+  }
+
+  .input-chevron {
+    align-items: center;
+    display: flex;
+    inset-block: 0;
+    inset-inline-end: var(--space-3);
+    pointer-events: none;
+    position: absolute;
   }
 
   .input[data-variant="textarea"] {

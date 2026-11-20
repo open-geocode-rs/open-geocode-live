@@ -35,7 +35,7 @@ const table = {
     states: ["rest", "hover", "focus", "pressed", "disabled"],
     flags: ["icon-only"],
   },
-  Input: { variants: ["text", "textarea"], sizes: ["md", "lg"], states: ["rest", "hover", "focus", "disabled", "invalid"] },
+  Input: { variants: ["text", "textarea", "select"], sizes: ["md", "lg"], states: ["rest", "hover", "focus", "disabled", "invalid"] },
   Badge: {
     variants: ["neutral", "accent", "success", "warning", "danger", "get", "post", "query", "delete"],
     sizes: ["default"],

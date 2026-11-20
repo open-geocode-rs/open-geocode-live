@@ -62,6 +62,8 @@
   --layout-toc-width: 14.375rem;
   --layout-content: 48rem;
   --layout-content-wide: 68rem;
+  /* The API reference's example panel, beside the operation's text. */
+  --layout-example: 33.75rem;
   --layout-page-max: 90rem;
   --layout-gutter: max(var(--space-6), calc((100vw - var(--layout-page-max)) / 2));
   /* The landing hero. The card's least height, the slice of it the globe shows, and the globe's width. */

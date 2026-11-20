@@ -20,8 +20,9 @@ const level = levels[Math.min(Math.max(section.level, 2), 6) - 2];
 const looks = { 2: "h3", 3: "quiet", 4: "h4", 5: "h4", 6: "h4" } as const;
 ---
 
-{/* The parts follow one another in the page's flow, so the flow spaces them as it spaces the prose. */}
-<Heading level={level} look={looks[level]} id={section.id} label={`Section titled “${section.title}”`}>
+{/* The parts follow one another in the page's flow, so the flow spaces them as it spaces the prose. The anchor reads
+    the heading's whole text, its required mark included. */}
+<Heading level={level} look={looks[level]} id={section.id} label={`Section titled “${section.title}${section.required ? " required" : ""}”`}>
   {section.title}{
     section.required && (
       <span class="required">

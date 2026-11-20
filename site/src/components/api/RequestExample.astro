@@ -4,7 +4,7 @@ import type { ApiOperation } from "../../lib/openapi";
 import Badge from "../ui/Badge.astro";
 import Button from "../ui/Button.astro";
 import CodeBlock from "../ui/CodeBlock.astro";
-import Menu from "../ui/Menu.astro";
+import Input from "../ui/Input.astro";
 
 interface Props {
   operation: ApiOperation;
@@ -22,11 +22,11 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
     <div class="request-head">
       <div class="request-title">
         <Badge variant={operation.method} />
-        <span class="sr-only">{operation.method.toUpperCase()}</span>
+        <span class="sr-only" data-pagefind-ignore>{operation.method.toUpperCase()}</span>
         <h3 class="request-summary">{operation.title}</h3>
       </div>
       <div class="request-controls">
-        <Menu label="Language" variant="outline" items={languages} current={snippets[0].id} triggerIcon="code" size="sm" align="end" />
+        <Input variant="select" icon="protocol" aria-label="Language" options={languages} value={snippets[0].id} data-language />
         <Button variant="outline" iconOnly icon="copy" label="Copy code" data-copy-request />
         <span class="request-copied" role="status" data-copy-status></span>
       </div>
@@ -62,16 +62,17 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
       const panes = [...panel.querySelectorAll<HTMLElement>("[data-snippet]")];
       if (!panes.some((p) => p.dataset.snippet === id)) continue;
       for (const p of panes) p.hidden = p.dataset.snippet !== id;
-      panel.querySelector("details[data-menu]")?.dispatchEvent(new CustomEvent("menu-select", { detail: id }));
+      const picker = panel.querySelector<HTMLSelectElement>("select[data-language]");
+      if (picker) picker.value = id;
     }
   }
 
   for (const panel of document.querySelectorAll<HTMLElement>("[data-request-example]")) {
-    panel.addEventListener("menu-change", (event) => {
-      if (!(event instanceof CustomEvent) || typeof event.detail !== "string") return;
-      show(event.detail);
+    const picker = panel.querySelector<HTMLSelectElement>("select[data-language]");
+    picker?.addEventListener("change", () => {
+      show(picker.value);
       try {
-        localStorage.setItem(KEY, event.detail);
+        localStorage.setItem(KEY, picker.value);
       } catch {}
     });
   }
@@ -169,12 +170,17 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
     border-block-end: var(--border) solid var(--color-border);
     font: var(--type-ui-strong);
     margin: 0;
-    padding: var(--space-2) var(--space-5);
+    padding: calc(var(--space-2) + var(--space-0-5)) var(--space-4);
+  }
+
+  .request-snippet {
+    padding: var(--space-4);
   }
 
   /* A long answer scrolls inside the panel, so the panel stays within the window beside the page. */
   .request-response-body {
     max-block-size: var(--container-md);
     overflow: auto;
+    padding: var(--space-2);
   }
 </style>

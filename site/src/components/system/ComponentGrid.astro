@@ -80,6 +80,11 @@ const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(
         <Input variant="textarea" size={size} state={state} rows={2} aria-label="Notes" placeholder="Notes" />
       )}
     </Matrix>
+    <Matrix caption="select" rows={inputStates} cols={inputSizes} cell={(state, size) => `Input:select:${size}:${state}`}>
+      {(state: (typeof inputStates)[number], size: (typeof inputSizes)[number]) => (
+        <Input variant="select" icon="protocol" size={size} state={state} aria-label="Language" options={[{ value: "curl", label: "cURL" }, { value: "js", label: "JavaScript" }]} value="curl" />
+      )}
+    </Matrix>
   </Section>
 
   <Section title="Badge" note="Each variant. A badge has one size and one state.">
