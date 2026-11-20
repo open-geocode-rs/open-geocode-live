@@ -1,0 +1,33 @@
+{
+  "breakpoints": ["40rem", "50rem", "72rem"],
+  "groups": {
+    "space": { "kind": "scale", "file": "primitives.css", "pattern": "^--space-(0-5|1-5|[0-9]+)$", "count": 14 },
+    "radius": { "kind": "scale", "file": "primitives.css", "pattern": "^--radius-(sm|md|lg|xl|full)$", "count": 5 },
+    "border": { "kind": "scale", "file": "primitives.css", "pattern": "^--border(-strong)?$", "count": 2 },
+    "control": { "kind": "scale", "file": "primitives.css", "pattern": "^--control-(sm|md|lg)$", "count": 3 },
+    "icon": { "kind": "scale", "file": "primitives.css", "pattern": "^--icon-(sm|md|lg)$", "count": 3 },
+    "container": { "kind": "scale", "file": "primitives.css", "pattern": "^--container-(sm|md|lg)$", "count": 3 },
+    "layout": { "kind": "scale", "file": "primitives.css", "pattern": "^--layout-[a-z-]+$", "count": 7 },
+    "shadow": { "kind": "scale", "file": "primitives.css", "pattern": "^--shadow-[a-z]+$", "count": 3 },
+    "duration": { "kind": "scale", "file": "primitives.css", "pattern": "^--duration-[a-z]+$", "count": 5 },
+    "ease": { "kind": "scale", "file": "primitives.css", "pattern": "^--ease-[a-z-]+$", "count": 3 },
+    "z": { "kind": "scale", "file": "primitives.css", "pattern": "^--z-[a-z]+$", "count": 4 },
+    "opacity": { "kind": "scale", "file": "primitives.css", "pattern": "^--opacity-[a-z]+$", "count": 2 },
+    "scale": { "kind": "scale", "file": "primitives.css", "pattern": "^--scale-press$", "count": 1 },
+    "p-font-size": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-font-size-([0-9]+|inline|fluid)$", "count": 11 },
+    "p-leading": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-leading-([0-9]+|[a-z]+)$", "count": 5 },
+    "p-weight": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-weight-[a-z]+$", "count": 4 },
+    "p-family": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-font-(sans|display|mono)$", "count": 3 },
+    "p-colour": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-(white|black|(neutral|navy|green|blue|purple|red|amber)-[0-9]+)$", "count": 27 },
+    "p-alpha": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-alpha-[0-9]+$", "count": 4 },
+    "color": { "kind": "role", "file": "roles.css", "pattern": "^--color-[a-z-]+$", "count": 24 },
+    "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 13 },
+    "map": { "kind": "component", "file": "components.css", "pattern": "^--map-[a-z-]+$", "count": 8, "reader": "src/components/landing/StreetMap.astro" },
+    "globe": { "kind": "component", "file": "components.css", "pattern": "^--globe-[a-z-]+$", "count": 7, "reader": "src/components/landing/DitherGlobe.astro" },
+    "terminal": { "kind": "component", "file": "components.css", "pattern": "^--terminal-[a-z-]+$", "count": 10, "reader": "src/components/landing/Walkthrough.astro" },
+    "syntax": { "kind": "component", "file": "components.css", "pattern": "^--syntax-[a-z-]+$", "count": 7, "reader": "src/components/ui/CodeBlock.astro" },
+    "method": { "kind": "component", "file": "components.css", "pattern": "^--method-[a-z]+-(ink|fill)$", "count": 8, "reader": "src/components/ui/Badge.astro" },
+    "button-raised": { "kind": "component", "file": "components.css", "pattern": "^--button-raised-[a-z-]+$", "count": 5, "reader": "src/components/ui/Button.astro" },
+    "host": { "kind": "host", "file": "host.css", "pattern": "^--sl-[a-z0-9-]+$", "count": 41 }
+  }
+}

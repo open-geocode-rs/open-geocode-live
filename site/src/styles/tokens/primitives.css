@@ -1,0 +1,152 @@
+/*
+ * Every raw value on the site lives in this file and nowhere else.
+ * Scales are read by components. Raw material, named --p-*, is read only by the other token files.
+ */
+:root {
+  /* Spacing. A 4px grid, named by multiples of 4px. */
+  --space-0-5: 0.125rem;
+  --space-1: 0.25rem;
+  --space-1-5: 0.375rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Radius. */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Border width. */
+  --border: 1px;
+  --border-strong: 2px;
+
+  /* Control height. */
+  --control-sm: 1.5rem;
+  --control-md: 2rem;
+  --control-lg: 2.5rem;
+
+  /* Icon size. */
+  --icon-sm: 0.75rem;
+  --icon-md: 1rem;
+  --icon-lg: 1.25rem;
+
+  /* Container width. */
+  --container-sm: 16rem;
+  --container-md: 24rem;
+  --container-lg: 36rem;
+
+  /* Layout. */
+  --layout-nav-height: 3.5rem;
+  --layout-sidebar-width: 18rem;
+  --layout-toc-width: 15rem;
+  --layout-content: 45rem;
+  --layout-content-wide: 68rem;
+  --layout-page-max: 90rem;
+  --layout-gutter: max(var(--space-6), calc((100vw - var(--layout-page-max)) / 2));
+
+  /* Shadow, one per height above the page. */
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.08), 0 4px 12px rgb(0 0 0 / 0.08);
+  --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.16);
+  --shadow-dialog: 0 24px 48px rgb(0 0 0 / 0.24);
+
+  /* Duration. Feedback is read by scripts only, never by a transition. */
+  --duration-press: 100ms;
+  --duration-hover: 150ms;
+  --duration-enter: 200ms;
+  --duration-panel: 300ms;
+  --duration-feedback: 1500ms;
+
+  /* Easing. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-hover: ease;
+
+  /* Stacking. */
+  --z-base: 0;
+  --z-raised: 1;
+  --z-sticky: 10;
+  --z-overlay: 20;
+
+  /* Opacity. */
+  --opacity-disabled: 0.5;
+  --opacity-busy: 0.7;
+
+  /* Press scale. */
+  --scale-press: 0.97;
+
+  /* Raw font size. Nothing below 12px exists. */
+  --p-font-size-12: 0.75rem;
+  --p-font-size-14: 0.875rem;
+  --p-font-size-16: 1rem;
+  --p-font-size-18: 1.125rem;
+  --p-font-size-20: 1.25rem;
+  --p-font-size-24: 1.5rem;
+  --p-font-size-32: 2rem;
+  --p-font-size-40: 2.5rem;
+  --p-font-size-56: 3.5rem;
+  --p-font-size-inline: 0.875em;
+  --p-font-size-fluid: 3.6vw;
+
+  /* Raw line height. */
+  --p-leading-1: 1;
+  --p-leading-display: 1.1;
+  --p-leading-heading: 1.25;
+  --p-leading-ui: 1.5;
+  --p-leading-prose: 1.7;
+
+  /* Raw weight. */
+  --p-weight-regular: 400;
+  --p-weight-medium: 500;
+  --p-weight-display: 550;
+  --p-weight-strong: 600;
+
+  /* Raw family. */
+  --p-font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --p-font-display: var(--font-display), "Archivo Narrow", ui-sans-serif, system-ui, sans-serif;
+  --p-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Raw colour. Each hue outside the brand has one step for a dark page and one for a light page. */
+  --p-white: #ffffff;
+  --p-black: #000000;
+  --p-neutral-50: #f5f5f5;
+  --p-neutral-100: #ebebeb;
+  --p-neutral-200: #d4d4d4;
+  --p-neutral-300: #c4c4c4;
+  --p-neutral-400: #8e8e8e;
+  --p-neutral-500: #5e5e5e;
+  --p-neutral-600: #3d3d3d;
+  --p-neutral-700: #313131;
+  --p-neutral-800: #1f1f1f;
+  --p-neutral-900: #181818;
+  --p-navy-700: #0e2e54;
+  --p-navy-900: #0a213d;
+  --p-green-100: #dcefe6;
+  --p-green-300: #a6dcc5;
+  --p-green-500: #49a782;
+  --p-green-700: #2f7d5f;
+  --p-green-900: #173a2d;
+  --p-blue-400: #6f9ff0;
+  --p-blue-700: #2c62c2;
+  --p-purple-400: #b38cf0;
+  --p-purple-700: #7446c2;
+  --p-red-400: #e8736b;
+  --p-red-700: #b8423a;
+  --p-amber-400: #f2c76b;
+  --p-amber-700: #9a5a0c;
+
+  /* Raw alpha. A tint is always color-mix(in srgb, <colour> <alpha>, transparent). */
+  --p-alpha-4: 4%;
+  --p-alpha-8: 8%;
+  --p-alpha-16: 16%;
+  --p-alpha-64: 64%;
+}

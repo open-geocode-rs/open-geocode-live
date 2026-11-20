@@ -1,0 +1,53 @@
+/*
+ * The variables the docs frame reads, each set from a role or a scale.
+ * Nothing on our side reads them. They are set on every theme wrapper so each resolves against that wrapper's roles.
+ */
+:root,
+[data-theme] {
+  --sl-color-white: var(--color-foreground);
+  --sl-color-gray-1: var(--color-foreground);
+  --sl-color-gray-2: var(--color-foreground-secondary);
+  --sl-color-gray-3: var(--color-foreground-muted);
+  --sl-color-gray-4: var(--color-border-strong);
+  --sl-color-gray-5: var(--color-border);
+  --sl-color-gray-6: var(--color-surface);
+  --sl-color-gray-7: var(--color-surface);
+  --sl-color-black: var(--color-background);
+  --sl-color-accent-low: var(--color-accent-subtle);
+  --sl-color-accent: var(--color-accent);
+  --sl-color-accent-high: var(--color-accent-strong);
+  --sl-color-text: var(--color-foreground);
+  --sl-color-text-accent: var(--color-accent);
+  --sl-color-text-invert: var(--color-on-solid);
+  --sl-color-bg: var(--color-background);
+  --sl-color-bg-nav: var(--color-background);
+  --sl-color-bg-sidebar: var(--color-background);
+  --sl-color-bg-inline-code: var(--color-surface);
+  --sl-color-bg-accent: var(--color-solid);
+  --sl-color-hairline-light: var(--color-border);
+  --sl-color-hairline: var(--color-border);
+  --sl-color-hairline-shade: var(--color-border);
+  --sl-color-backdrop-overlay: var(--color-backdrop);
+}
+
+:root {
+  --sl-shadow-sm: var(--shadow-raised);
+  --sl-shadow-md: var(--shadow-overlay);
+  --sl-shadow-lg: var(--shadow-dialog);
+
+  --sl-nav-height: var(--layout-nav-height);
+  --sl-nav-pad-x: var(--space-4);
+  --sl-nav-pad-y: var(--space-3);
+  --sl-mobile-toc-height: var(--space-12);
+  --sl-sidebar-width: var(--layout-sidebar-width);
+  --sl-sidebar-pad-x: var(--space-4);
+  --sl-content-width: var(--layout-content);
+  --sl-content-pad-x: var(--space-4);
+  --sl-content-gap-y: var(--space-4);
+  --sl-menu-button-size: var(--control-md);
+
+  --sl-z-index-toc: var(--z-raised);
+  --sl-z-index-menu: var(--z-overlay);
+  --sl-z-index-navbar: var(--z-sticky);
+  --sl-z-index-skiplink: var(--z-overlay);
+}
