@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from "astro/types";
 import Icon, { type IconName } from "./Icon.astro";
 
-export const buttonVariants = ["solid", "outline", "ghost", "raised"] as const;
+export const buttonVariants = ["solid", "outline", "ghost", "raised", "raised-solid"] as const;
 export const buttonSizes = ["sm", "md", "lg"] as const;
 export const buttonStates = ["rest", "hover", "focus", "pressed", "disabled"] as const;
 
@@ -127,10 +127,18 @@ const Tag = href ? "a" : "button";
   }
 
   .button[data-variant="raised"] {
-    background-color: var(--button-raised-cap);
+    background: var(--button-raised-cap);
     border: var(--border-strong) solid var(--button-raised-edge);
     border-radius: var(--radius-full);
     box-shadow: var(--button-raised-shadow);
+  }
+
+  .button[data-variant="raised-solid"] {
+    background: var(--button-raised-solid-cap);
+    border: var(--border-strong) solid var(--button-raised-solid-edge);
+    border-radius: var(--radius-full);
+    box-shadow: var(--button-raised-solid-shadow);
+    color: var(--color-on-solid);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -144,7 +152,11 @@ const Tag = href ? "a" : "button";
     }
 
     .button[data-variant="raised"]:hover {
-      background-color: var(--button-raised-cap-hover);
+      background: var(--button-raised-cap-hover);
+    }
+
+    .button[data-variant="raised-solid"]:hover {
+      background: var(--button-raised-solid-cap-hover);
     }
   }
 
@@ -158,7 +170,11 @@ const Tag = href ? "a" : "button";
   }
 
   .button[data-variant="raised"][data-state="hover"] {
-    background-color: var(--button-raised-cap-hover);
+    background: var(--button-raised-cap-hover);
+  }
+
+  .button[data-variant="raised-solid"][data-state="hover"] {
+    background: var(--button-raised-solid-cap-hover);
   }
 
   .button:focus-visible,
@@ -192,6 +208,12 @@ const Tag = href ? "a" : "button";
     .button[data-variant="raised"]:active,
     .button[data-variant="raised"][data-state="pressed"] {
       box-shadow: var(--button-raised-shadow-pressed);
+      translate: 0 var(--space-1);
+    }
+
+    .button[data-variant="raised-solid"]:active,
+    .button[data-variant="raised-solid"][data-state="pressed"] {
+      box-shadow: var(--button-raised-solid-shadow-pressed);
       translate: 0 var(--space-1);
     }
   }

@@ -29,7 +29,7 @@
     "terminal": { "kind": "component", "file": "components.css", "pattern": "^--terminal-[a-z-]+$", "count": 10, "reader": "src/components/landing/Walkthrough.astro" },
     "syntax": { "kind": "component", "file": "components.css", "pattern": "^--syntax-[a-z-]+$", "count": 7, "reader": "src/components/ui/CodeBlock.astro" },
     "method": { "kind": "component", "file": "components.css", "pattern": "^--method-[a-z]+-(ink|fill)$", "count": 8, "reader": "src/components/ui/Badge.astro" },
-    "button-raised": { "kind": "component", "file": "components.css", "pattern": "^--button-raised-[a-z-]+$", "count": 5, "reader": "src/components/ui/Button.astro" },
+    "button-raised": { "kind": "component", "file": "components.css", "pattern": "^--button-raised-[a-z-]+$", "count": 10, "reader": "src/components/ui/Button.astro" },
     "host": { "kind": "host", "file": "host.css", "pattern": "^--sl-[a-z0-9-]+$", "count": 41 }
   },
   "owners": {

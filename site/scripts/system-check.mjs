@@ -30,7 +30,7 @@ for (const t of shown) if (!defined.has(t)) problems.push(`token on the page but
 // The component table of the spec's step 2. A component with one variant or one size uses "default".
 const table = {
   Button: {
-    variants: ["solid", "outline", "ghost", "raised"],
+    variants: ["solid", "outline", "ghost", "raised", "raised-solid"],
     sizes: ["sm", "md", "lg"],
     states: ["rest", "hover", "focus", "pressed", "disabled"],
     flags: ["icon-only"],
