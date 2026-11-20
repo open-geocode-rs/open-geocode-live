@@ -9,6 +9,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "check:hover": "node scripts/hover-check.mjs",
+    "check:behaviour": "node scripts/behaviour-check.mjs",
     "check:reference": "node scripts/reference-check.mjs",
     "lint": "node lint/run.mjs",
     "lint:probes": "node lint/probes.mjs"

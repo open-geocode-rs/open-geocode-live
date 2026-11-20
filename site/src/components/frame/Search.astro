@@ -93,9 +93,14 @@ const strings = {
     meta: { title?: string };
     sub_results: Section[];
   }
+  interface Hit {
+    data(): Promise<Page>;
+  }
   interface Pagefind {
     options(options: { baseUrl: string; excerptLength: number; ranking?: Record<string, number> }): Promise<void>;
-    debouncedSearch(term: string): Promise<{ results: { data(): Promise<Page> }[] } | null>;
+    search(term: string): Promise<{ results: Hit[] }>;
+    debouncedSearch(term: string): Promise<{ results: Hit[] } | null>;
+    destroy(): Promise<void>;
   }
 
   const PAGE_SIZE = 5;
@@ -106,12 +111,28 @@ const strings = {
 
   let index: Promise<Pagefind> | undefined;
   function load(): Promise<Pagefind> {
-    index ??= import(/* @vite-ignore */ `${base}pagefind/pagefind.js`).then(async (module: Pagefind) => {
-      // The ranking is the site's search setting, so results come in the order the site is set to give them.
-      await module.options({ baseUrl: base, excerptLength: EXCERPT_WORDS, ranking: pagefindUserConfig.ranking });
-      return module;
-    });
+    index ??= import(/* @vite-ignore */ `${base}pagefind/pagefind.js`).then(
+      async (module: Pagefind) => {
+        // The ranking is the site's search setting, so results come in the order the site is set to give them.
+        await module.options({ baseUrl: base, excerptLength: EXCERPT_WORDS, ranking: pagefindUserConfig.ranking });
+        return module;
+      },
+      (error: unknown) => {
+        // A load that failed is tried again next time.
+        index = undefined;
+        throw error;
+      },
+    );
     return index;
+  }
+
+  // Drops the index, with the hits it failed to load, which it would otherwise give back as failures for good. The
+  // next load starts a fresh one.
+  async function reset() {
+    const old = index;
+    index = undefined;
+    const pagefind = await old?.catch(() => undefined);
+    await pagefind?.destroy();
   }
 
   class SiteSearch extends HTMLElement {
@@ -183,24 +204,60 @@ const strings = {
         message.textContent = (strings[key] ?? "").replace("[SEARCH_TERM]", term).replace("[COUNT]", String(count));
       };
 
-      let shown = 0;
-      let hits: { data(): Promise<Page> }[] = [];
+      // The results of the query the list shows, and how many of them it shows. Unset while a newer query is pending, so
+      // Load more and Enter act only on the results of the query in the box.
+      interface Results {
+        term: string;
+        hits: Hit[];
+        shown: number;
+        // Set when a hit failed to load. The index then holds that failure, so the next batch searches again.
+        failed: boolean;
+      }
+      let current: Results | undefined;
+      // Batches load one after another, so each starts where the last one ended and they land in order.
+      let batches = Promise.resolve();
       // Counts the queries typed. Work for an older query is dropped when it finishes, so it never lands in a newer
       // query's list, or in the box after it was cleared.
       let query = 0;
-      const showMore = async () => {
-        const asked = query;
-        const next = hits.slice(shown, shown + PAGE_SIZE);
-        shown += next.length;
-        const items = await Promise.all(next.map(async (hit) => render(await hit.data())));
-        if (asked !== query) return;
-        list.append(...items);
-        more.hidden = shown >= hits.length;
+
+      const nextBatch = async (results: Results) => {
+        if (results !== current) return;
+        if (results.failed) {
+          // A fresh index loads every hit again, in the same order, since the term and the index are the same.
+          const pagefind = await load();
+          const again = await pagefind.search(results.term);
+          results.hits = again.results;
+          results.failed = false;
+        }
+        if (results !== current) return;
+        const next = results.hits.slice(results.shown, results.shown + PAGE_SIZE);
+        const loaded = await Promise.allSettled(next.map((hit) => hit.data()));
+        if (results !== current) return;
+        // The list grows only by the hits before the first that failed, so it stays in order and the rest load next time.
+        const pages: Page[] = [];
+        for (const r of loaded) {
+          if (r.status === "rejected") break;
+          pages.push(r.value);
+        }
+        if (pages.length < next.length) {
+          results.failed = true;
+          await reset();
+        }
+        list.append(...pages.map(render));
+        results.shown += pages.length;
+        more.hidden = results.shown >= results.hits.length;
       };
-      more.querySelector("button")?.addEventListener("click", () => void showMore());
+      const showMore = (results: Results) => {
+        batches = batches.then(() => nextBatch(results)).catch(() => undefined);
+        return batches;
+      };
+      more.querySelector("button")?.addEventListener("click", () => {
+        if (current) void showMore(current);
+      });
 
       input.addEventListener("input", async () => {
         const asked = ++query;
+        current = undefined;
         const term = input.value.trim();
         if (!term) {
           list.replaceChildren();
@@ -219,15 +276,15 @@ const strings = {
         const search = await pagefind.debouncedSearch(term);
         // A newer keystroke replaced this search.
         if (!search || asked !== query) return;
-        hits = search.results;
-        shown = 0;
+        const results: Results = { term, hits: search.results, shown: 0, failed: false };
+        current = results;
         list.replaceChildren();
-        say(hits.length === 0 ? "zero" : hits.length === 1 ? "one" : "many", term, hits.length);
-        await showMore();
+        say(results.hits.length === 0 ? "zero" : results.hits.length === 1 ? "one" : "many", term, results.hits.length);
+        await showMore(results);
       });
 
       frame.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" && event.target === input) list.querySelector<HTMLAnchorElement>("a")?.click();
+        if (event.key === "Enter" && event.target === input && current) list.querySelector<HTMLAnchorElement>("a")?.click();
       });
     }
   }
