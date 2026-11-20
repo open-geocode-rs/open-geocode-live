@@ -1,5 +1,6 @@
 // Lints each probe on its own, in a copy of the site, and checks the probe's rule finds something new.
-// Prints one failing rule per probe. Exits 1 if any probe passes the lint, so a rule that stops working fails here.
+// A probe marked "pass" must find nothing new, so a rule that grows to catch what it should allow fails here too.
+// Prints one line per probe. Exits 1 if any probe gives the wrong result, so a rule that stops working fails here.
 import { spawnSync } from "node:child_process";
 import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -66,9 +67,15 @@ try {
     apply(p.head, p.body);
     for (const extra of p.head.also ?? []) apply(extra, extra.text);
     const which = p.head.rule === "og/scripts" ? "script" : /^og\/(markup|content)$/.test(p.head.rule) ? "markup" : "style";
-    const fresh = [...findings(which)].filter((f) => !standing.has(f));
+    const fresh = [...findings(p.head.pass ? "all" : which)].filter((f) => !standing.has(f));
     const hit = fresh.filter((f) => f.startsWith(`${p.head.rule}|`));
-    if (hit.length > 0) {
+    if (p.head.pass) {
+      if (fresh.length === 0) console.log(`${p.name}: passes the lint, as it should for ${p.head.rule}`);
+      else {
+        wrong++;
+        console.log(`${p.name}: FAILS the lint. Expected it to pass ${p.head.rule}. New findings: ${fresh.join("; ")}`);
+      }
+    } else if (hit.length > 0) {
       covered.add(p.head.rule);
       console.log(`${p.name}: fails ${p.head.rule}. ${hit[0].split("|")[2]}`);
     } else {
@@ -78,7 +85,7 @@ try {
     for (const [file, text] of originals) writeFileSync(join(work, file), text);
     originals.clear();
   }
-  console.log(`${probes.length} probes, ${probes.length - wrong} fail the lint as they should, rules covered ${covered.size}: ${[...covered].sort().join(", ")}`);
+  console.log(`${probes.length} probes, ${probes.length - wrong} give the result they should, rules covered ${covered.size}: ${[...covered].sort().join(", ")}`);
   process.exitCode = wrong === 0 ? 0 : 1;
 } finally {
   rmSync(work, { recursive: true, force: true });

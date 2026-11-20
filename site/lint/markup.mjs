@@ -1,12 +1,16 @@
 // Checks what oxlint cannot read. The markup of each Astro file is read with Astro's own parser and checked against
-// og/markup, and the expressions in it against og/scripts. Each MDX doc is held to og/content.
+// og/markup, and the expressions in it against og/scripts. The markup of each Markdown and MDX doc is read with the
+// parser the site renders it with, so fenced and inline code is never checked, and is held to og/markup. Each MDX
+// doc is also held to og/content.
 // Prints one line per finding, or a JSON list with --format json. Exits 1 on any finding.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parse } from "@astrojs/compiler-rs";
+import { fromHtml } from "hast-util-from-html";
+import { markdownToMdast, mdxToMdast } from "satteri";
 import { includedFiles, root } from "./project.mjs";
-import { markupVisitors, scriptVisitors } from "./rules.mjs";
+import { markupVisitors, rawControl, scriptVisitors, styleAttribute, styleValueOk } from "./rules.mjs";
 
 const lineAt = (text, offset) => text.slice(0, offset).split("\n").length;
 
@@ -45,6 +49,49 @@ function astro(file, text, say) {
   walk(ast.body, (node) => visitors.forEach((v) => v[node.type]?.(node)), skip);
 }
 
+/** The HTML written in a Markdown doc, outside code. */
+function markdown(file, text, say) {
+  const visit = (node) => {
+    if (node.type === "html") {
+      const offset = node.position.start.line - 1;
+      const check = (el) => {
+        if (el.type === "element") {
+          const line = offset + (el.position?.start.line ?? 1);
+          const control = rawControl(el.tagName, file);
+          if (control) say("og/markup", line, control);
+          if (el.properties?.style !== undefined && !styleValueOk({ type: "Literal", value: el.properties.style })) say("og/markup", line, styleAttribute);
+        }
+        for (const c of el.children ?? []) check(c);
+      };
+      check(fromHtml(node.value, { fragment: true }));
+    }
+    for (const c of node.children ?? []) visit(c);
+  };
+  visit(markdownToMdast(text, { features: { frontmatter: true, gfm: true } }));
+}
+
+/** The JSX written in an MDX doc, outside code. An expression is read with Astro's parser, as in an Astro file. */
+function mdx(file, text, say) {
+  const visit = (node) => {
+    if (node.type === "mdxJsxFlowElement" || node.type === "mdxJsxTextElement") {
+      const line = node.position.start.line;
+      const control = rawControl(node.name, file);
+      if (control) say("og/markup", line, control);
+      for (const a of node.attributes ?? []) {
+        if (a.type !== "mdxJsxAttribute" || a.name !== "style") continue;
+        let value = { type: "Literal", value: a.value ?? "" };
+        if (typeof a.value === "object" && a.value !== null) {
+          const el = parse(`<p style={${a.value.value}} />`).ast.body[0];
+          value = el?.openingElement?.attributes?.[0]?.value;
+        }
+        if (!styleValueOk(value)) say("og/markup", line, styleAttribute);
+      }
+    }
+    for (const c of node.children ?? []) visit(c);
+  };
+  visit(mdxToMdast(text, { features: { frontmatter: true, gfm: true } }));
+}
+
 // An MDX page is docs content. The docs prose reads the frame's rendered markup and draws each part through the
 // system, so a page may use only the parts it knows how to draw, and no markup of its own that sets a look.
 // The parts it draws, by the name a page imports them under from the frame's components.
@@ -79,7 +126,11 @@ export function check(files = includedFiles()) {
     const text = readFileSync(join(root, file), "utf8");
     const say = (rule, line, message) => out.push({ rule, file, line, message });
     if (file.endsWith(".astro")) astro(file, text, say);
-    else if (file.endsWith(".mdx")) content(text, say);
+    else if (file.endsWith(".md")) markdown(file, text, say);
+    else if (file.endsWith(".mdx")) {
+      mdx(file, text, say);
+      content(text, say);
+    }
   }
   return out;
 }
