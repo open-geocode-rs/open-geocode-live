@@ -111,19 +111,20 @@ const strings = {
 
   let index: Promise<Pagefind> | undefined;
   function load(): Promise<Pagefind> {
-    index ??= import(/* @vite-ignore */ `${base}pagefind/pagefind.js`).then(
-      async (module: Pagefind) => {
+    if (index) return index;
+    const loading = import(/* @vite-ignore */ `${base}pagefind/pagefind.js`)
+      .then(async (module: Pagefind) => {
         // The ranking is the site's search setting, so results come in the order the site is set to give them.
         await module.options({ baseUrl: base, excerptLength: EXCERPT_WORDS, ranking: pagefindUserConfig.ranking });
         return module;
-      },
-      (error: unknown) => {
-        // A load that failed is tried again next time.
-        index = undefined;
+      })
+      .catch((error: unknown) => {
+        // A load that failed at either step is tried again next time, unless a newer load has taken its place.
+        if (index === loading) index = undefined;
         throw error;
-      },
-    );
-    return index;
+      });
+    index = loading;
+    return loading;
   }
 
   // Drops the index, with the hits it failed to load, which it would otherwise give back as failures for good. The

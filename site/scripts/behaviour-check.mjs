@@ -56,6 +56,18 @@ async function search(tab, term) {
   await tab.locator("[data-search-input]").fill(term);
 }
 const more = (/** @type {Page} */ tab) => tab.locator("[data-search-more] button");
+/**
+ * Serves the search index's script with code put in at the start of one of its functions.
+ * @param {Page} tab
+ * @param {string} at The text that opens the function.
+ * @param {string} code
+ */
+const patchIndex = (tab, at, code) =>
+  tab.route("**/pagefind/pagefind.js", async (route) => {
+    const body = await (await route.fetch()).text();
+    if (!body.includes(at)) throw new Error(`the search index's script has no ${at}`);
+    await route.fulfill({ body: body.replace(at, at + code), contentType: "text/javascript" });
+  });
 
 /** The first rows of a query, loaded one batch at a time with nothing in the way. */
 async function rowsInOrder(/** @type {string} */ term, /** @type {number} */ batches) {
@@ -146,6 +158,24 @@ const cases = {
     });
     return [...enter, ...load];
   },
+
+  /** An index that fails to start is started again on the next keystroke, so search works once it can. */
+  "search starts again after the index failed": () =>
+    visit(
+      "/docs/quickstart/",
+      desktop,
+      async (tab) => {
+        await search(tab, "geocode");
+        await tab.waitForTimeout(1000);
+        await tab.locator("[data-search-input]").press("End");
+        await tab.keyboard.type("s");
+        await rowsReach(tab, 1).catch(() => undefined);
+        const rows = await tab.locator("[data-search-results] > li").count();
+        return rows ? [] : ["after the index failed once, no later search showed results"];
+      },
+      // The index fails the first time it is set up, as when a file of it does not arrive.
+      (tab) => patchIndex(tab, "var options=async(new_options)=>{", "if(!globalThis.__ogFailed){globalThis.__ogFailed=true;throw new Error(\"index failed\")}"),
+    ),
 
   // Theme.
 
