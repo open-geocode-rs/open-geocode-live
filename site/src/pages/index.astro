@@ -220,7 +220,7 @@ const description =
   .og-result {
     block-size: var(--space-6);
     color: var(--color-foreground-secondary);
-    font: var(--type-ui);
+    font: var(--type-code);
     margin: var(--space-2) 0 0;
     max-inline-size: 100%;
     overflow: hidden;
@@ -232,6 +232,7 @@ const description =
   /* The hint says what to type. It is not an answer, so it is quieter. */
   .og-result[data-hint] {
     color: var(--color-foreground-muted);
+    font: var(--type-ui);
   }
 
   /* Hidden but still in place, so a result appearing never moves the page. */
