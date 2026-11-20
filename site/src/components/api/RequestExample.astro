@@ -25,7 +25,7 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
         <span class="sr-only">{operation.method.toUpperCase()}</span>
         <h3 class="request-summary">{operation.title}</h3>
       </div>
-      <Menu label="Language" items={languages} current={snippets[0].id} triggerIcon="code" size="sm" align="end" />
+      <Menu label="Language" variant="outline" items={languages} current={snippets[0].id} triggerIcon="code" size="sm" align="end" />
     </div>
     {
       snippets.map((s, i) => (

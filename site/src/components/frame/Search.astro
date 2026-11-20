@@ -1,7 +1,6 @@
 ---
 import Button from "../ui/Button.astro";
 import Input from "../ui/Input.astro";
-import Kbd from "../ui/Kbd.astro";
 
 const t = Astro.locals.t;
 const label = t("search.label");
@@ -24,7 +23,7 @@ const strings = {
   <span class="search-wide">
     <Button variant="outline" icon="search" data-open-search aria-keyshortcuts="Control+K">
       <span class="search-label">{label}</span>
-      <span class="search-shortcut" data-search-shortcut hidden><Kbd>{`${t("search.ctrlKey")} K`}</Kbd></span>
+      <span class="search-shortcut" data-search-shortcut hidden>{`${t("search.ctrlKey")} K`}</span>
     </Button>
   </span>
   <span class="search-narrow">
@@ -237,8 +236,11 @@ const strings = {
     text-align: start;
   }
 
+  /* The shortcut is a quiet hint at the button's end, not a key cap. */
   .search-shortcut {
+    color: var(--color-foreground-muted);
     display: flex;
+    font: var(--type-caption);
   }
 
   .search-shortcut[hidden] {
