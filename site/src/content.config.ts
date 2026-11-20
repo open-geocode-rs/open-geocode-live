@@ -1,5 +1,5 @@
-import { docsLoader } from "@astrojs/starlight/loaders";
-import { docsSchema } from "@astrojs/starlight/schema";
+import { docsLoader, i18nLoader } from "@astrojs/starlight/loaders";
+import { docsSchema, i18nSchema } from "@astrojs/starlight/schema";
 import { defineCollection } from "astro:content";
 
 export const collections = {
@@ -13,4 +13,7 @@ export const collections = {
     }),
     schema: docsSchema(),
   }),
+  // The docs frame reads its interface words from this collection. The site keeps the frame's English as it is, so the
+  // English file sets no word of its own.
+  i18n: defineCollection({ loader: i18nLoader(), schema: i18nSchema() }),
 };
