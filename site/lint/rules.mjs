@@ -15,6 +15,8 @@ const isStyle = (node) => node?.type === "MemberExpression" && !node.computed &&
 /**
  * The number a timing argument comes to, when it is written in this file, with the object it came through.
  * `constInit(node, id)` gives the initialiser of the const that `id` names where `node` sits, if there is one.
+ * A sum or product is written through an object only when every part that holds a number is, so `SHOW.pause + 900`
+ * counts as a number written in the file.
  */
 function numberIn(constInit, node) {
   if (!node) return undefined;
@@ -30,7 +32,12 @@ function numberIn(constInit, node) {
     const prop = init.properties.find((p) => p.type === "Property" && (p.key.name ?? p.key.value) === node.property.name);
     return prop && numberIn(constInit, prop.value) ? { via: node.object.name } : undefined;
   }
-  if (node.type === "BinaryExpression") return numberIn(constInit, node.left) ?? numberIn(constInit, node.right);
+  if (node.type === "BinaryExpression") {
+    const left = numberIn(constInit, node.left);
+    const right = numberIn(constInit, node.right);
+    if (!left || !right) return left ?? right;
+    return left.via === right.via ? left : { via: undefined };
+  }
   return undefined;
 }
 

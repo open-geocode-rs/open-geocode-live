@@ -1,0 +1,2 @@
+probe {"rule": "og/scripts", "file": "src/components/landing/Walkthrough.astro", "after": "  const SHOW = { type: 38, line: 90, pause: 320, hold: 3200, tick: 100, blink: 500 };\n"}
+  setTimeout(() => document.body.focus(), SHOW.pause + 12345);
