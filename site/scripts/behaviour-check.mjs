@@ -247,6 +247,25 @@ const cases = {
           });
         }),
     ),
+
+  /** A hidden panel paints nothing, even a child that sets its own visibility, such as a code block's Copied! tag. */
+  "hidden panels paint nothing": () =>
+    visit("/docs/api/operations/create/", { ...desktop, permissions: ["clipboard-read", "clipboard-write"] }, async (tab) => {
+      const root = tab.locator("[data-tabs]").first();
+      const first = root.locator('[role="tabpanel"]').first();
+      const block = first.locator("[data-codeblock]").first();
+      if ((await block.count()) === 0) return ["the first tab panel holds no code block to copy"];
+      await block.hover();
+      await block.locator("[data-copy]").click();
+      await root.locator('[role="tab"]').nth(1).click();
+      await tab.mouse.move(0, 0);
+      const box = await first.boundingBox();
+      if (!box) return ["the hidden panel has no box"];
+      const during = await tab.screenshot({ clip: box });
+      await tab.waitForTimeout(PAST_FEEDBACK);
+      const after = await tab.screenshot({ clip: box });
+      return during.equals(after) ? [] : ["the hidden panel painted over the shown one while its code block said Copied!"];
+    }),
 };
 
 let failed = 0;

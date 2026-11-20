@@ -53,6 +53,7 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
         id={`${uid}-panel-${id}`}
         aria-labelledby={`${uid}-tab-${id}`}
         hidden={id !== current}
+        inert={id !== current}
         set:html={html}
       />
     ))
@@ -70,7 +71,10 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
       t.setAttribute("aria-selected", String(on));
       t.tabIndex = on ? 0 : -1;
       const panel = document.getElementById(t.getAttribute("aria-controls") ?? "");
-      if (panel) panel.hidden = !on;
+      if (panel) {
+        panel.hidden = !on;
+        panel.inert = !on;
+      }
     }
     if (focus) tab.focus();
   }
@@ -113,8 +117,11 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
     min-inline-size: 0;
   }
 
+  /* A hidden panel keeps its place, so it still sizes the cell. A child may set its own visibility, so the panel is
+     also made fully transparent, which no child can undo, and inert, so nothing in it takes a pointer or the focus. */
   .tabs-panel[hidden] {
     display: block;
+    opacity: 0;
     visibility: hidden;
   }
 
