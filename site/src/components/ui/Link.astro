@@ -29,14 +29,16 @@ const external = /^https?:\/\//.test(href);
 ><slot />{variant === "standalone" && <Icon name={external ? "arrow-up-right" : "arrow-right"} size="sm" />}</a>
 
 <style>
+  /* A link reads in the text's own colour. Its underline, or a standalone link's arrow, marks it, so colour is not
+     the only sign. */
   .link {
     border-radius: var(--radius-sm);
-    color: var(--color-accent);
+    color: var(--color-foreground);
     text-decoration-color: currentColor;
     text-decoration-thickness: var(--border);
     text-underline-offset: var(--space-0-5);
     transition-duration: var(--duration-hover);
-    transition-property: color, text-decoration-color;
+    transition-property: text-decoration-color;
     transition-timing-function: var(--ease-hover);
   }
 
@@ -52,10 +54,6 @@ const external = /^https?:\/\//.test(href);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .link:hover {
-      color: var(--color-accent-strong);
-    }
-
     .link[data-variant="inline"]:hover {
       text-decoration-thickness: var(--border-strong);
     }
@@ -63,10 +61,6 @@ const external = /^https?:\/\//.test(href);
     .link[data-variant="standalone"]:hover {
       text-decoration-line: underline;
     }
-  }
-
-  .link[data-state="hover"] {
-    color: var(--color-accent-strong);
   }
 
   .link[data-variant="inline"][data-state="hover"] {
