@@ -162,7 +162,8 @@
   --p-neutral-900: #181818;
 
   /* The brand is the logo's two colours, navy and green. Every other blue and green is one of them mixed by one rule,
-     a tint toward white or a shade toward black by 32% or 64%, and only the steps a role reads exist. */
+     a tint toward white or a shade toward black by 32% or 64%, and only the steps a role reads exist. The 33% shade
+     is the green that GET's ink takes on its badge's fill, the least shade that keeps 4.5 to 1 there. */
   --p-navy: #032a57;
   --p-navy-tint-64: color-mix(in srgb, var(--p-navy), var(--p-white) 64%);
   --p-navy-tint-32: color-mix(in srgb, var(--p-navy), var(--p-white) 32%);
@@ -170,11 +171,12 @@
   --p-green: #38ad7f;
   --p-green-tint-64: color-mix(in srgb, var(--p-green), var(--p-white) 64%);
   --p-green-shade-32: color-mix(in srgb, var(--p-green), var(--p-black) 32%);
+  --p-green-shade-33: color-mix(in srgb, var(--p-green), var(--p-black) 33%);
   --p-green-shade-64: color-mix(in srgb, var(--p-green), var(--p-black) 64%);
   --p-purple-400: #b38cf0;
   --p-purple-700: #7446c2;
-  --p-red-400: #e8736b;
-  --p-red-700: #b8423a;
+  --p-red-400: #e9776f;
+  --p-red-700: #b13f38;
   --p-amber-400: #f2c76b;
   --p-amber-700: #9a5a0c;
 

@@ -78,12 +78,12 @@
   --terminal-dot-minimize: var(--p-amber-400);
   --terminal-dot-zoom: var(--p-green);
 
-  /* method: fills behind the four HTTP method badges, light enough for each ink to keep 4.5 to 1, and their edges, a
-     stronger tint of the same colour. */
-  --method-get-fill: color-mix(in srgb, var(--p-green) var(--p-alpha-8), transparent);
-  --method-post-fill: color-mix(in srgb, var(--p-navy-tint-64) var(--p-alpha-8), transparent);
-  --method-query-fill: color-mix(in srgb, var(--p-purple-400) var(--p-alpha-8), transparent);
-  --method-delete-fill: color-mix(in srgb, var(--p-red-400) var(--p-alpha-8), transparent);
+  /* method: fills behind the four HTTP method badges, a 16% tint of each method's colour, and their edges, a stronger
+     tint of the same colour. Each ink keeps 4.5 to 1 on its fill. */
+  --method-get-fill: color-mix(in srgb, var(--p-green) var(--p-alpha-16), transparent);
+  --method-post-fill: color-mix(in srgb, var(--p-navy-tint-64) var(--p-alpha-16), transparent);
+  --method-query-fill: color-mix(in srgb, var(--p-purple-400) var(--p-alpha-16), transparent);
+  --method-delete-fill: color-mix(in srgb, var(--p-red-400) var(--p-alpha-16), transparent);
   --method-get-edge: color-mix(in srgb, var(--p-green) var(--p-alpha-24), transparent);
   --method-post-edge: color-mix(in srgb, var(--p-navy-tint-64) var(--p-alpha-24), transparent);
   --method-query-edge: color-mix(in srgb, var(--p-purple-400) var(--p-alpha-24), transparent);
@@ -118,7 +118,7 @@
   --codeblock-dot: var(--p-neutral-200);
 
   /* method: ink of the four HTTP method badges on a light page. */
-  --method-get-ink: var(--p-green-shade-32);
+  --method-get-ink: var(--p-green-shade-33);
   --method-post-ink: var(--p-navy);
   --method-query-ink: var(--p-purple-700);
   --method-delete-ink: var(--p-red-700);
