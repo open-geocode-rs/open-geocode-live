@@ -1,0 +1,2 @@
+probe {"rule": "og/directive", "file": "src/lib/motion.ts", "after": "// Timings for scripts, read from the duration tokens, so no script writes a duration of its own.\n"}
+/* oxlint-disable */

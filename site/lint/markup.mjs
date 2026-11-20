@@ -1,7 +1,8 @@
 // Checks what oxlint cannot read. The markup of each Astro file is read with Astro's own parser and checked against
 // og/markup, and the expressions in it against og/scripts. The markup of each Markdown and MDX doc is read with the
 // parser the site renders it with, so fenced and inline code is never checked, and is held to og/markup. Each MDX
-// doc is also held to og/content.
+// doc is also held to og/content. Every file
+// fails og/directive on a comment that would switch a lint rule off, since disable comments must have no effect.
 // Prints one line per finding, or a JSON list with --format json. Exits 1 on any finding.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -119,12 +120,17 @@ function content(text, say) {
   }
 }
 
+const directive = /\b(?:oxlint|eslint)-disable\b/g;
+
 /** The findings for every included file, as { rule, file, line, message }. */
 export function check(files = includedFiles()) {
   const out = [];
   for (const file of files) {
     const text = readFileSync(join(root, file), "utf8");
     const say = (rule, line, message) => out.push({ rule, file, line, message });
+    for (const m of text.matchAll(directive)) {
+      say("og/directive", lineAt(text, m.index), `${m[0]} would switch a lint rule off. Disable comments have no effect, so fix the finding instead (og/directive)`);
+    }
     if (file.endsWith(".astro")) astro(file, text, say);
     else if (file.endsWith(".md")) markdown(file, text, say);
     else if (file.endsWith(".mdx")) {
