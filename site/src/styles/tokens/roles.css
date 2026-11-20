@@ -56,7 +56,7 @@
   --color-warning-subtle: color-mix(in srgb, var(--p-amber-400) var(--p-alpha-8), transparent);
   --color-danger: var(--p-red-700);
   --color-danger-subtle: color-mix(in srgb, var(--p-red-400) var(--p-alpha-8), transparent);
-  --color-backdrop: color-mix(in srgb, var(--p-black) var(--p-alpha-64), transparent);
+  --color-backdrop: color-mix(in srgb, var(--p-neutral-500) var(--p-alpha-64), transparent);
 
   color-scheme: light;
 }

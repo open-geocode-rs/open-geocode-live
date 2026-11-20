@@ -33,7 +33,7 @@ const strings = {
   <dialog class="search-dialog" aria-label={label}>
     <div class="search-frame" data-search-frame>
       <div class="search-form">
-        <Input type="search" size="lg" placeholder={label} aria-label={label} autocomplete="off" spellcheck="false" data-search-input />
+        <Input type="search" icon="search" size="lg" placeholder={label} aria-label={label} autocomplete="off" spellcheck="false" data-search-input />
         <span class="search-cancel">
           <Button variant="ghost" size="lg" data-close-search>{t("search.cancelLabel")}</Button>
         </span>
@@ -353,8 +353,9 @@ const strings = {
     font: var(--type-caption);
   }
 
+  /* A match reads in the text's full colour, not on a fill. */
   .search-excerpt :global(mark) {
-    background-color: var(--color-accent-subtle);
+    background-color: transparent;
     color: var(--color-foreground);
   }
 
@@ -379,12 +380,15 @@ const strings = {
       display: none;
     }
 
+    /* As tall as its content, from a floor that holds the field and a few results, to the window less a margin. A
+       fixed dialog with both insets at zero would otherwise stretch to the window. */
     .search-dialog {
-      block-size: auto;
+      block-size: max-content;
       border-radius: var(--radius-xl);
       margin: var(--space-20) auto auto;
-      max-block-size: calc(100% - var(--space-20) - var(--space-20));
+      max-block-size: calc(100% - var(--space-16) - var(--space-16));
       max-inline-size: var(--container-lg);
+      min-block-size: var(--container-sm);
     }
 
     .search-frame {

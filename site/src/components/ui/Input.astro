@@ -1,5 +1,6 @@
 ---
 import type { HTMLAttributes } from "astro/types";
+import Icon, { type IconName } from "./Icon.astro";
 
 export const inputVariants = ["text", "textarea"] as const;
 export const inputSizes = ["md", "lg"] as const;
@@ -13,7 +14,8 @@ type Shared = {
 };
 
 type Omitted = "class" | "class:list" | "style" | "size";
-type TextProps = Omit<HTMLAttributes<"input">, Omitted> & Shared & { variant?: "text" };
+/** A text field may lead with an icon that says what it is for, such as search. */
+type TextProps = Omit<HTMLAttributes<"input">, Omitted> & Shared & { variant?: "text"; icon?: IconName };
 type TextareaProps = Omit<HTMLAttributes<"textarea">, Omitted> & Shared & { variant: "textarea"; value?: string };
 
 export type Props = TextProps | TextareaProps;
@@ -34,7 +36,7 @@ function textareaAttrs({ variant, size, state, invalid, disabled, value, ...rest
   return { attrs: own(rest), value };
 }
 
-function textAttrs({ variant, size, state, invalid, disabled, ...rest }: TextProps) {
+function textAttrs({ variant, size, state, invalid, disabled, icon, ...rest }: TextProps) {
   return own(rest);
 }
 ---
@@ -43,7 +45,14 @@ function textAttrs({ variant, size, state, invalid, disabled, ...rest }: TextPro
   props.variant === "textarea" ? (
     <textarea {...textareaAttrs(props).attrs} {...shared} class="input" data-variant="textarea">{textareaAttrs(props).value}</textarea>
   ) : (
-    <input type="text" {...textAttrs(props)} {...shared} class="input" data-variant="text" />
+    props.icon ? (
+      <span class="input-field">
+        <span class="input-icon"><Icon name={props.icon} size="md" /></span>
+        <input type="text" {...textAttrs(props)} {...shared} class="input" data-variant="text" data-icon />
+      </span>
+    ) : (
+      <input type="text" {...textAttrs(props)} {...shared} class="input" data-variant="text" />
+    )
   )
 }
 
@@ -60,6 +69,25 @@ function textAttrs({ variant, size, state, invalid, disabled, ...rest }: TextPro
     transition-duration: var(--duration-hover);
     transition-property: border-color, background-color;
     transition-timing-function: var(--ease-hover);
+  }
+
+  .input-field {
+    display: block;
+    position: relative;
+  }
+
+  .input-icon {
+    align-items: center;
+    color: var(--color-foreground-muted);
+    display: flex;
+    inset-block: 0;
+    inset-inline-start: var(--space-3);
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .input[data-icon] {
+    padding-inline-start: var(--space-8);
   }
 
   .input::placeholder {
