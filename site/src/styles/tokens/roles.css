@@ -74,6 +74,9 @@
   --type-h4: var(--p-weight-display) var(--p-font-size-18) / var(--p-leading-heading) var(--p-font-display);
   --type-lead: var(--p-weight-regular) var(--p-font-size-18) / var(--p-leading-ui) var(--p-font-sans);
   --type-body: var(--p-weight-regular) var(--p-font-size-16) / var(--p-leading-prose) var(--p-font-sans);
+  /* A short title set at body size, such as a feature card's, and the short text under it. */
+  --type-body-strong: var(--p-weight-medium) var(--p-font-size-16) / var(--p-leading-heading) var(--p-font-sans);
+  --type-body-sm: var(--p-weight-regular) var(--p-font-size-15) / var(--p-leading-heading) var(--p-font-sans);
   --type-ui: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
   --type-ui-strong: var(--p-weight-medium) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
   --type-caption: var(--p-weight-regular) var(--p-font-size-12) / var(--p-leading-ui) var(--p-font-sans);

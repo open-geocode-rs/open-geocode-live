@@ -5,7 +5,7 @@
     "radius": { "kind": "scale", "file": "primitives.css", "pattern": "^--radius-(sm|md|lg|xl|full)$", "count": 5 },
     "border": { "kind": "scale", "file": "primitives.css", "pattern": "^--border(-strong)?$", "count": 2 },
     "control": { "kind": "scale", "file": "primitives.css", "pattern": "^--control-(sm|md|lg)$", "count": 3 },
-    "icon": { "kind": "scale", "file": "primitives.css", "pattern": "^--icon-(sm|md|lg)$", "count": 3 },
+    "icon": { "kind": "scale", "file": "primitives.css", "pattern": "^--icon-(sm|md|lg|xl|stroke-xl)$", "count": 5 },
     "container": { "kind": "scale", "file": "primitives.css", "pattern": "^--container-(2xs|xs|sm|md|lg)$", "count": 5 },
     "layout": { "kind": "scale", "file": "primitives.css", "pattern": "^--layout-[a-z-]+$", "count": 11 },
     "shadow": { "kind": "scale", "file": "primitives.css", "pattern": "^--shadow-[a-z]+$", "count": 3 },
@@ -15,7 +15,7 @@
     "z": { "kind": "scale", "file": "primitives.css", "pattern": "^--z-[a-z]+$", "count": 3 },
     "opacity": { "kind": "scale", "file": "primitives.css", "pattern": "^--opacity-[a-z]+$", "count": 1 },
     "scale": { "kind": "scale", "file": "primitives.css", "pattern": "^--scale-press$", "count": 1 },
-    "p-font-size": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-font-size-([0-9]+|inline|fluid)$", "count": 11 },
+    "p-font-size": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-font-size-([0-9]+|inline|fluid)$", "count": 12 },
     "p-leading": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-leading-([0-9]+|[a-z]+)$", "count": 5 },
     "p-weight": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-weight-[a-z]+$", "count": 3 },
     "p-tracking": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-tracking-[a-z]+$", "count": 2 },
@@ -23,7 +23,7 @@
     "p-colour": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-(white|black|(neutral|purple|red|amber)-[0-9]+|(navy|green)(-(tint|shade)-[0-9]+)?)$", "count": 26 },
     "p-alpha": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-alpha-[0-9]+$", "count": 4 },
     "color": { "kind": "role", "file": "roles.css", "pattern": "^--color-[a-z-]+$", "count": 26 },
-    "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 13 },
+    "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 15 },
     "tracking": { "kind": "role", "file": "roles.css", "pattern": "^--tracking-[a-z]+$", "count": 2 },
     "codeblock": { "kind": "component", "file": "components.css", "pattern": "^--codeblock-[a-z-]+$", "count": 4, "reader": "src/components/ui/CodeBlock.astro" },
     "map": { "kind": "component", "file": "components.css", "pattern": "^--map-[a-z-]+$", "count": 8, "reader": "src/components/landing/StreetMap.astro" },
@@ -57,6 +57,10 @@
     "--container-xs": "src/components/ui/Menu.astro",
     "--color-selection": "src/styles/global.css",
     "--color-on-selection": "src/styles/global.css",
-    "--color-accent-subtle": "src/components/ui/Badge.astro"
+    "--color-accent-subtle": "src/components/ui/Badge.astro",
+    "--icon-xl": "src/components/ui/Icon.astro",
+    "--icon-stroke-xl": "src/components/ui/Icon.astro",
+    "--type-body-strong": "src/pages/index.astro",
+    "--type-body-sm": "src/pages/index.astro"
   }
 }

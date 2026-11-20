@@ -197,7 +197,7 @@ const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(
   <Section title="Icon" note="Every icon in the set, at each size.">
     <div class="grid">
       {
-        (["sm", "md", "lg"] as const).map((size) => (
+        (["sm", "md", "lg", "xl"] as const).map((size) => (
           <Cell component="Icon" variant="default" size={size} state="rest" width="wide">
             {iconNames.map((name) => (
               <Icon name={name} size={size} label={name} />

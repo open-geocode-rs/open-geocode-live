@@ -39,6 +39,9 @@
   --icon-sm: 0.75rem;
   --icon-md: 1rem;
   --icon-lg: 1.25rem;
+  /* The largest icon stands for a whole idea, as on a feature card, and is drawn with a finer line. */
+  --icon-xl: 1.5rem;
+  --icon-stroke-xl: 1.5px;
 
   /* Container width. The two smallest are menus as wide as a short list needs. */
   --container-2xs: 9rem;
@@ -96,6 +99,7 @@
   /* Raw font size. Nothing below 12px exists. */
   --p-font-size-12: 0.75rem;
   --p-font-size-14: 0.875rem;
+  --p-font-size-15: 0.9375rem;
   --p-font-size-16: 1rem;
   --p-font-size-18: 1.125rem;
   --p-font-size-20: 1.25rem;

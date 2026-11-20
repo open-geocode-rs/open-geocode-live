@@ -46,7 +46,7 @@ const table = {
   Tabs: { variants: ["default"], sizes: ["md"], states: ["rest", "hover", "focus", "current"] },
   Card: { variants: ["plain", "framed"], sizes: ["default"], states: ["rest"] },
   CodeBlock: { variants: ["plain", "terminal", "titled", "command", "numbered"], sizes: ["default"], states: ["rest", "copied"] },
-  Icon: { variants: ["default"], sizes: ["sm", "md", "lg"], states: ["rest"] },
+  Icon: { variants: ["default"], sizes: ["sm", "md", "lg", "xl"], states: ["rest"] },
   Link: { variants: ["inline", "standalone"], sizes: ["inherit"], states: ["rest", "hover", "focus"] },
 };
 

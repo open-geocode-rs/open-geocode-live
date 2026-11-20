@@ -86,7 +86,7 @@ const description =
         <ul class="og-features-grid">
           {features.map((f) => (
             <li>
-              <Icon name={f.icon} size="lg" />
+              <Icon name={f.icon} size="xl" />
               <h3>{f.title}</h3>
               <p>{f.text}</p>
             </li>
@@ -317,13 +317,14 @@ const description =
   }
 
   .og-features-grid h3 {
-    font: var(--type-body);
+    font: var(--type-body-strong);
+    letter-spacing: var(--tracking-tight);
     margin: var(--space-4) 0 var(--space-1);
   }
 
   .og-features-grid p {
-    color: var(--color-foreground-secondary);
-    font: var(--type-ui);
+    color: var(--color-foreground-muted);
+    font: var(--type-body-sm);
     margin: 0;
   }
 

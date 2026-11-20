@@ -71,7 +71,7 @@ export const icons: Record<IconName, { d: string; mark?: true }> = {
 
 export interface Props {
   name: IconName;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   /** Read aloud when the icon stands alone. Without it the icon is hidden from assistive technology. */
   label?: string;
 }
@@ -114,6 +114,12 @@ const { d, mark = false } = icons[name];
   .icon[data-size="lg"] {
     block-size: var(--icon-lg);
     inline-size: var(--icon-lg);
+  }
+
+  .icon[data-size="xl"] {
+    block-size: var(--icon-xl);
+    inline-size: var(--icon-xl);
+    stroke-width: var(--icon-stroke-xl);
   }
 
   .icon[data-mark] {
