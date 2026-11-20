@@ -41,7 +41,11 @@ const items: MenuItem[] = [
     }
   }
 
+  // The choice is held here, and storage only keeps it for the next page, so a choice that could not be saved still holds.
+  let chosen = load();
+
   function apply(theme: Theme) {
+    chosen = theme;
     const system = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
     document.documentElement.dataset.theme = theme === "auto" ? system : theme;
     try {
@@ -53,7 +57,7 @@ const items: MenuItem[] = [
   }
 
   matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
-    if (load() === "auto") apply("auto");
+    if (chosen === "auto") apply("auto");
   });
 
   class ThemeSelect extends HTMLElement {

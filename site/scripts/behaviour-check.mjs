@@ -146,6 +146,34 @@ const cases = {
     });
     return [...enter, ...load];
   },
+
+  // Theme.
+
+  /** A chosen theme holds when the system's theme changes, even where the choice cannot be saved. */
+  "theme choice holds without storage": () =>
+    visit(
+      "/docs/",
+      { ...desktop, colorScheme: "light" },
+      async (tab) => {
+        await tab.locator("og-theme-select summary").first().click();
+        await tab.locator('og-theme-select [role="menuitemradio"][data-value="dark"]').first().click();
+        const chosen = await tab.evaluate(() => document.documentElement.dataset.theme);
+        // Each change is let settle, or the two cancel out before the page hears either.
+        await tab.emulateMedia({ colorScheme: "dark" });
+        await tab.waitForTimeout(200);
+        await tab.emulateMedia({ colorScheme: "light" });
+        await tab.waitForTimeout(200);
+        const now = await tab.evaluate(() => document.documentElement.dataset.theme);
+        return chosen === "dark" && now === "dark" ? [] : [`chose Dark (page ${chosen}), then the system went dark and light and the page is ${now}`];
+      },
+      // Storage that cannot be written, as when it is full or the browser keeps nothing.
+      (tab) =>
+        tab.addInitScript(() => {
+          Storage.prototype.setItem = () => {
+            throw new DOMException("full", "QuotaExceededError");
+          };
+        }),
+    ),
 };
 
 let failed = 0;
