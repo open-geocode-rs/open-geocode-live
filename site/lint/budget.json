@@ -23,7 +23,7 @@
     "p-colour": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-(white|black|(neutral|purple|red|amber)-[0-9]+|(navy|green)(-(tint|shade)-[0-9]+)?)$", "count": 26 },
     "p-alpha": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-alpha-[0-9]+$", "count": 5 },
     "color": { "kind": "role", "file": "roles.css", "pattern": "^--color-[a-z-]+$", "count": 28 },
-    "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 19 },
+    "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 21 },
     "tracking": { "kind": "role", "file": "roles.css", "pattern": "^--tracking-[a-z]+$", "count": 5 },
     "codeblock": { "kind": "component", "file": "components.css", "pattern": "^--codeblock-[a-z-]+$", "count": 5, "reader": "src/components/ui/CodeBlock.astro" },
     "map": { "kind": "component", "file": "components.css", "pattern": "^--map-[a-z-]+$", "count": 8, "reader": "src/components/landing/StreetMap.astro" },
@@ -72,6 +72,8 @@
     "--tracking-wide": "src/components/ui/Button.astro",
     "--tracking-display": "src/components/landing/AddressMorph.astro",
     "--type-label-code": "src/components/ui/Badge.astro",
-    "--color-code": "src/styles/global.css"
+    "--color-code": "src/styles/global.css",
+    "--type-code-block": "src/components/ui/CodeBlock.astro",
+    "--type-ui-compact": "src/components/frame/TocList.astro"
   }
 }

@@ -42,7 +42,7 @@ const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split
             <summary class="nav-summary">
               <span>{entry.label}</span>
               <span class="nav-caret">
-                <Icon name="chevron-down" size="sm" />
+                <Icon name="chevron-down" size="md" />
               </span>
             </summary>
             <SidebarRestorePoint />
@@ -95,7 +95,6 @@ const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split
   }
 
   .nav-caret {
-    color: var(--color-foreground-muted);
     display: inline-flex;
     rotate: -90deg;
   }
@@ -125,10 +124,6 @@ const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split
   @media (hover: hover) and (pointer: fine) {
     .nav-link:hover {
       background-color: var(--color-control);
-    }
-
-    .nav-summary:hover .nav-caret {
-      color: var(--color-foreground);
     }
   }
 

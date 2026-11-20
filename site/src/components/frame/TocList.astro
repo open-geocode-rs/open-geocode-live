@@ -26,7 +26,7 @@ const { items, nested = false } = Astro.props;
 
 <style>
   .toc-list {
-    border-inline-start: var(--border) solid var(--color-border);
+    border-inline-start: var(--border) solid var(--color-border-control);
     list-style: none;
     margin: 0;
     padding: 0;
@@ -42,7 +42,7 @@ const { items, nested = false } = Astro.props;
     border-inline-start: var(--border-strong) solid transparent;
     color: var(--color-foreground);
     display: block;
-    font: var(--type-ui);
+    font: var(--type-ui-compact);
     overflow-wrap: anywhere;
     padding: var(--space-1-5) var(--space-4);
     text-decoration: none;

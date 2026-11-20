@@ -171,6 +171,11 @@ const owned: Transformer = {
     display: none;
   }
 
+  /* A numbered block is an example in the API panel, set tighter than prose. */
+  .codeblock[data-variant="numbered"] :global(.codeblock-pre) {
+    font: var(--type-code);
+  }
+
   .codeblock[data-variant="numbered"] :global(.codeblock-code) {
     counter-reset: codeblock-line;
   }
@@ -270,7 +275,7 @@ const owned: Transformer = {
   }
 
   .codeblock :global(.codeblock-pre) {
-    font: var(--type-code);
+    font: var(--type-code-block);
     margin: 0;
     overflow-x: auto;
     padding: var(--space-4);

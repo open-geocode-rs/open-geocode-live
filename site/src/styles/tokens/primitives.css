@@ -59,8 +59,8 @@
   /* The landing page's header is taller than the docs header, to hold its larger controls. */
   --layout-landing-nav-height: 4.5rem;
   --layout-sidebar-width: 18rem;
-  --layout-toc-width: 15rem;
-  --layout-content: 45rem;
+  --layout-toc-width: 14.375rem;
+  --layout-content: 48rem;
   --layout-content-wide: 68rem;
   --layout-page-max: 90rem;
   --layout-gutter: max(var(--space-6), calc((100vw - var(--layout-page-max)) / 2));

@@ -83,6 +83,8 @@
   --type-body-sm: var(--p-weight-regular) var(--p-font-size-15) / var(--p-leading-heading) var(--p-font-sans);
   --type-ui: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
   --type-ui-strong: var(--p-weight-medium) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
+  /* A list of short links read at a glance, such as the contents of a page. */
+  --type-ui-compact: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-heading) var(--p-font-sans);
   /* The landing page's controls, set at body size, and its call to action, set heavier. */
   --type-ui-lg: var(--p-weight-medium) var(--p-font-size-16) / var(--p-leading-ui) var(--p-font-sans);
   --type-ui-lg-strong: var(--p-weight-semibold) var(--p-font-size-16) / var(--p-leading-ui) var(--p-font-sans);
@@ -90,6 +92,8 @@
   --type-label: var(--p-weight-medium) var(--p-font-size-12) / var(--p-leading-1) var(--p-font-sans);
   --type-label-code: var(--p-weight-medium) var(--p-font-size-12) / var(--p-leading-1) var(--p-font-mono);
   --type-code: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-mono);
+  /* A code block in prose, on the prose's own line height. */
+  --type-code-block: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-prose) var(--p-font-mono);
   /* A one-line command, set small so a long one fits a narrow column. */
   --type-code-sm: var(--p-weight-regular) var(--p-font-size-12) / var(--p-leading-ui) var(--p-font-mono);
   --type-code-inline: var(--p-weight-regular) var(--p-font-size-inline) / var(--p-leading-1) var(--p-font-mono);
