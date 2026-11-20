@@ -2,17 +2,21 @@
 // A solid disc holding one icon, the mark on the landing page's keys and menu links.
 import Icon, { type IconName } from "../ui/Icon.astro";
 
-interface Props {
-  icon: IconName;
+type Props = (
+  | { icon: IconName; keyHint?: never }
+  | { icon?: never; keyHint: string }
+) & {
   size?: "sm" | "md";
   /** Sits at the start or the end of a raised button, close to its edge as a key's mark is. */
   edge?: "start" | "end";
-}
+};
 
-const { icon, size = "sm", edge } = Astro.props;
+const { icon, keyHint, size = "sm", edge } = Astro.props;
 ---
 
-<span class="disc" data-size={size} data-edge={edge} aria-hidden="true"><Icon name={icon} size="md" /></span>
+<span class="disc" data-size={size} data-edge={edge} data-key={keyHint ? "" : undefined} aria-hidden={icon ? "true" : undefined}>
+  {icon ? <Icon name={icon} size="md" /> : <kbd class="disc-key">{keyHint}</kbd>}
+</span>
 
 <style>
   .disc {
@@ -34,6 +38,16 @@ const { icon, size = "sm", edge } = Astro.props;
   .disc[data-size="md"] {
     block-size: var(--control-md);
     inline-size: var(--control-md);
+  }
+
+  .disc[data-key] {
+    inline-size: auto;
+    min-inline-size: calc(var(--control-sm) + var(--space-1));
+    padding-inline: var(--space-1-5);
+  }
+
+  .disc-key {
+    font: var(--type-label);
   }
 
   /* A raised button pads its label by the 16px step. The disc reaches into that padding, to 4px from the cap's edge. */

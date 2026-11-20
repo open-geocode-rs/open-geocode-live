@@ -372,6 +372,63 @@ const cases = {
 
   // Landing.
 
+  /** The address and its coordinates occupy the headline itself through typing, search and clear. */
+  "address search keeps the headline and fits its text": async () => {
+    const problems = [];
+    for (const viewport of [desktop.viewport, { width: 390, height: 844 }]) {
+      const found = await visit("/", { viewport, reducedMotion: "reduce" }, async (tab) => {
+        const notes = [];
+        const morph = tab.locator("og-address-morph");
+        const input = morph.getByRole("textbox");
+        const searchButton = morph.getByRole("button", { name: "Search" });
+        await tab.route("**/api/geocode?*", (route) =>
+          route.fulfill({
+            json: {
+              features: [{ geometry: { coordinates: [2.3313, 48.86914] }, properties: { label: "12 Rue de la Paix, Paris" } }],
+            },
+          }),
+        );
+        await tab.getByRole("button", { name: "Try it for free" }).click();
+        const geometry = () =>
+          input.evaluate((el) => {
+            const style = getComputedStyle(el);
+            const headline = el.closest("og-address-morph");
+            return { font: style.font, headlineFont: headline && getComputedStyle(headline).font, border: style.borderTopWidth, background: style.backgroundColor };
+          });
+        const box = async (/** @type {import("playwright").Locator} */ control) => {
+          const bounds = await control.boundingBox();
+          if (!bounds) throw new Error("address search control is not visible");
+          return bounds;
+        };
+        const style = await geometry();
+        if (style.font !== style.headlineFont || style.border !== "0px" || style.background !== "rgba(0, 0, 0, 0)") {
+          notes.push("the address field does not inherit the borderless headline styling");
+        }
+        const empty = await box(input);
+        await input.fill("Paris");
+        const short = await box(input);
+        await input.fill("12 Rue de la Paix, Paris");
+        const long = await box(input);
+        if (short.width >= empty.width || long.width <= short.width) notes.push("the field does not size to the text");
+        const button = await box(searchButton);
+        if (viewport.width === desktop.viewport.width && button.x < long.x + long.width) notes.push("Search overlaps the address");
+        if (viewport.width !== desktop.viewport.width && button.y < long.y + long.height) notes.push("Search is not below the mobile address");
+        await input.press("Enter");
+        await tab.locator("og-address-morph input[data-answer]").waitFor();
+        if ((await input.inputValue()) !== "48.86914, 2.33130") notes.push("the coordinates did not replace the address");
+        const clear = morph.getByRole("button", { name: "Clear esc" });
+        await clear.getByText("esc", { exact: true }).waitFor();
+        await clear.click();
+        if ((await input.inputValue()) !== "" || Math.abs((await box(input)).width - empty.width) > 1) {
+          notes.push("clearing did not restore the empty address field");
+        }
+        return notes;
+      });
+      problems.push(...found.map((problem) => `${viewport.width}px: ${problem}`));
+    }
+    return problems;
+  },
+
   /** Enter after an input method's composition searches at once, and only the Enter that confirms the characters is held. */
   "enter after a composition searches": () =>
     visit("/", desktop, async (tab) => {

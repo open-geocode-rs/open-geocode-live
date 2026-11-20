@@ -1,0 +1,41 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+type Props = Pick<HTMLAttributes<"input">, "aria-label" | "placeholder">;
+
+const { "aria-label": label, placeholder } = Astro.props;
+---
+
+<input class="headline-input" type="text" size="1" dir="auto" aria-label={label} autocomplete="off" spellcheck="false" {placeholder} />
+
+<style>
+  .headline-input {
+    background: transparent;
+    border: 0;
+    caret-color: var(--color-foreground);
+    color: inherit;
+    font: inherit;
+    grid-area: 1 / 1;
+    inline-size: 100%;
+    letter-spacing: inherit;
+    min-inline-size: 0;
+    outline: none;
+    padding: 0;
+  }
+
+  .headline-input::placeholder {
+    color: var(--color-border-strong);
+    opacity: 1;
+  }
+
+  .headline-input[data-answer] {
+    caret-color: transparent;
+  }
+
+  @media (forced-colors: active) {
+    .headline-input:focus-visible {
+      outline: var(--border-strong) solid Highlight;
+      outline-offset: calc(var(--space-0-5) * -1);
+    }
+  }
+</style>

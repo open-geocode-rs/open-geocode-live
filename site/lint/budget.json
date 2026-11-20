@@ -1,5 +1,5 @@
 {
-  "breakpoints": ["40rem", "48rem", "50rem", "52rem", "72rem"],
+  "breakpoints": ["28rem", "40rem", "48rem", "50rem", "52rem", "72rem"],
   "groups": {
     "space": { "kind": "scale", "file": "primitives.css", "pattern": "^--space-(0-5|1-5|3-5|[0-9]+)$", "count": 16 },
     "radius": { "kind": "scale", "file": "primitives.css", "pattern": "^--radius-(sm|md|lg|xl|full)$", "count": 5 },
