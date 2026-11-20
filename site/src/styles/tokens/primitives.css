@@ -120,8 +120,7 @@
   --p-font-display: var(--font-display), "Archivo Narrow", ui-sans-serif, system-ui, sans-serif;
   --p-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* Raw colour. Each hue outside the brand has one step for a dark page and one for a light page.
-     Navy is the brand's own hue, so it has the lighter steps the globe draws its sea with. */
+  /* Raw colour. Each hue outside the brand has one step for a dark page and one for a light page. */
   --p-white: #ffffff;
   --p-black: #000000;
   --p-neutral-50: #f5f5f5;
@@ -134,17 +133,17 @@
   --p-neutral-700: #313131;
   --p-neutral-800: #1f1f1f;
   --p-neutral-900: #181818;
-  --p-navy-300: #9fb3c8;
-  --p-navy-500: #4a6a8c;
-  --p-navy-700: #0e2e54;
-  --p-navy-900: #0a213d;
-  --p-green-100: #dcefe6;
-  --p-green-300: #a6dcc5;
-  --p-green-500: #49a782;
-  --p-green-700: #2b7357;
-  --p-green-900: #173a2d;
-  --p-blue-400: #6f9ff0;
-  --p-blue-700: #2c62c2;
+
+  /* The brand is the logo's two colours, navy and green. Every other blue and green is one of them mixed by one rule,
+     a tint toward white or a shade toward black by 32% or 64%, and only the steps a role reads exist. */
+  --p-navy: #032a57;
+  --p-navy-tint-64: color-mix(in srgb, var(--p-navy), var(--p-white) 64%);
+  --p-navy-tint-32: color-mix(in srgb, var(--p-navy), var(--p-white) 32%);
+  --p-navy-shade-32: color-mix(in srgb, var(--p-navy), var(--p-black) 32%);
+  --p-green: #38ad7f;
+  --p-green-tint-64: color-mix(in srgb, var(--p-green), var(--p-white) 64%);
+  --p-green-shade-32: color-mix(in srgb, var(--p-green), var(--p-black) 32%);
+  --p-green-shade-64: color-mix(in srgb, var(--p-green), var(--p-black) 64%);
   --p-purple-400: #b38cf0;
   --p-purple-700: #7446c2;
   --p-red-400: #e8736b;

@@ -42,13 +42,45 @@ function resolve(vars, value, seen = new Set()) {
   });
 }
 
-// A colour as sRGB channels from 0 to 1 and an alpha. A tint is color-mix(in srgb, <colour> <alpha>, transparent).
+// A colour as sRGB channels from 0 to 1 and an alpha. It is a hex colour, or a color-mix in srgb of two colours, either
+// of which may be transparent or itself a color-mix. A brand step mixes two colours, and a tint mixes one with transparent.
+function split(args) {
+  const parts = [];
+  let depth = 0, start = 0;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "(") depth++;
+    else if (args[i] === ")") depth--;
+    else if (args[i] === "," && depth === 0) { parts.push(args.slice(start, i).trim()); start = i + 1; }
+  }
+  parts.push(args.slice(start).trim());
+  return parts;
+}
+
 function rgba(value) {
-  const mix = /^color-mix\(in srgb, (#[0-9a-f]{6}) ([\d.]+)%, transparent\)$/i.exec(value.trim());
-  const [hex, alpha] = mix ? [mix[1], Number(mix[2]) / 100] : [value.trim(), 1];
-  const h = hex.replace("#", "");
+  const v = value.trim();
+  if (v === "transparent") return { channels: [0, 0, 0], alpha: 0 };
+  const fn = /^color-mix\(([\s\S]*)\)$/i.exec(v);
+  if (fn) {
+    const [space, ...colours] = split(fn[1]);
+    if (space !== "in srgb" || colours.length !== 2) throw new Error(`not a colour: ${value}`);
+    const parsed = colours.map((c) => {
+      const m = /^([\s\S]*?)\s+([\d.]+)%$/.exec(c);
+      return m ? { colour: rgba(m[1]), share: Number(m[2]) / 100 } : { colour: rgba(c), share: undefined };
+    });
+    const [a, b] = parsed;
+    if (a.share === undefined && b.share === undefined) a.share = b.share = 0.5;
+    else if (a.share === undefined) a.share = 1 - b.share;
+    else if (b.share === undefined) b.share = 1 - a.share;
+    // Premultiplied mixing, as the browser does it.
+    const alpha = a.colour.alpha * a.share + b.colour.alpha * b.share;
+    const channels = [0, 1, 2].map((i) =>
+      alpha === 0 ? 0 : (a.colour.channels[i] * a.colour.alpha * a.share + b.colour.channels[i] * b.colour.alpha * b.share) / alpha,
+    );
+    return { channels, alpha };
+  }
+  const h = v.replace("#", "");
   if (!/^[0-9a-f]{6}$/i.test(h)) throw new Error(`not a colour: ${value}`);
-  return { channels: [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255), alpha };
+  return { channels: [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255), alpha: 1 };
 }
 
 // A tint laid over a solid colour.
