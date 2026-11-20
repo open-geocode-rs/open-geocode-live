@@ -55,8 +55,10 @@ export default defineConfig({
         alt: "OpenGeocode",
         replacesTitle: true,
       },
-      favicon: "/favicon.png",
+      // The SVG follows the browser's theme. The PNG is for browsers that cannot show an SVG icon.
+      favicon: "/favicon.svg",
       head: [
+        { tag: "link", attrs: { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "96x96" } },
         { tag: "link", attrs: { rel: "apple-touch-icon", href: "/apple-touch-icon.png" } },
         // Starlight emits twitter:card summary_large_image but no image, so previews came up blank.
         { tag: "meta", attrs: { property: "og:image", content: `${site}/og.png` } },
