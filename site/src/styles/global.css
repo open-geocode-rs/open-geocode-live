@@ -36,8 +36,7 @@ body {
 }
 
 .prose :not(pre) > code {
-  background-color: var(--color-surface);
-  border: var(--border) solid var(--color-border);
+  background-color: var(--color-code);
   border-radius: var(--radius-sm);
   font: var(--type-code-inline);
   padding: 0 var(--space-1);

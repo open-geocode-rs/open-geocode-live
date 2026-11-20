@@ -69,7 +69,7 @@ const operations: ApiOperation[] = allOperations().filter((op) => !tag || op.tag
           {operations.map((op) => (
             <li class="operation">
               <a class="operation-link" href={op.href}>
-                <Badge variant={op.method}>{op.method.toUpperCase()}</Badge>
+                <Badge variant={op.method} size="sm">{op.method.toUpperCase()}</Badge>
                 <span class="operation-path">{op.path}</span>
               </a>
             </li>

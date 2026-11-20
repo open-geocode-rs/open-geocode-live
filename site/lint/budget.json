@@ -22,15 +22,15 @@
     "p-family": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-font-(sans|display|mono)$", "count": 3 },
     "p-colour": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-(white|black|(neutral|purple|red|amber)-[0-9]+|(navy|green)(-(tint|shade)-[0-9]+)?)$", "count": 26 },
     "p-alpha": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-alpha-[0-9]+$", "count": 5 },
-    "color": { "kind": "role", "file": "roles.css", "pattern": "^--color-[a-z-]+$", "count": 27 },
-    "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 18 },
+    "color": { "kind": "role", "file": "roles.css", "pattern": "^--color-[a-z-]+$", "count": 28 },
+    "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 19 },
     "tracking": { "kind": "role", "file": "roles.css", "pattern": "^--tracking-[a-z]+$", "count": 5 },
     "codeblock": { "kind": "component", "file": "components.css", "pattern": "^--codeblock-[a-z-]+$", "count": 5, "reader": "src/components/ui/CodeBlock.astro" },
     "map": { "kind": "component", "file": "components.css", "pattern": "^--map-[a-z-]+$", "count": 8, "reader": "src/components/landing/StreetMap.astro" },
     "globe": { "kind": "component", "file": "components.css", "pattern": "^--globe-[a-z-]+$", "count": 7, "reader": "src/components/landing/DitherGlobe.astro" },
     "terminal": { "kind": "component", "file": "components.css", "pattern": "^--terminal-[a-z-]+$", "count": 10, "reader": "src/components/landing/Walkthrough.astro" },
     "syntax": { "kind": "component", "file": "components.css", "pattern": "^--syntax-[a-z-]+$", "count": 7, "reader": "src/components/ui/CodeBlock.astro" },
-    "method": { "kind": "component", "file": "components.css", "pattern": "^--method-[a-z]+-(ink|fill)$", "count": 8, "reader": "src/components/ui/Badge.astro" },
+    "method": { "kind": "component", "file": "components.css", "pattern": "^--method-[a-z]+-(ink|fill|edge)$", "count": 12, "reader": "src/components/ui/Badge.astro" },
     "button-raised": { "kind": "component", "file": "components.css", "pattern": "^--button-raised-[a-z-]+$", "count": 11, "reader": "src/components/ui/Button.astro" },
     "host": { "kind": "host", "file": "host.css", "pattern": "^--sl-[a-z0-9-]+$", "count": 41 }
   },
@@ -71,6 +71,7 @@
     "--tracking-snug": "src/pages/index.astro",
     "--tracking-wide": "src/components/ui/Button.astro",
     "--tracking-display": "src/components/landing/AddressMorph.astro",
-    "--type-code-sm": "src/components/ui/CodeBlock.astro"
+    "--type-label-code": "src/components/ui/Badge.astro",
+    "--color-code": "src/styles/global.css"
   }
 }

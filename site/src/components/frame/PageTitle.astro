@@ -38,11 +38,11 @@ const operation = operationFor(route.id);
 {
   operation && (
     <p class="endpoint">
-      <Badge variant={operation.method}>{operation.method.toUpperCase()}</Badge>
+      <Badge variant={operation.method} size="sm">{operation.method.toUpperCase()}</Badge>
       <code class="endpoint-path">{operation.path}</code>
       {operation.alias && (
         <span class="endpoint-alias">
-          or <Badge variant={operation.alias}>{operation.alias.toUpperCase()}</Badge>
+          or <Badge variant={operation.alias} size="sm">{operation.alias.toUpperCase()}</Badge>
         </span>
       )}
     </p>

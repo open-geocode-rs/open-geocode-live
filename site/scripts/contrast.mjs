@@ -120,6 +120,7 @@ const marks = ["--color-focus"];
 // Each badge's text and the fill behind it, as Badge.astro pairs them.
 const badges = [
   ["neutral", "--color-foreground-secondary", "--color-control-hover"],
+  ["code", "--color-foreground", "--color-control-hover"],
   ["accent", "--color-accent-strong", "--color-accent-subtle"],
   ["success", "--color-success", "--color-success-subtle"],
   ["warning", "--color-warning", "--color-warning-subtle"],

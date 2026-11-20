@@ -43,7 +43,7 @@ const { blocks, density } = Astro.props;
           return (
             <p class="tags">
               <span class="type">{block.type.text}</span>
-              {block.type.format && <Badge>format: {block.type.format}</Badge>}
+              {block.type.format && <Badge variant="code" size="sm">format: {block.type.format}</Badge>}
             </p>
           );
         case "tags":
@@ -51,7 +51,7 @@ const { blocks, density } = Astro.props;
             <p class="tags">
               {block.label && <span class="tags-label">{block.label}</span>}
               {block.tags.map((tag) => (
-                <Badge>{tag}</Badge>
+                <Badge variant="code" size="sm">{tag}</Badge>
               ))}
             </p>
           );
@@ -63,7 +63,7 @@ const { blocks, density } = Astro.props;
               {block.tags.length > 0 && (
                 <p class="tags">
                   {block.tags.map((tag) => (
-                    <Badge>{tag}</Badge>
+                    <Badge variant="code" size="sm">{tag}</Badge>
                   ))}
                 </p>
               )}
@@ -74,7 +74,7 @@ const { blocks, density } = Astro.props;
                       <strong>{field.deprecated ? <s>{field.name}</s> : field.name}</strong>{field.required ? ":" : ": optional"}
                     </span>
                     {field.type && <span class="type">{field.type.text}</span>}
-                    {field.type?.format && <Badge>format: {field.type.format}</Badge>}
+                    {field.type?.format && <Badge variant="code" size="sm">format: {field.type.format}</Badge>}
                     {field.deprecated && <Badge variant="warning">deprecated</Badge>}
                   </p>
                   {field.blocks.length > 0 && <Astro.self blocks={field.blocks} density="field" />}

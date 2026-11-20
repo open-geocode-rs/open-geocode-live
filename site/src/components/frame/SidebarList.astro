@@ -29,7 +29,7 @@ const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split
           <a class="nav-link" href={entry.href} aria-current={entry.isCurrent ? "page" : undefined}>
             {methodOf(entry) ? (
               <>
-                <Badge variant={methodOf(entry)} />
+                <Badge variant={methodOf(entry)} size="sm" />
                 <span class="sr-only">{entry.badge?.text}</span>
               </>
             ) : (

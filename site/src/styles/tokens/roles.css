@@ -18,6 +18,7 @@
   --color-control: color-mix(in srgb, var(--color-foreground) var(--p-alpha-4), transparent);
   --color-control-hover: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
   --color-selected: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
+  --color-code: color-mix(in srgb, var(--color-foreground) var(--p-alpha-16), transparent);
   --color-solid: var(--p-white);
   --color-solid-hover: var(--p-neutral-200);
   --color-on-solid: var(--p-neutral-900);
@@ -50,6 +51,7 @@
   --color-control: color-mix(in srgb, var(--color-foreground) var(--p-alpha-4), transparent);
   --color-control-hover: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
   --color-selected: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
+  --color-code: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
   --color-solid: var(--p-neutral-900);
   --color-solid-hover: var(--p-neutral-700);
   --color-on-solid: var(--p-white);
@@ -86,6 +88,7 @@
   --type-ui-lg-strong: var(--p-weight-semibold) var(--p-font-size-16) / var(--p-leading-ui) var(--p-font-sans);
   --type-caption: var(--p-weight-regular) var(--p-font-size-12) / var(--p-leading-ui) var(--p-font-sans);
   --type-label: var(--p-weight-medium) var(--p-font-size-12) / var(--p-leading-1) var(--p-font-sans);
+  --type-label-code: var(--p-weight-medium) var(--p-font-size-12) / var(--p-leading-1) var(--p-font-mono);
   --type-code: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-mono);
   /* A one-line command, set small so a long one fits a narrow column. */
   --type-code-sm: var(--p-weight-regular) var(--p-font-size-12) / var(--p-leading-ui) var(--p-font-mono);
