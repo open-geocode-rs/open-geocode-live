@@ -1,0 +1,94 @@
+---
+import Icon, { type IconName } from "./Icon.astro";
+
+export const badgeVariants = ["neutral", "accent", "success", "warning", "danger", "get", "post", "query", "delete"] as const;
+export const badgeSizes = ["sm", "md"] as const;
+export const badgeStates = ["rest"] as const;
+
+export interface Props {
+  variant?: (typeof badgeVariants)[number];
+  size?: (typeof badgeSizes)[number];
+}
+
+const { variant = "neutral", size = "md" } = Astro.props;
+
+// Each HTTP method carries the arrow it has across the API reference.
+const methodIcons: Partial<Record<(typeof badgeVariants)[number], IconName>> = {
+  get: "arrow-down-left",
+  post: "arrow-up-right",
+  query: "search",
+  delete: "x",
+};
+const icon = methodIcons[variant];
+---
+
+<span class="badge" data-variant={variant} data-size={size}>
+  {icon && <Icon name={icon} size="sm" />}
+  <slot />
+</span>
+
+<style>
+  .badge {
+    align-items: center;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    font: var(--type-label);
+    gap: var(--space-1);
+    white-space: nowrap;
+  }
+
+  .badge[data-size="sm"] {
+    block-size: var(--icon-lg);
+    padding-inline: var(--space-1-5);
+  }
+
+  .badge[data-size="md"] {
+    block-size: var(--control-sm);
+    padding-inline: var(--space-2);
+  }
+
+  .badge[data-variant="neutral"] {
+    background-color: var(--color-control-hover);
+    color: var(--color-foreground-secondary);
+  }
+
+  .badge[data-variant="accent"] {
+    background-color: var(--color-accent-subtle);
+    color: var(--color-accent);
+  }
+
+  .badge[data-variant="success"] {
+    background-color: var(--color-success-subtle);
+    color: var(--color-success);
+  }
+
+  .badge[data-variant="warning"] {
+    background-color: var(--color-warning-subtle);
+    color: var(--color-warning);
+  }
+
+  .badge[data-variant="danger"] {
+    background-color: var(--color-danger-subtle);
+    color: var(--color-danger);
+  }
+
+  .badge[data-variant="get"] {
+    background-color: var(--method-get-fill);
+    color: var(--method-get-ink);
+  }
+
+  .badge[data-variant="post"] {
+    background-color: var(--method-post-fill);
+    color: var(--method-post-ink);
+  }
+
+  .badge[data-variant="query"] {
+    background-color: var(--method-query-fill);
+    color: var(--method-query-ink);
+  }
+
+  .badge[data-variant="delete"] {
+    background-color: var(--method-delete-fill);
+    color: var(--method-delete-ink);
+  }
+</style>

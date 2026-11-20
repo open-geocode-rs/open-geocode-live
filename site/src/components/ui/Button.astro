@@ -1,0 +1,226 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Icon, { type IconName } from "./Icon.astro";
+
+export const buttonVariants = ["solid", "outline", "ghost", "raised"] as const;
+export const buttonSizes = ["sm", "md", "lg"] as const;
+export const buttonStates = ["rest", "hover", "focus", "pressed", "disabled", "busy"] as const;
+
+type Base = Omit<HTMLAttributes<"button">, "class" | "class:list" | "style" | "aria-label"> & {
+  variant?: (typeof buttonVariants)[number];
+  size?: (typeof buttonSizes)[number];
+  /** Holds a state without a pointer, for the system page. */
+  state?: (typeof buttonStates)[number];
+  busy?: boolean;
+  icon?: IconName;
+};
+
+export type Props =
+  | (Base & { iconOnly?: false; label?: string })
+  | (Base & { iconOnly: true; icon: IconName; label: string });
+
+const {
+  variant = "solid",
+  size = "md",
+  state = "rest",
+  busy = false,
+  icon,
+  iconOnly = false,
+  label,
+  type = "button",
+  disabled,
+  ...attrs
+} = Astro.props;
+
+// No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
+const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
+const iconSize = size === "lg" ? "md" : size === "sm" ? "sm" : "md";
+---
+
+<button
+  {...own(attrs)}
+  class="button"
+  type={type}
+  data-variant={variant}
+  data-size={size}
+  data-icon-only={iconOnly ? "" : undefined}
+  data-state={state === "rest" ? undefined : state}
+  disabled={disabled || state === "disabled"}
+  aria-busy={busy || state === "busy" ? "true" : undefined}
+  aria-label={iconOnly ? label : undefined}
+>
+  <span class="button-spinner"><Icon name="spinner" size={iconSize} /></span>
+  {
+    icon && (
+      <span class="button-icon">
+        <Icon name={icon} size={iconSize} />
+      </span>
+    )
+  }
+  {!iconOnly && <slot />}
+</button>
+
+<style>
+  .button {
+    align-items: center;
+    background-color: transparent;
+    border: var(--border) solid transparent;
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+    cursor: pointer;
+    display: inline-flex;
+    font: var(--type-ui-strong);
+    gap: var(--space-2);
+    justify-content: center;
+    padding-block: 0;
+    transition-duration: var(--duration-hover);
+    transition-property: background-color, border-color, color;
+    transition-timing-function: var(--ease-hover);
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .button-icon {
+    display: inline-flex;
+  }
+
+  .button-spinner {
+    display: none;
+  }
+
+  .button[aria-busy="true"] .button-spinner,
+  .button[data-state="busy"] .button-spinner {
+    display: inline-flex;
+  }
+
+  .button[aria-busy="true"] .button-icon,
+  .button[data-state="busy"] .button-icon {
+    display: none;
+  }
+
+  .button[data-size="sm"] {
+    block-size: var(--control-sm);
+    padding-inline: var(--space-2);
+  }
+
+  .button[data-size="md"] {
+    block-size: var(--control-md);
+    padding-inline: var(--space-3);
+  }
+
+  .button[data-size="lg"] {
+    block-size: var(--control-lg);
+    padding-inline: var(--space-5);
+  }
+
+  .button[data-icon-only][data-size="sm"] {
+    inline-size: var(--control-sm);
+    padding-inline: 0;
+  }
+
+  .button[data-icon-only][data-size="md"] {
+    inline-size: var(--control-md);
+    padding-inline: 0;
+  }
+
+  .button[data-icon-only][data-size="lg"] {
+    inline-size: var(--control-lg);
+    padding-inline: 0;
+  }
+
+  .button[data-variant="solid"] {
+    background-color: var(--color-solid);
+    color: var(--color-on-solid);
+  }
+
+  .button[data-variant="outline"] {
+    background-color: var(--color-control);
+    border-color: var(--color-border-strong);
+  }
+
+  .button[data-variant="raised"] {
+    background-color: var(--button-raised-cap);
+    border: var(--border-strong) solid var(--button-raised-edge);
+    border-radius: var(--radius-full);
+    box-shadow: var(--button-raised-shadow);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .button[data-variant="solid"]:hover {
+      background-color: var(--color-solid-hover);
+    }
+
+    .button[data-variant="outline"]:hover,
+    .button[data-variant="ghost"]:hover {
+      background-color: var(--color-control-hover);
+    }
+
+    .button[data-variant="raised"]:hover {
+      background-color: var(--button-raised-cap-hover);
+    }
+  }
+
+  .button[data-variant="solid"][data-state="hover"] {
+    background-color: var(--color-solid-hover);
+  }
+
+  .button[data-variant="outline"][data-state="hover"],
+  .button[data-variant="ghost"][data-state="hover"] {
+    background-color: var(--color-control-hover);
+  }
+
+  .button[data-variant="raised"][data-state="hover"] {
+    background-color: var(--button-raised-cap-hover);
+  }
+
+  .button:focus-visible,
+  .button[data-state="focus"] {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .button:disabled,
+  .button[data-state="disabled"] {
+    cursor: not-allowed;
+    opacity: var(--opacity-disabled);
+  }
+
+  .button[aria-busy="true"],
+  .button[data-state="busy"] {
+    cursor: progress;
+    opacity: var(--opacity-busy);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .button {
+      transition:
+        background-color var(--duration-hover) var(--ease-hover),
+        border-color var(--duration-hover) var(--ease-hover),
+        color var(--duration-hover) var(--ease-hover),
+        box-shadow var(--duration-press) var(--ease-out),
+        transform var(--duration-press) var(--ease-out),
+        translate var(--duration-press) var(--ease-out);
+    }
+
+    .button-spinner {
+      animation: button-spin var(--duration-panel) linear infinite;
+    }
+
+    @keyframes button-spin {
+      to {
+        rotate: 180deg;
+      }
+    }
+
+    .button:active,
+    .button[data-state="pressed"] {
+      transform: scale(var(--scale-press));
+    }
+
+    .button[data-variant="raised"]:active,
+    .button[data-variant="raised"][data-state="pressed"] {
+      box-shadow: var(--button-raised-shadow-pressed);
+      translate: 0 var(--space-1);
+    }
+  }
+</style>

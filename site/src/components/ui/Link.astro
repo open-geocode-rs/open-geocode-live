@@ -1,0 +1,77 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Icon from "./Icon.astro";
+
+export const linkVariants = ["inline", "standalone"] as const;
+export const linkSizes = ["inherit"] as const;
+export const linkStates = ["rest", "hover", "focus"] as const;
+
+export type Props = Omit<HTMLAttributes<"a">, "class" | "class:list" | "style"> & {
+  href: string;
+  variant?: (typeof linkVariants)[number];
+  /** Holds a state without a pointer, for the system page. */
+  state?: (typeof linkStates)[number];
+};
+
+const { variant = "inline", state = "rest", href, ...attrs } = Astro.props;
+// No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
+const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
+const external = /^https?:\/\//.test(href);
+---
+
+<a
+  {...own(attrs)}
+  class="link"
+  href={href}
+  data-variant={variant}
+  data-state={state === "rest" ? undefined : state}
+  rel={external ? "noopener" : undefined}
+><slot />{variant === "standalone" && <Icon name={external ? "arrow-up-right" : "arrow-right"} size="sm" />}</a>
+
+<style>
+  .link {
+    border-radius: var(--radius-sm);
+    color: var(--color-accent);
+    text-decoration-color: currentColor;
+    text-decoration-thickness: var(--border);
+    text-underline-offset: var(--space-0-5);
+    transition-duration: var(--duration-hover);
+    transition-property: color, text-decoration-color;
+    transition-timing-function: var(--ease-hover);
+  }
+
+  .link[data-variant="inline"] {
+    text-decoration-line: underline;
+  }
+
+  .link[data-variant="standalone"] {
+    align-items: center;
+    display: inline-flex;
+    gap: var(--space-1);
+    text-decoration-line: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .link:hover {
+      color: var(--color-accent-strong);
+    }
+
+    .link[data-variant="standalone"]:hover {
+      text-decoration-line: underline;
+    }
+  }
+
+  .link[data-state="hover"] {
+    color: var(--color-accent-strong);
+  }
+
+  .link[data-variant="standalone"][data-state="hover"] {
+    text-decoration-line: underline;
+  }
+
+  .link:focus-visible,
+  .link[data-state="focus"] {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+</style>

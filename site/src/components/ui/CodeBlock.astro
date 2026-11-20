@@ -1,0 +1,196 @@
+---
+import type { ComponentProps } from "astro/types";
+import { Code } from "astro:components";
+import Button from "./Button.astro";
+import Icon from "./Icon.astro";
+
+export const codeBlockVariants = ["plain", "titled"] as const;
+export const codeBlockSizes = ["default"] as const;
+export const codeBlockStates = ["rest", "copied"] as const;
+
+type CodeProps = ComponentProps<typeof Code>;
+type Transformer = NonNullable<CodeProps["transformers"]>[number];
+
+type Shared = {
+  code: string;
+  lang?: Extract<CodeProps["lang"], string>;
+  /** Holds a state without a pointer, for the system page. */
+  state?: (typeof codeBlockStates)[number];
+};
+
+export type Props = (Shared & { variant?: "plain" }) | (Shared & { variant: "titled"; title: string });
+
+const { code, lang = "plaintext", state = "rest", variant = "plain" } = Astro.props;
+const title = Astro.props.variant === "titled" ? Astro.props.title : undefined;
+
+// The highlighter names each token's colour by a variable. Turn that into a data attribute our own style reads,
+// and drop the inline styles, so the block's look lives in this file and nowhere else.
+const syntax: Record<string, string> = {
+  "token-keyword": "keyword",
+  "token-string": "string",
+  "token-string-expression": "string",
+  "token-constant": "constant",
+  "token-function": "function",
+  "token-link": "function",
+  "token-parameter": "parameter",
+  "token-comment": "comment",
+  "token-punctuation": "punctuation",
+};
+const owned: Transformer = {
+  pre(node) {
+    node.properties = { class: "codeblock-pre", tabindex: "0", "data-language": lang };
+  },
+  code(node) {
+    node.properties = { class: "codeblock-code" };
+  },
+  line(node) {
+    node.properties = { class: "codeblock-line" };
+  },
+  span(node) {
+    const kind = /--astro-code-([\w-]+)/.exec(String(node.properties.style ?? ""))?.[1];
+    node.properties = kind && syntax[kind] ? { "data-syntax": syntax[kind] } : {};
+  },
+};
+---
+
+<div class="codeblock" data-codeblock data-variant={variant} data-state={state === "copied" ? "copied" : undefined}>
+  {
+    title && (
+      <div class="codeblock-bar">
+        <span class="codeblock-title">{title}</span>
+      </div>
+    )
+  }
+  <div class="codeblock-actions">
+    <span class="codeblock-status"><Icon name="check" size="sm" /><span role="status" data-status>{state === "copied" ? "Copied" : ""}</span></span>
+    <Button variant="ghost" size="sm" iconOnly icon="copy" label="Copy code" data-copy />
+  </div>
+  <div class="codeblock-body">
+    <Code code={code} lang={lang} theme="css-variables" wrap={null} transformers={[owned]} />
+  </div>
+  <template data-code>{code}</template>
+</div>
+
+<script>
+  for (const block of document.querySelectorAll<HTMLElement>("[data-codeblock]")) {
+    const button = block.querySelector<HTMLButtonElement>("[data-copy]");
+    const source = block.querySelector<HTMLTemplateElement>("template[data-code]");
+    const status = block.querySelector<HTMLElement>("[data-status]");
+    if (!button || !source || !status) continue;
+    // The message stays until the reader moves on from the button.
+    const reset = () => {
+      block.removeAttribute("data-state");
+      status.textContent = "";
+    };
+    button.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(source.content.textContent ?? "");
+      block.dataset.state = "copied";
+      status.textContent = "Copied";
+    });
+    button.addEventListener("blur", reset);
+    block.addEventListener("pointerleave", reset);
+  }
+</script>
+
+<style>
+  .codeblock {
+    background-color: var(--color-surface);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    color: var(--color-foreground);
+    display: grid;
+    grid-template-areas: "bar actions" "body body";
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .codeblock[data-variant="plain"] {
+    grid-template-areas: "body actions" "body .";
+  }
+
+  .codeblock-bar {
+    align-items: center;
+    block-size: var(--control-lg);
+    border-block-end: var(--border) solid var(--color-border);
+    display: flex;
+    grid-area: bar;
+    padding-inline: var(--space-4);
+  }
+
+  .codeblock-title {
+    color: var(--color-foreground-secondary);
+    font: var(--type-caption);
+  }
+
+  .codeblock-actions {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+    grid-area: actions;
+    padding-inline: var(--space-2);
+  }
+
+  .codeblock[data-variant="titled"] .codeblock-actions {
+    border-block-end: var(--border) solid var(--color-border);
+  }
+
+  .codeblock[data-variant="plain"] .codeblock-actions {
+    block-size: var(--control-lg);
+  }
+
+  .codeblock-status {
+    align-items: center;
+    color: var(--color-success);
+    display: inline-flex;
+    font: var(--type-caption);
+    gap: var(--space-1);
+    visibility: hidden;
+  }
+
+  .codeblock[data-state="copied"] .codeblock-status {
+    visibility: visible;
+  }
+
+  .codeblock-body {
+    grid-area: body;
+    min-inline-size: 0;
+  }
+
+  .codeblock :global(.codeblock-pre) {
+    font: var(--type-code);
+    margin: 0;
+    overflow-x: auto;
+    padding: var(--space-4);
+  }
+
+  .codeblock :global(.codeblock-code) {
+    font: inherit;
+  }
+
+  .codeblock :global([data-syntax="keyword"]) {
+    color: var(--syntax-keyword);
+  }
+
+  .codeblock :global([data-syntax="string"]) {
+    color: var(--syntax-string);
+  }
+
+  .codeblock :global([data-syntax="constant"]) {
+    color: var(--syntax-constant);
+  }
+
+  .codeblock :global([data-syntax="function"]) {
+    color: var(--syntax-function);
+  }
+
+  .codeblock :global([data-syntax="parameter"]) {
+    color: var(--syntax-parameter);
+  }
+
+  .codeblock :global([data-syntax="comment"]) {
+    color: var(--syntax-comment);
+  }
+
+  .codeblock :global([data-syntax="punctuation"]) {
+    color: var(--syntax-punctuation);
+  }
+</style>

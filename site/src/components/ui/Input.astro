@@ -1,0 +1,112 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+export const inputVariants = ["text", "textarea"] as const;
+export const inputSizes = ["md", "lg"] as const;
+export const inputStates = ["rest", "hover", "focus", "disabled", "invalid"] as const;
+
+type Shared = {
+  size?: (typeof inputSizes)[number];
+  /** Holds a state without a pointer, for the system page. */
+  state?: (typeof inputStates)[number];
+  invalid?: boolean;
+};
+
+type Omitted = "class" | "class:list" | "style" | "size";
+type TextProps = Omit<HTMLAttributes<"input">, Omitted> & Shared & { variant?: "text" };
+type TextareaProps = Omit<HTMLAttributes<"textarea">, Omitted> & Shared & { variant: "textarea"; value?: string };
+
+export type Props = TextProps | TextareaProps;
+
+const props = Astro.props;
+const { size = "md", state = "rest", invalid = false } = props;
+const shared = {
+  "data-size": size,
+  "data-state": state === "rest" ? undefined : state,
+  "aria-invalid": invalid || state === "invalid" ? ("true" as const) : undefined,
+  disabled: props.disabled || state === "disabled",
+};
+
+// No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
+const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
+
+function textareaAttrs({ variant, size, state, invalid, disabled, value, ...rest }: TextareaProps) {
+  return { attrs: own(rest), value };
+}
+
+function textAttrs({ variant, size, state, invalid, disabled, ...rest }: TextProps) {
+  return own(rest);
+}
+---
+
+{
+  props.variant === "textarea" ? (
+    <textarea {...textareaAttrs(props).attrs} {...shared} class="input" data-variant="textarea">{textareaAttrs(props).value}</textarea>
+  ) : (
+    <input type="text" {...textAttrs(props)} {...shared} class="input" data-variant="text" />
+  )
+}
+
+<style>
+  .input {
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    box-sizing: border-box;
+    color: var(--color-foreground);
+    font: var(--type-ui);
+    inline-size: 100%;
+    padding-inline: var(--space-3);
+    transition-duration: var(--duration-hover);
+    transition-property: border-color, background-color;
+    transition-timing-function: var(--ease-hover);
+  }
+
+  .input::placeholder {
+    color: var(--color-foreground-muted);
+  }
+
+  .input[data-variant="text"][data-size="md"] {
+    block-size: var(--control-md);
+  }
+
+  .input[data-variant="text"][data-size="lg"] {
+    block-size: var(--control-lg);
+  }
+
+  .input[data-variant="textarea"] {
+    padding-block: var(--space-2);
+    resize: vertical;
+  }
+
+  .input[data-variant="textarea"][data-size="lg"] {
+    padding-block: var(--space-3);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .input:hover {
+      border-color: var(--color-foreground-muted);
+    }
+  }
+
+  .input[data-state="hover"] {
+    border-color: var(--color-foreground-muted);
+  }
+
+  .input:focus-visible,
+  .input[data-state="focus"] {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .input[aria-invalid="true"],
+  .input[data-state="invalid"] {
+    border-color: var(--color-danger);
+  }
+
+  .input:disabled,
+  .input[data-state="disabled"] {
+    cursor: not-allowed;
+    opacity: var(--opacity-disabled);
+  }
+</style>
