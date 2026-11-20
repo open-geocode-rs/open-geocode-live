@@ -172,6 +172,13 @@ const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(
       }
       {
         codeBlockStates.map((state) => (
+          <Cell component="CodeBlock" variant="terminal" size="default" state={state} width="wider">
+            <CodeBlock variant="terminal" code={shell} lang="shell" state={state} />
+          </Cell>
+        ))
+      }
+      {
+        codeBlockStates.map((state) => (
           <Cell component="CodeBlock" variant="command" size="default" state={state} width="wider">
             <CodeBlock variant="command" code={command} lang="shell" state={state} />
           </Cell>

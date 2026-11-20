@@ -44,6 +44,10 @@
 }
 
 :root {
+  /* codeblock: the copy feedback on a code block, a filled tag in the brand's green. */
+  --codeblock-feedback-fill: var(--p-green-shade-32);
+  --codeblock-feedback-ink: var(--p-white);
+
   /* globe: the dithered globe, in the logo's own pair of navy and green. */
   --globe-land-shadow: var(--p-green-shade-32);
   --globe-land: var(--p-green);
@@ -74,6 +78,10 @@
 
 :root,
 [data-theme="dark"] {
+  /* codeblock: the bar of a terminal block and its three dots, on a dark page. */
+  --codeblock-bar: var(--p-neutral-700);
+  --codeblock-dot: var(--p-neutral-600);
+
   /* method: ink of the four HTTP method badges on a dark page. */
   --method-get-ink: var(--p-green);
   --method-post-ink: var(--p-navy-tint-64);
@@ -91,6 +99,10 @@
 }
 
 [data-theme="light"] {
+  /* codeblock: the bar of a terminal block and its three dots, on a light page. */
+  --codeblock-bar: var(--p-neutral-100);
+  --codeblock-dot: var(--p-neutral-200);
+
   /* method: ink of the four HTTP method badges on a light page. */
   --method-get-ink: var(--p-green-shade-32);
   --method-post-ink: var(--p-navy);

@@ -45,7 +45,7 @@ const table = {
   Menu: { variants: ["default", "outline"], sizes: ["sm", "md"], states: ["closed", "open", "item-hover", "item-focus", "item-current"] },
   Tabs: { variants: ["default"], sizes: ["md"], states: ["rest", "hover", "focus", "current"] },
   Card: { variants: ["plain", "framed"], sizes: ["default"], states: ["rest"] },
-  CodeBlock: { variants: ["plain", "titled", "command", "numbered"], sizes: ["default"], states: ["rest", "copied"] },
+  CodeBlock: { variants: ["plain", "terminal", "titled", "command", "numbered"], sizes: ["default"], states: ["rest", "copied"] },
   Icon: { variants: ["default"], sizes: ["sm", "md", "lg"], states: ["rest"] },
   Link: { variants: ["inline", "standalone"], sizes: ["inherit"], states: ["rest", "hover", "focus"] },
 };

@@ -2,9 +2,8 @@
 import type { ComponentProps } from "astro/types";
 import { Code } from "astro:components";
 import Button from "./Button.astro";
-import Icon from "./Icon.astro";
 
-export const codeBlockVariants = ["plain", "titled", "command", "numbered"] as const;
+export const codeBlockVariants = ["plain", "terminal", "titled", "command", "numbered"] as const;
 export const codeBlockSizes = ["default"] as const;
 export const codeBlockStates = ["rest", "copied"] as const;
 
@@ -18,9 +17,10 @@ type Shared = {
   state?: (typeof codeBlockStates)[number];
 };
 
-/** A command is one line of shell, set compactly after a prompt that is not copied with it. A numbered block numbers its
+/** A terminal block is shell set under a bar with three dots, so a reader sees at once that it is typed at a prompt.
+ * A command is one line of shell, set compactly after a prompt that is not copied with it. A numbered block numbers its
  * lines and has no box or copy button of its own, for a panel that frames it and owns the copy action. */
-export type Props = (Shared & { variant?: "plain" | "command" | "numbered" }) | (Shared & { variant: "titled"; title: string });
+export type Props = (Shared & { variant?: "plain" | "terminal" | "command" | "numbered" }) | (Shared & { variant: "titled"; title: string });
 
 const { code, lang = "plaintext", state = "rest", variant = "plain" } = Astro.props;
 const title = Astro.props.variant === "titled" ? Astro.props.title : undefined;
@@ -63,10 +63,25 @@ const owned: Transformer = {
       </div>
     )
   }
+  {
+    variant === "terminal" && (
+      <div class="codeblock-bar" aria-hidden="true">
+        <span class="codeblock-dot" />
+        <span class="codeblock-dot" />
+        <span class="codeblock-dot" />
+      </div>
+    )
+  }
   {variant === "command" && <span class="codeblock-prompt" aria-hidden="true">$</span>}
-  <div class="codeblock-actions">
-    <span class="codeblock-status"><Icon name="check" size="sm" /><span role="status" data-status>{state === "copied" ? "Copied" : ""}</span></span>
-    <Button variant="ghost" size="sm" iconOnly icon="copy" label="Copy code" data-copy />
+  <div class="codeblock-actions" data-codeblock-float={variant === "plain" || variant === "terminal" ? "" : undefined}>
+    <span class="codeblock-status" role="status" data-status>{state === "copied" ? "Copied!" : ""}</span>
+    {
+      variant === "command" ? (
+        <Button variant="ghost" size="sm" iconOnly icon="copy" label="Copy code" data-copy />
+      ) : (
+        <Button variant="outline" iconOnly icon="copy" label="Copy code" data-copy />
+      )
+    }
   </div>
   <div class="codeblock-body">
     <Code code={code} lang={lang} theme="css-variables" wrap={null} transformers={[owned]} />
@@ -87,7 +102,7 @@ const owned: Transformer = {
       await navigator.clipboard.writeText(source.content.textContent ?? "");
       cancel();
       block.dataset.state = "copied";
-      status.textContent = "Copied";
+      status.textContent = "Copied!";
       // The message stays for the feedback duration, then clears.
       cancel = after("--duration-feedback", () => {
         block.removeAttribute("data-state");
@@ -101,15 +116,37 @@ const owned: Transformer = {
   .codeblock {
     background-color: var(--color-surface);
     border: var(--border) solid var(--color-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     color: var(--color-foreground);
     display: grid;
     grid-template-areas: "bar actions" "body body";
     grid-template-columns: minmax(0, 1fr) auto;
+    position: relative;
   }
 
   .codeblock[data-variant="plain"] {
-    grid-template-areas: "body actions" "body .";
+    grid-template-areas: "body";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .codeblock[data-variant="terminal"] {
+    grid-template-areas: "bar" "body";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .codeblock[data-variant="terminal"] .codeblock-bar {
+    background-color: var(--codeblock-bar);
+    block-size: var(--space-8);
+    border-start-end-radius: var(--radius-md);
+    border-start-start-radius: var(--radius-md);
+    gap: var(--space-2);
+  }
+
+  .codeblock-dot {
+    background-color: var(--codeblock-dot);
+    block-size: var(--space-3);
+    border-radius: var(--radius-full);
+    inline-size: var(--space-3);
   }
 
   /* One line on the page's own background, with no visible edge, the prompt before it and the copy button inside it. */
@@ -183,20 +220,43 @@ const owned: Transformer = {
     border-block-end: var(--border) solid var(--color-border);
   }
 
-  .codeblock[data-variant="plain"] .codeblock-actions {
-    block-size: var(--control-lg);
+  /* On a plain or terminal block the copy button lies over the code's top end, and shows while the pointer or the
+     focus is in the block, or while it says the code was copied. */
+  [data-codeblock-float] {
+    background-color: var(--color-surface);
+    inset-block-start: var(--space-2);
+    inset-inline-end: 0;
+    opacity: 0;
+    position: absolute;
+    transition: opacity var(--duration-hover) var(--ease-hover);
+  }
+
+  .codeblock[data-variant="terminal"] [data-codeblock-float] {
+    inset-block-start: calc(var(--space-8) + var(--space-2));
+  }
+
+  .codeblock:focus-within [data-codeblock-float],
+  .codeblock[data-state="copied"] [data-codeblock-float] {
+    opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .codeblock:hover [data-codeblock-float] {
+      opacity: 1;
+    }
   }
 
   .codeblock[data-variant="command"] .codeblock-actions {
     padding-inline: var(--space-1-5);
   }
 
+  /* After a copy, a filled tag beside the button says so. */
   .codeblock-status {
-    align-items: center;
-    color: var(--color-success);
-    display: inline-flex;
-    font: var(--type-caption);
-    gap: var(--space-1);
+    background-color: var(--codeblock-feedback-fill);
+    border-radius: var(--radius-sm);
+    color: var(--codeblock-feedback-ink);
+    font: var(--type-ui);
+    padding: var(--space-0-5) var(--space-2);
     visibility: hidden;
   }
 

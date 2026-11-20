@@ -11,6 +11,8 @@ export interface Props {
 }
 
 const { nodes } = Astro.props;
+// Languages typed at a prompt. Their blocks take the terminal look.
+const shell = new Set(["sh", "bash", "shell", "shellscript", "zsh", "console", "shellsession", "powershell", "ps", "ps1", "bat", "batch", "cmd"]);
 ---
 
 {
@@ -39,7 +41,7 @@ const { nodes } = Astro.props;
           </Heading>
         );
       case "code":
-        return <CodeBlock code={node.code} lang={node.lang} />;
+        return <CodeBlock variant={shell.has(node.lang) ? "terminal" : "plain"} code={node.code} lang={node.lang} />;
       case "aside":
         return (
           <Aside tone={node.tone} title={node.title}>
