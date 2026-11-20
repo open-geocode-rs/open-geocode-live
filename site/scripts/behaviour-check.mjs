@@ -372,51 +372,39 @@ const cases = {
 
   // Landing.
 
-  /** The address and its coordinates occupy the headline itself through typing, search and clear. */
-  "address search keeps the headline and fits its text": async () => {
+  "address palette searches and pins coordinates to the headline": async () => {
     const problems = [];
     for (const viewport of [desktop.viewport, { width: 390, height: 844 }]) {
       const found = await visit("/", { viewport, reducedMotion: "reduce" }, async (tab) => {
         const notes = [];
-        const morph = tab.locator("og-address-morph");
-        const input = morph.getByRole("textbox");
-        const searchButton = morph.getByRole("button", { name: "Search" });
-        await tab.route("**/api/geocode?*", (route) =>
-          route.fulfill({
-            json: {
-              features: [{ geometry: { coordinates: [2.3313, 48.86914] }, properties: { label: "12 Rue de la Paix, Paris" } }],
-            },
-          }),
+        const headline = tab.locator("og-address-morph").getByRole("button", { name: "Search an address" });
+        const dialog = tab.getByRole("dialog", { name: "Address search" });
+        const input = dialog.getByRole("combobox");
+        /** @param {string} label */
+        const response = (label) => ({
+          features: [{ geometry: { coordinates: [2.3313, 48.86914] }, properties: { label } }],
+        });
+        await tab.route("**/api/autocomplete?*", (route) =>
+          route.fulfill({ json: response("12 Rue de la Paix") }),
         );
-        await tab.getByRole("button", { name: "Try it for free" }).click();
-        const geometry = () =>
-          input.evaluate((el) => {
-            const style = getComputedStyle(el);
-            const headline = el.closest("og-address-morph");
-            return { font: style.font, headlineFont: headline && getComputedStyle(headline).font, border: style.borderTopWidth, background: style.backgroundColor };
-          });
-        const box = async (/** @type {import("playwright").Locator} */ control) => {
-          const bounds = await control.boundingBox();
-          if (!bounds) throw new Error("address search control is not visible");
-          return bounds;
-        };
-        const style = await geometry();
-        if (style.font !== style.headlineFont || style.border !== "0px" || style.background !== "rgba(0, 0, 0, 0)") {
-          notes.push("the address field does not inherit the borderless headline styling");
-        }
-        const empty = await box(input);
-        await input.fill("Paris");
-        const short = await box(input);
-        await input.fill("12 Rue de la Paix, Paris");
-        const long = await box(input);
-        if (short.width >= empty.width || long.width <= short.width) notes.push("the field does not size to the text");
-        const button = await box(searchButton);
-        if (viewport.width === desktop.viewport.width && button.x < long.x + long.width) notes.push("Search overlaps the address");
-        if (viewport.width !== desktop.viewport.width && button.y < long.y + long.height) notes.push("Search is not below the mobile address");
+        await tab.route("**/api/geocode?*", (route) =>
+          route.fulfill({ json: response("12 Rue de la Paix, Paris") }),
+        );
+
+        await headline.press("Space");
+        await dialog.waitFor();
+        if (!(await input.evaluate((el) => el === document.activeElement))) notes.push("opening the palette did not focus the search field");
+        if ((await dialog.getByRole("option").count()) !== 0) notes.push("the empty palette shows a result");
+        await input.fill("12 Rue de la Paix");
+        await dialog.getByRole("option", { name: "12 Rue de la Paix", exact: true }).waitFor();
         await input.press("Enter");
-        await tab.locator("og-address-morph input[data-answer]").waitFor();
-        if ((await input.inputValue()) !== "48.86914, 2.33130") notes.push("the coordinates did not replace the address");
-        const hasFocusOutline = await input.evaluate((el) => {
+        await dialog.getByRole("option", { name: "12 Rue de la Paix, Paris", exact: true }).waitFor();
+        await input.press("Enter");
+        await dialog.waitFor({ state: "hidden" });
+        if ((await headline.innerText()).replace(/\s+/g, " ") !== "48.86914, 2.33130") {
+          notes.push("the selected coordinates did not replace the headline");
+        }
+        const hasFocusOutline = await headline.evaluate((el) => {
           const style = getComputedStyle(el);
           const card = el.closest(".og-card");
           return (
@@ -428,13 +416,7 @@ const cases = {
             style.outlineColor !== getComputedStyle(card).backgroundColor
           );
         });
-        if (!hasFocusOutline) notes.push("the coordinates have no visible keyboard focus indicator");
-        const clear = morph.getByRole("button", { name: "Clear esc" });
-        await clear.getByText("esc", { exact: true }).waitFor();
-        await clear.click();
-        if ((await input.inputValue()) !== "" || Math.abs((await box(input)).width - empty.width) > 1) {
-          notes.push("clearing did not restore the empty address field");
-        }
+        if (!hasFocusOutline) notes.push("the answered headline has no visible keyboard focus indicator");
         return notes;
       });
       problems.push(...found.map((problem) => `${viewport.width}px: ${problem}`));
@@ -448,12 +430,11 @@ const cases = {
       let searches = 0;
       await tab.route("**/api/geocode**", (route) => {
         searches++;
-        return route.fulfill({ json: [] });
+        return route.fulfill({ json: { features: [] } });
       });
       const send = (/** @type {string[]} */ events) =>
-        tab.locator("og-address-morph input").first().evaluate((input, list) => {
+        tab.getByRole("dialog", { name: "Address search" }).getByRole("combobox").evaluate((input, list) => {
           const el = /** @type {HTMLInputElement} */ (input);
-          el.readOnly = false;
           el.value = "東京都千代田区";
           for (const e of list) {
             if (e === "start") el.dispatchEvent(new CompositionEvent("compositionstart", { data: "" }));
@@ -465,11 +446,13 @@ const cases = {
         }, events);
       const problems = [];
       // Characters picked with the pointer: the composition ends with no key at all.
+      await tab.getByRole("button", { name: "Try it for free" }).click();
       await send(["start", "end", "enter"]);
       await tab.waitForTimeout(500);
       if (searches !== 1) problems.push(`after a composition ended by the pointer, the first Enter made ${searches} searches, expected 1`);
       await tab.reload({ waitUntil: "networkidle" });
       searches = 0;
+      await tab.getByRole("button", { name: "Search an address" }).press("Space");
       await send(["start", "end", "confirm"]);
       await tab.waitForTimeout(500);
       if (searches !== 0) problems.push(`the Enter that confirmed the characters made ${searches} searches, expected none`);

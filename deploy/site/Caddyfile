@@ -23,17 +23,30 @@ http://:8081 {
 	encode zstd gzip
 	import security
 
-	# The one API the site exposes: GET /api/geocode, with q alone and one result,
-	# answered by the runtime's /geocode. /api/search is its old name, kept so pages
-	# opened before the rename still work; remove it after 2026-11-16.
-	# Rebuilding the query drops every other parameter, and q is re-encoded, so it
-	# can't smuggle more in. Batch, reverse, other methods and other paths fall
-	# through to the static files and 404 (deploy/search/open-geocode-search.service).
-	@geocode {
+	# The landing palette only exposes GET autocomplete and forward geocoding.
+	# Rebuild the query so callers can supply only the search text.
+	@address {
 		method GET
-		path /api/geocode /api/search
+		path /api/geocode /api/autocomplete
 	}
-	handle @geocode {
+	handle @address {
+		# Cloudflare's Add visitor location headers transform supplies the coarse
+		# coordinates. This listener only receives Cloudflare Tunnel traffic.
+		@visitor_location {
+			header_regexp latitude CF-IPLatitude ^(-?(?:[0-8]?[0-9](?:\.[0-9]+)?|90(?:\.0+)?))$
+			header_regexp longitude CF-IPLongitude ^(-?(?:(?:1[0-7][0-9]|[0-9]?[0-9])(?:\.[0-9]+)?|180(?:\.0+)?))$
+		}
+		rewrite @visitor_location {path}?q={query.q}&limit=5&focus={http.regexp.longitude.1},{http.regexp.latitude.1}
+		rewrite * {path}?q={query.q}&limit=5
+		uri strip_prefix /api
+		reverse_proxy 127.0.0.1:8090
+	}
+
+	@legacy_search {
+		method GET
+		path /api/search
+	}
+	handle @legacy_search {
 		rewrite * /geocode?q={query.q}&limit=1
 		reverse_proxy 127.0.0.1:8090
 	}

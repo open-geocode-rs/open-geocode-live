@@ -46,7 +46,7 @@ const jsonLd = {
       image: card,
       applicationCategory: "DeveloperApplication",
       operatingSystem: "Linux, macOS, Windows",
-      license: "https://opensource.org/license/mit",
+      license: `${repo}/blob/main/LICENSE`,
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       publisher: { "@id": `${home}#org` },
       sameAs: [repo, "https://crates.io/crates/open-geocode"],
@@ -56,11 +56,21 @@ const jsonLd = {
 ---
 
 <!doctype html>
-<!-- The landing page is always light. -->
 <html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      (() => {
+        let choice;
+        try {
+          choice = localStorage.getItem("starlight-theme");
+        } catch {}
+        document.documentElement.dataset.theme = choice === "light" || choice === "dark"
+          ? choice
+          : matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      })();
+    </script>
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
@@ -74,7 +84,7 @@ const jsonLd = {
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={cardAlt} />
     <meta name="twitter:card" content="summary_large_image" />
-    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon.png" type="image/png" sizes="96x96" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -95,6 +105,20 @@ const jsonLd = {
     <SiteHeader />
     <slot />
     <Footer />
+    <script is:inline>
+      (() => {
+        const logos = document.querySelectorAll("img[data-logo-dark]");
+        const root = document.documentElement;
+        const syncLogos = () => {
+          const dark = root.dataset.theme === "dark";
+          for (const logo of logos) {
+            logo.src = dark ? logo.dataset.logoDark : logo.dataset.logoLight;
+          }
+        };
+        syncLogos();
+        new MutationObserver(syncLogos).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+      })();
+    </script>
   </body>
 </html>
 

@@ -1,6 +1,7 @@
 ---
 import Landing from "../layouts/Landing.astro";
 import AddressMorph from "../components/landing/AddressMorph.astro";
+import AddressSearch from "../components/landing/AddressSearch.astro";
 import DitherGlobe from "../components/landing/DitherGlobe.astro";
 import HalftoneField from "../components/landing/HalftoneField.astro";
 import StreetMap from "../components/landing/StreetMap.astro";
@@ -58,16 +59,19 @@ const description =
       <HalftoneField />
       <StreetMap />
       <h1 class="sr-only">OpenGeocode: free, open-source, self-hosted geocoding</h1>
-      <div class="og-copy" data-mode="examples">
+      <div class="og-copy">
         <span class="og-try">
-          <Button variant="raised" size="lg">
+          <Button variant="raised" size="lg" aria-haspopup="dialog" aria-controls="address-search" data-address-search-open>
             Try it for free
             <Disc icon="arrow-right" edge="end" />
           </Button>
         </span>
-        <AddressMorph examples={examples} placeholder="100 Queen St W, Toronto" />
-        <p class="og-result" dir="auto" aria-live="polite" hidden></p>
-        <p class="og-sub">Fast, lightweight, self-hosted geocoding engine in pure Rust.</p>
+        <AddressMorph examples={examples} />
+        <AddressSearch />
+        <div class="og-caption">
+          <p class="og-result" dir="auto" aria-live="polite" hidden></p>
+          <p class="og-sub">Fast, lightweight, self-hosted geocoding engine in pure Rust.</p>
+        </div>
         <span class="og-cta">
           <Button variant="raised-solid" size="xl" href="/docs/quickstart/">Get started</Button>
         </span>
@@ -100,76 +104,25 @@ const description =
     <Faq />
   </main>
   <script>
-    // The pill or a click on the example starts typing in the headline.
     const copy = document.querySelector<HTMLElement>(".og-copy")!;
-    const pill = copy.querySelector<HTMLButtonElement>(".og-try button")!;
     const result = copy.querySelector<HTMLElement>(".og-result")!;
-    const line = copy.querySelector("og-address-morph") as HTMLElement & {
-      startEditing(): void;
-      stopEditing(): void;
+    const headline = copy.querySelector("og-address-morph") as HTMLElement & {
+      showCoordinates?(lat: number, lon: number): void;
     };
-    // Decoration only: if either failed to load, its methods are missing and the calls
-    // below are skipped, so search itself never depends on them.
     const globe = document.querySelector("og-dither-globe") as HTMLElement & {
       turnTo?(lat: number, lon: number): void;
-      release?(): void;
     };
     const map = document.querySelector("og-street-map") as HTMLElement & {
       show?(lat: number, lon: number): void;
-      hide?(): void;
     };
 
-    // While typing, the result's line says what to type; the answer replaces it.
-    const hint = () => {
-      result.hidden = false;
-      result.dataset.hint = "";
-      result.textContent = "Type a street address, anywhere in the world.";
-      result.title = "";
-    };
-
-    const setEditing = (editing: boolean) => {
-      copy.dataset.mode = editing ? "edit" : "examples";
-      result.hidden = true;
-      if (editing) {
-        line.startEditing();
-        hint();
-      }
-      else {
-        line.stopEditing();
-        globe.release?.();
-        map.hide?.();
-      }
-    };
-
-    pill.addEventListener("click", () => setEditing(true));
-    copy.addEventListener("og-edit", () => setEditing(true));
-    copy.addEventListener("og-cancel", () => setEditing(false));
-    copy.addEventListener("og-clear", () => {
-      hint();
-      globe.release?.();
-      map.hide?.();
-    });
-    copy.addEventListener("input", () => {
-      if (!("hint" in result.dataset)) hint();
-    });
-    // The matched address goes under the coordinates, so a near miss is visible.
     copy.addEventListener("og-result", (event) => {
-      const hit = (event as CustomEvent<{ label: string; coordinates: string } | null | undefined>).detail;
+      const { label, lat, lon } = (event as CustomEvent<{ label: string; lat: number; lon: number }>).detail;
+      result.textContent = result.title = label;
       result.hidden = false;
-      delete result.dataset.hint;
-      if (hit) {
-        const [lat, lon] = hit.coordinates.split(",").map(Number);
-        globe.turnTo?.(lat, lon);
-        map.show?.(lat, lon);
-      } else {
-        globe.release?.();
-        map.hide?.();
-      }
-      result.textContent = result.title = hit
-        ? hit.label
-        : hit === null
-          ? "No match for that address."
-          : "Search isn't reachable right now. Try one of the example addresses.";
+      headline.showCoordinates?.(lat, lon);
+      globe.turnTo?.(lat, lon);
+      map.show?.(lat, lon);
     });
   </script>
 </Landing>
@@ -210,29 +163,26 @@ const description =
     margin-block-end: var(--space-10);
   }
 
-  /* Hidden, not removed, so the headline holds its place while typing. */
-  .og-copy[data-mode="edit"] .og-try {
-    visibility: hidden;
+  .og-caption {
+    max-inline-size: 100%;
+  }
+
+  .og-caption:has(:where(.og-result:not([hidden]))) .og-sub {
+    color: var(--color-foreground-secondary);
   }
 
   /* One line between the headline and the subtitle, as tall as a body line. A longer match is cut short, and the full
      text is its title. */
   .og-result {
     block-size: var(--space-6);
-    color: var(--color-foreground-secondary);
-    font: var(--type-code);
+    color: var(--color-foreground);
+    font: var(--type-ui-strong);
     margin: var(--space-2) 0 0;
     max-inline-size: 100%;
     overflow: hidden;
     text-align: center;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  /* The hint says what to type. It is not an answer, so it is quieter. */
-  .og-result[data-hint] {
-    color: var(--color-foreground-muted);
-    font: var(--type-ui);
   }
 
   /* Hidden but still in place, so a result appearing never moves the page. */

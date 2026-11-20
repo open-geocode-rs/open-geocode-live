@@ -69,7 +69,10 @@ try {
     for (const extra of p.head.also ?? []) apply(extra, extra.text);
     const which = p.head.rule === "og/scripts" ? "script" : /^og\/(markup|content|directive)$/.test(p.head.rule) ? "markup" : "style";
     const fresh = [...findings(p.head.pass ? "all" : which)].filter((f) => !standing.has(f));
-    const hit = fresh.filter((f) => f.startsWith(`${p.head.rule}|`));
+    const hit = fresh.filter((finding) => {
+      const [rule, , message] = finding.split("|", 3);
+      return rule === p.head.rule && (!p.head.message || message.startsWith(p.head.message));
+    });
     if (p.head.pass) {
       if (fresh.length === 0) console.log(`${p.name}: passes the lint, as it should for ${p.head.rule}`);
       else {
@@ -81,7 +84,8 @@ try {
       console.log(`${p.name}: fails ${p.head.rule}. ${hit[0].split("|")[2]}`);
     } else {
       wrong++;
-      console.log(`${p.name}: PASSES the lint. Expected ${p.head.rule}. New findings: ${fresh.join("; ") || "none"}`);
+      const expected = p.head.message ? `${p.head.rule} with message "${p.head.message}"` : p.head.rule;
+      console.log(`${p.name}: FAILS the probe. Expected ${expected}. New findings: ${fresh.join("; ") || "none"}`);
     }
     for (const [file, text] of originals) text === undefined ? rmSync(join(work, file)) : writeFileSync(join(work, file), text);
     originals.clear();

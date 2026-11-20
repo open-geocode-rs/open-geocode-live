@@ -1,0 +1,33 @@
+---
+import logoDark from "../../assets/logo-dark.png";
+import logoLight from "../../assets/logo-light.png";
+
+interface Props {
+  alt: string;
+  compact?: boolean;
+}
+
+const { alt, compact } = Astro.props;
+---
+
+<img
+  class="og-brand"
+  src={logoLight.src}
+  data-logo-light={logoLight.src}
+  data-logo-dark={logoDark.src}
+  data-compact={compact ? "" : undefined}
+  width={logoLight.width}
+  height={logoLight.height}
+  alt={alt}
+/>
+
+<style>
+  .og-brand {
+    block-size: var(--space-8);
+    inline-size: auto;
+  }
+
+  .og-brand[data-compact] {
+    block-size: var(--space-6);
+  }
+</style>

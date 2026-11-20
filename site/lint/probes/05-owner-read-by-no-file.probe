@@ -1,2 +1,2 @@
-probe {"rule": "og/unread-token", "file": "src/components/frame/Search.astro", "replace": "var(--color-backdrop)"}
-var(--color-background)
+probe {"rule": "og/unread-token", "message": "--layout-search is owned by src/components/frame/Search.astro but read by no file outside the token files and the system page", "file": "src/components/frame/Search.astro", "replace": "var(--layout-search)", "also": [{"file": "src/components/system/Foundations.astro", "after": "  .foundations {\n", "text": "    min-block-size: var(--layout-search);\n"}]}
+var(--space-20)
