@@ -1,0 +1,45 @@
+---
+const { toc } = Astro.locals.starlightRoute;
+---
+
+<div class="panel" data-has-toc={toc ? "" : undefined}>
+  {/* With no contents column, the content column takes the room the column would have used. */}
+  <div class="panel-content" data-wide={toc ? undefined : ""}>
+    <slot />
+  </div>
+</div>
+
+<style>
+  .panel {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .panel-content {
+    max-inline-size: var(--layout-content);
+  }
+
+  .panel-content[data-wide] {
+    max-inline-size: var(--layout-content-wide);
+  }
+
+  /* Blocks in a panel sit one step apart. Kept at no specificity, so any block can set its own space above. */
+  :global(:where(.panel-content > * + *)) {
+    margin-block-start: var(--space-6);
+  }
+
+  @media (min-width: 50rem) {
+    .panel {
+      padding-inline: var(--space-16) 0;
+    }
+  }
+
+  @media (min-width: 72rem) {
+    .panel[data-has-toc] {
+      padding-inline: var(--space-8);
+    }
+
+    .panel-content {
+      margin-inline: auto;
+    }
+  }
+</style>

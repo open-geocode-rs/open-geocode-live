@@ -1,0 +1,523 @@
+---
+import Button from "../ui/Button.astro";
+import Icon from "../ui/Icon.astro";
+import Input from "../ui/Input.astro";
+
+const t = Astro.locals.t;
+const label = t("search.label");
+// The search index's own words, as the frame translates them, in English where it has none.
+const all = t.all();
+const index = (key: string, english: string) => {
+  const word = all[`pagefind.${key}`];
+  return typeof word === "string" ? word : english;
+};
+const strings = {
+  zero: index("zero_results", "No results for [SEARCH_TERM]"),
+  one: index("one_result", "[COUNT] result for [SEARCH_TERM]"),
+  many: index("many_results", "[COUNT] results for [SEARCH_TERM]"),
+  searching: index("searching", "Searching for [SEARCH_TERM]..."),
+  unavailable: t("search.devWarning"),
+};
+---
+
+<og-search class="search" data-strings={JSON.stringify(strings)}>
+  <span class="search-wide">
+    <Button variant="outline" icon="search" data-open-search aria-keyshortcuts="Control+K">
+      <span class="search-label">{label}</span>
+      <span class="search-shortcut" data-search-shortcut hidden>{`${t("search.ctrlKey")} K`}</span>
+    </Button>
+  </span>
+  <span class="search-narrow">
+    <Button variant="outline" iconOnly icon="search" label={label} data-open-search />
+  </span>
+
+  <dialog class="search-dialog" aria-label={label}>
+    <div class="search-frame" data-search-frame>
+      <div class="search-form">
+        <Input type="search" icon="search" size="lg" placeholder={label} aria-label={label} autocomplete="off" spellcheck="false" data-search-input />
+        <span class="search-cancel">
+          <Button variant="ghost" size="lg" data-close-search>{t("search.cancelLabel")}</Button>
+        </span>
+      </div>
+      <p class="search-message" data-search-message aria-live="polite"></p>
+      <ol class="search-results" data-search-results></ol>
+      <span class="search-more" data-search-more hidden>
+        <Button variant="outline">{index("load_more", "Load more results")}</Button>
+      </span>
+    </div>
+
+    <template data-search-page>
+      <li class="search-result">
+        <a class="search-hit search-page">
+          <span class="search-page-icon"><Icon name="file-text" size="md" /></span>
+          <span class="search-title"></span>
+          <span class="search-excerpt"></span>
+        </a>
+      </li>
+    </template>
+    <template data-search-section>
+      <a class="search-hit search-section">
+        <span class="search-title"></span>
+        <span class="search-excerpt"></span>
+      </a>
+    </template>
+  </dialog>
+</og-search>
+
+{/* Inline, so the shortcut shows with the right key from the first paint. */}
+<script is:inline>
+  (() => {
+    const mac = /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent);
+    for (const shortcut of document.querySelectorAll("[data-search-shortcut]")) {
+      if (mac) {
+        const key = shortcut.querySelector("kbd");
+        if (key) key.textContent = "⌘ K";
+        shortcut.closest("button")?.setAttribute("aria-keyshortcuts", "Meta+K");
+      }
+      shortcut.hidden = false;
+    }
+  })();
+</script>
+
+<script>
+  import { pagefindUserConfig } from "virtual:starlight/pagefind-config";
+
+  /** The part of the search index's script this component uses. */
+  interface Section {
+    url: string;
+    title: string;
+    excerpt: string;
+    locations?: number[];
+  }
+  interface Page extends Section {
+    meta: { title?: string };
+    sub_results: Section[];
+  }
+  interface Hit {
+    data(): Promise<Page>;
+  }
+  interface Pagefind {
+    options(options: { baseUrl: string; excerptLength: number; ranking?: Record<string, number> }): Promise<void>;
+    search(term: string): Promise<{ results: Hit[] }>;
+    debouncedSearch(term: string): Promise<{ results: Hit[] } | null>;
+    destroy(): Promise<void>;
+  }
+
+  const PAGE_SIZE = 5;
+  const SECTIONS = 3;
+  // Words around each match. Short, since a page shows its sections under it.
+  const EXCERPT_WORDS = 12;
+  const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+
+  let index: Promise<Pagefind> | undefined;
+  function load(): Promise<Pagefind> {
+    index ??= import(/* @vite-ignore */ `${base}pagefind/pagefind.js`).then(
+      async (module: Pagefind) => {
+        // The ranking is the site's search setting, so results come in the order the site is set to give them.
+        await module.options({ baseUrl: base, excerptLength: EXCERPT_WORDS, ranking: pagefindUserConfig.ranking });
+        return module;
+      },
+      (error: unknown) => {
+        // A load that failed is tried again next time.
+        index = undefined;
+        throw error;
+      },
+    );
+    return index;
+  }
+
+  // Drops the index, with the hits it failed to load, which it would otherwise give back as failures for good. The
+  // next load starts a fresh one.
+  async function reset() {
+    const old = index;
+    index = undefined;
+    const pagefind = await old?.catch(() => undefined);
+    await pagefind?.destroy();
+  }
+
+  class SiteSearch extends HTMLElement {
+    connectedCallback() {
+      const dialog = this.querySelector("dialog")!;
+      const frame = this.querySelector<HTMLElement>("[data-search-frame]")!;
+      const input = this.querySelector<HTMLInputElement>("[data-search-input]")!;
+      const message = this.querySelector<HTMLElement>("[data-search-message]")!;
+      const list = this.querySelector<HTMLOListElement>("[data-search-results]")!;
+      const more = this.querySelector<HTMLElement>("[data-search-more]")!;
+      const pageTemplate = this.querySelector<HTMLTemplateElement>("template[data-search-page]")!;
+      const sectionTemplate = this.querySelector<HTMLTemplateElement>("template[data-search-section]")!;
+      const strings: Record<string, string> = JSON.parse(this.dataset.strings ?? "{}");
+
+      const open = () => {
+        if (dialog.open) return;
+        dialog.showModal();
+        input.focus();
+        input.select();
+        void load().catch(() => undefined);
+      };
+      const close = () => dialog.close();
+
+      for (const button of this.querySelectorAll("[data-open-search]")) button.addEventListener("click", open);
+      this.querySelector("[data-close-search]")?.addEventListener("click", close);
+      // A press on the backdrop lands on the dialog itself, outside the frame.
+      dialog.addEventListener("click", (event) => {
+        if (event.target === dialog || (event.target as Element).closest("a")) close();
+      });
+      window.addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+          event.preventDefault();
+          if (dialog.open) close();
+          else open();
+        }
+      });
+
+      const fill = (node: Element, section: Section) => {
+        node.setAttribute("href", section.url);
+        node.querySelector(".search-title")!.textContent = section.title;
+        // The index escapes page text and marks each match, so its excerpt is safe to place as markup.
+        node.querySelector(".search-excerpt")!.innerHTML = section.excerpt;
+      };
+
+      // A page's first section is the page itself when it starts at the page's own address. That one is the page's row.
+      // The sections under it are at most the few with the most matches, in page order, and the top of the page counts
+      // as one of them.
+      const hasRoot = (page: Page) => page.sub_results[0]?.url === page.url;
+      const sections = (page: Page) => {
+        const own = hasRoot(page) ? page.sub_results.slice(1) : page.sub_results;
+        if (own.length <= SECTIONS) return own;
+        const top = [...own].sort((a, b) => (b.locations?.length ?? 0) - (a.locations?.length ?? 0)).slice(0, SECTIONS);
+        return own.filter((s) => top.includes(s));
+      };
+
+      // A page's row shows its excerpt only when its first section is the page itself. Otherwise the sections say it.
+      const render = (page: Page) => {
+        const item = pageTemplate.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+        fill(item.querySelector("a")!, { url: page.url, title: page.meta.title ?? page.url, excerpt: hasRoot(page) ? page.excerpt : "" });
+        for (const section of sections(page)) {
+          const link = sectionTemplate.content.firstElementChild!.cloneNode(true) as HTMLAnchorElement;
+          fill(link, section);
+          item.append(link);
+        }
+        return item;
+      };
+
+      const say = (key: string, term: string, count = 0) => {
+        message.textContent = (strings[key] ?? "").replace("[SEARCH_TERM]", term).replace("[COUNT]", String(count));
+      };
+
+      // The results of the query the list shows, and how many of them it shows. Unset while a newer query is pending, so
+      // Load more and Enter act only on the results of the query in the box.
+      interface Results {
+        term: string;
+        hits: Hit[];
+        shown: number;
+        // Set when a hit failed to load. The index then holds that failure, so the next batch searches again.
+        failed: boolean;
+      }
+      let current: Results | undefined;
+      // Batches load one after another, so each starts where the last one ended and they land in order.
+      let batches = Promise.resolve();
+      // Counts the queries typed. Work for an older query is dropped when it finishes, so it never lands in a newer
+      // query's list, or in the box after it was cleared.
+      let query = 0;
+
+      const nextBatch = async (results: Results) => {
+        if (results !== current) return;
+        if (results.failed) {
+          // A fresh index loads every hit again, in the same order, since the term and the index are the same.
+          const pagefind = await load();
+          const again = await pagefind.search(results.term);
+          results.hits = again.results;
+          results.failed = false;
+        }
+        if (results !== current) return;
+        const next = results.hits.slice(results.shown, results.shown + PAGE_SIZE);
+        const loaded = await Promise.allSettled(next.map((hit) => hit.data()));
+        if (results !== current) return;
+        // The list grows only by the hits before the first that failed, so it stays in order and the rest load next time.
+        const pages: Page[] = [];
+        for (const r of loaded) {
+          if (r.status === "rejected") break;
+          pages.push(r.value);
+        }
+        if (pages.length < next.length) {
+          results.failed = true;
+          await reset();
+        }
+        list.append(...pages.map(render));
+        results.shown += pages.length;
+        more.hidden = results.shown >= results.hits.length;
+      };
+      const showMore = (results: Results) => {
+        batches = batches.then(() => nextBatch(results)).catch(() => undefined);
+        return batches;
+      };
+      more.querySelector("button")?.addEventListener("click", () => {
+        if (current) void showMore(current);
+      });
+
+      input.addEventListener("input", async () => {
+        const asked = ++query;
+        current = undefined;
+        const term = input.value.trim();
+        if (!term) {
+          list.replaceChildren();
+          message.textContent = "";
+          more.hidden = true;
+          return;
+        }
+        say("searching", term);
+        let pagefind: Pagefind;
+        try {
+          pagefind = await load();
+        } catch {
+          if (asked === query) message.textContent = strings.unavailable ?? "";
+          return;
+        }
+        const search = await pagefind.debouncedSearch(term);
+        // A newer keystroke replaced this search.
+        if (!search || asked !== query) return;
+        const results: Results = { term, hits: search.results, shown: 0, failed: false };
+        current = results;
+        list.replaceChildren();
+        say(results.hits.length === 0 ? "zero" : results.hits.length === 1 ? "one" : "many", term, results.hits.length);
+        await showMore(results);
+      });
+
+      frame.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && event.target === input && current) list.querySelector<HTMLAnchorElement>("a")?.click();
+      });
+    }
+  }
+  customElements.define("og-search", SiteSearch);
+</script>
+
+<style>
+  .search {
+    display: contents;
+  }
+
+  .search-wide {
+    display: none;
+  }
+
+  .search-narrow {
+    display: flex;
+  }
+
+  .search-label {
+    flex: 1;
+    text-align: start;
+  }
+
+  /* The shortcut is a quiet hint at the button's end, not a key cap. */
+  /* The shortcut is a small filled key cap at the field's end. */
+  .search-shortcut {
+    align-items: center;
+    background-color: var(--color-surface);
+    block-size: var(--icon-lg);
+    border-radius: var(--radius-sm);
+    color: var(--color-foreground);
+    display: flex;
+    font: var(--type-label);
+    padding-inline: var(--space-1-5);
+  }
+
+  .search-shortcut[hidden] {
+    display: none;
+  }
+
+  .search-dialog {
+    background-color: var(--color-background);
+    block-size: 100%;
+    border: var(--border) solid var(--color-border);
+    box-shadow: var(--shadow-dialog);
+    color: var(--color-foreground);
+    inline-size: 100%;
+    margin: 0;
+    max-block-size: 100%;
+    max-inline-size: 100%;
+    padding: 0;
+  }
+
+  .search-dialog[open] {
+    display: flex;
+  }
+
+  .search-dialog::backdrop {
+    backdrop-filter: var(--blur-backdrop);
+    background-color: var(--color-backdrop);
+  }
+
+  .search-frame {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-3);
+    overflow-y: auto;
+    padding: var(--space-4);
+  }
+
+  .search-form {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .search-cancel {
+    display: flex;
+  }
+
+  .search-message {
+    color: var(--color-foreground-muted);
+    font: var(--type-ui-sm-strong);
+    margin: 0;
+    padding-block-start: var(--space-1);
+  }
+
+  .search-message:empty {
+    display: none;
+  }
+
+  .search-results {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .search-result {
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .search-hit {
+    background-color: var(--color-control);
+    color: var(--color-foreground);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-0-5);
+    padding: var(--space-3) var(--space-4);
+    text-decoration: none;
+  }
+
+  /* A page's row and its sections share one inset. The page's row holds a page icon in it, and each section a branch
+     of the tree that joins it to the page, as the reader scans down. */
+  .search-page,
+  .search-section {
+    padding-inline-start: calc(var(--space-10) + var(--space-1));
+    position: relative;
+  }
+
+  .search-page-icon {
+    align-items: center;
+    color: var(--color-foreground-muted);
+    display: flex;
+    inset-block: 0;
+    inset-inline-start: var(--space-4);
+    position: absolute;
+  }
+
+  .search-section {
+    border-block-start: var(--border) solid var(--color-border);
+  }
+
+  .search-section::before,
+  .search-section::after {
+    border: 0 solid var(--color-border-control);
+    content: "";
+    inset-inline-start: calc(var(--space-5) + var(--space-0-5));
+    position: absolute;
+  }
+
+  /* The trunk runs the section's full height, and stops at the branch on the last section. */
+  .search-section::before {
+    border-inline-start-width: var(--border);
+    inset-block: 0;
+  }
+
+  .search-section:last-child::before {
+    block-size: calc(var(--space-5) + var(--space-0-5));
+    inset-block-end: auto;
+  }
+
+  .search-section::after {
+    border-block-start-width: var(--border);
+    inline-size: var(--space-3);
+    inset-block-start: calc(var(--space-5) + var(--space-0-5));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .search-hit:hover {
+      background-color: var(--color-control-hover);
+    }
+  }
+
+  .search-hit:focus-visible {
+    background-color: var(--color-control-hover);
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: calc(var(--space-0-5) * -1);
+  }
+
+  .search-title {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui-strong);
+  }
+
+  .search-excerpt {
+    color: var(--color-foreground-muted);
+    font: var(--type-ui-sm);
+  }
+
+  .search-excerpt:empty {
+    display: none;
+  }
+
+  /* A match reads in the text's full colour, not on a fill. */
+  .search-excerpt :global(mark) {
+    background-color: transparent;
+    color: var(--color-foreground);
+    font: var(--type-ui-sm-strong);
+  }
+
+  .search-more {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .search-more[hidden] {
+    display: none;
+  }
+
+  @media (min-width: 50rem) {
+    /* A grid cell stretches the button to the column's width. */
+    .search-wide {
+      display: grid;
+      inline-size: var(--container-sm);
+    }
+
+    .search-narrow,
+    .search-cancel {
+      display: none;
+    }
+
+    /* As tall as its content, from a floor that holds the field and a few results, to the window less a margin. A
+       fixed dialog with both insets at zero would otherwise stretch to the window. */
+    .search-dialog {
+      block-size: max-content;
+      border-radius: var(--radius-xl);
+      margin: var(--space-20) auto auto;
+      max-block-size: calc(100% - var(--space-16) - var(--space-16));
+      max-inline-size: var(--container-lg);
+      min-block-size: var(--layout-search);
+    }
+
+    .search-frame {
+      padding: var(--space-3);
+    }
+  }
+</style>

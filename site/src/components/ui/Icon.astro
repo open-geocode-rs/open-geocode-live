@@ -1,0 +1,135 @@
+---
+// The one icon set. Each icon is drawn on a 24 unit grid with round strokes, except brand marks, which are filled.
+export const iconNames = [
+  "arrow-right",
+  "arrow-up-right",
+  "arrow-down-left",
+  "book",
+  "chart",
+  "check",
+  "chevron-down",
+  "chevrons-up-down",
+  "protocol",
+  "code",
+  "copy",
+  "crosshair",
+  "enter",
+  "file",
+  "file-text",
+  "info",
+  "lightbulb",
+  "link",
+  "map-pin",
+  "menu",
+  "monitor",
+  "moon",
+  "octagon-alert",
+  "pencil",
+  "search",
+  "server",
+  "sun",
+  "table",
+  "triangle-alert",
+  "x",
+  "zap",
+  "github",
+] as const;
+
+export type IconName = (typeof iconNames)[number];
+
+export const icons: Record<IconName, { d: string; mark?: true }> = {
+  "arrow-right": { d: "M5 12h14M12 5l7 7-7 7" },
+  "arrow-up-right": { d: "M7 17 17 7M7 7h10v10" },
+  "arrow-down-left": { d: "M17 7 7 17M17 17H7V7" },
+  book: { d: "M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z" },
+  chart: { d: "M3 3v18h18M8 17v-4M13 17V9M18 17V5" },
+  check: { d: "M20 6 9 17l-5-5" },
+  "chevron-down": { d: "m6 9 6 6 6-6" },
+  "chevrons-up-down": { d: "m7 15 5 5 5-5M7 9l5-5 5 5" },
+  protocol: { d: "M4 9.5h.01M4 14.5h.01M10 20 15 4M15 20 20 4" },
+  code: { d: "m16 18 6-6-6-6M8 6l-6 6 6 6" },
+  copy: { d: "M9 9h11v11H9zM5 15H4V4h11v1" },
+  crosshair: { d: "M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0M2 12h3M19 12h3M12 2v3M12 19v3" },
+  enter: { d: "M9 10l-5 5 5 5M20 4v7a4 4 0 0 1-4 4H4" },
+  file: { d: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5" },
+  "file-text": { d: "M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5M9 13h6M9 17h6M9 9h1" },
+  info: { d: "M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0M12 16v-4M12 8h.01" },
+  lightbulb: { d: "M15 14c.2-1 .7-1.7 1.5-2.5A6 6 0 1 0 7.5 11.5c.8.8 1.3 1.5 1.5 2.5M9 18h6M10 22h4" },
+  link: { d: "M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7" },
+  menu: { d: "M4 6h16M4 12h16M4 18h16" },
+  "map-pin": { d: "M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0" },
+  monitor: { d: "M3 4h18v12H3zM8 20h8M12 16v4" },
+  moon: { d: "M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" },
+  "octagon-alert": { d: "M7.9 2h8.2L22 7.9v8.2L16.1 22H7.9L2 16.1V7.9zM12 8v4M12 16h.01" },
+  pencil: { d: "M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z" },
+  search: { d: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5" },
+  server: { d: "M4 4h16v6H4zM4 14h16v6H4zM8 7h.01M8 17h.01" },
+  sun: { d: "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" },
+  table: { d: "M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 9h18M3 15h18M9 3v18" },
+  "triangle-alert": { d: "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0M12 9v4M12 17h.01" },
+  x: { d: "M18 6 6 18M6 6l12 12" },
+  zap: { d: "M13 2 4 14h7l-1 8 9-12h-7z" },
+  github: {
+    mark: true,
+    d: "M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.46-1.1-1.46-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z",
+  },
+};
+
+export interface Props {
+  name: IconName;
+  size?: "sm" | "md" | "lg" | "xl";
+  /** Read aloud when the icon stands alone. Without it the icon is hidden from assistive technology. */
+  label?: string;
+}
+
+const { name, size = "md", label } = Astro.props;
+const { d, mark = false } = icons[name];
+---
+
+<svg
+  class="icon"
+  data-size={size}
+  data-mark={mark ? "" : undefined}
+  viewBox="0 0 24 24"
+  role={label ? "img" : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : "true"}
+  focusable="false"
+><path d={d} /></svg>
+
+<style>
+  .icon {
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: var(--border-strong);
+  }
+
+  .icon[data-size="sm"] {
+    block-size: var(--icon-sm);
+    inline-size: var(--icon-sm);
+  }
+
+  .icon[data-size="md"] {
+    block-size: var(--icon-md);
+    inline-size: var(--icon-md);
+  }
+
+  .icon[data-size="lg"] {
+    block-size: var(--icon-lg);
+    inline-size: var(--icon-lg);
+  }
+
+  .icon[data-size="xl"] {
+    block-size: var(--icon-xl);
+    inline-size: var(--icon-xl);
+    stroke-width: var(--icon-stroke-xl);
+  }
+
+  .icon[data-mark] {
+    fill: currentColor;
+    stroke: none;
+  }
+</style>

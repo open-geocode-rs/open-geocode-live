@@ -1,0 +1,3 @@
+probe {"rule": "og/raw-value", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    /* stylelint-disable-next-line */
+    gap: 10px;

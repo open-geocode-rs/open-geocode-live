@@ -1,0 +1,4 @@
+probe {"rule": "og/selector", "file": "src/components/ui/Badge.astro", "after": "<style>\n"}
+  [class~="foreign-widget"] {
+    display: block;
+  }

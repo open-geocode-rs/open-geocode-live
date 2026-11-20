@@ -1,0 +1,186 @@
+---
+import { exampleFor, snippetsFor } from "../../lib/api";
+import type { ApiOperation } from "../../lib/openapi";
+import Badge from "../ui/Badge.astro";
+import Button from "../ui/Button.astro";
+import CodeBlock from "../ui/CodeBlock.astro";
+import Input from "../ui/Input.astro";
+
+interface Props {
+  operation: ApiOperation;
+}
+
+const { operation } = Astro.props;
+const example = exampleFor(operation);
+const snippets = snippetsFor(example);
+const { response } = example;
+const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
+---
+
+<aside class="request-example" aria-label="Example request" data-request-example>
+  <div class="request-card">
+    <div class="request-head">
+      <div class="request-title">
+        <Badge variant={operation.method} />
+        <span class="sr-only" data-pagefind-ignore>{operation.method.toUpperCase()}</span>
+        <h3 class="request-summary">{operation.title}</h3>
+      </div>
+      <div class="request-controls">
+        <Input variant="select" icon="protocol" aria-label="Language" options={languages} value={snippets[0].id} data-language />
+        <Button variant="outline" iconOnly icon="copy" label="Copy code" data-copy-request />
+        <span class="request-copied" role="status" data-copy-status></span>
+      </div>
+    </div>
+    {
+      snippets.map((s, i) => (
+        <div class="request-snippet" data-snippet={s.id} hidden={i > 0}>
+          <CodeBlock variant="numbered" code={s.code} lang={s.lang} />
+        </div>
+      ))
+    }
+  </div>
+  {
+    response && (
+      <div class="request-response">
+        <p class="request-response-title">200 example</p>
+        <div class="request-response-body">
+          <CodeBlock variant="numbered" code={response} lang="json" />
+        </div>
+      </div>
+    )
+  }
+</aside>
+
+<script>
+  import { after } from "../../lib/motion";
+
+  const KEY = "og-snippet";
+
+  /** Shows one language in every example on the page, and marks it in each picker. */
+  function show(id: string) {
+    for (const panel of document.querySelectorAll<HTMLElement>("[data-request-example]")) {
+      const panes = [...panel.querySelectorAll<HTMLElement>("[data-snippet]")];
+      if (!panes.some((p) => p.dataset.snippet === id)) continue;
+      for (const p of panes) p.hidden = p.dataset.snippet !== id;
+      const picker = panel.querySelector<HTMLSelectElement>("select[data-language]");
+      if (picker) picker.value = id;
+    }
+  }
+
+  for (const panel of document.querySelectorAll<HTMLElement>("[data-request-example]")) {
+    const picker = panel.querySelector<HTMLSelectElement>("select[data-language]");
+    picker?.addEventListener("change", () => {
+      show(picker.value);
+      try {
+        localStorage.setItem(KEY, picker.value);
+      } catch {}
+    });
+  }
+
+  // The panel's copy button copies the request in the language shown.
+  for (const panel of document.querySelectorAll<HTMLElement>("[data-request-example]")) {
+    const button = panel.querySelector<HTMLButtonElement>("[data-copy-request]");
+    const status = panel.querySelector<HTMLElement>("[data-copy-status]");
+    let cancel = () => {};
+    button?.addEventListener("click", async () => {
+      const shown = panel.querySelector<HTMLElement>(".request-snippet:not([hidden]) template[data-code]");
+      if (!(shown instanceof HTMLTemplateElement)) return;
+      await navigator.clipboard.writeText(shown.content.textContent ?? "");
+      if (!status) return;
+      status.textContent = "Copied!";
+      cancel();
+      // The tag stays for the feedback duration, then clears.
+      cancel = after("--duration-feedback", () => {
+        status.textContent = "";
+      });
+    });
+  }
+
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) show(saved);
+  } catch {}
+</script>
+
+<style>
+  /* One frame on a quiet fill. The request sits in a card with its title row, and the answer below it on the fill. */
+  .request-example {
+    background-color: var(--color-control);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-xl);
+    color: var(--color-foreground);
+    padding: var(--space-1);
+  }
+
+  .request-card {
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .request-head {
+    align-items: center;
+    border-block-end: var(--border) solid var(--color-border);
+    display: flex;
+    gap: var(--space-2);
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  }
+
+  .request-title,
+  .request-controls {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  /* In a narrow panel the title gives way, cut short, and the controls keep their size. */
+  .request-title {
+    min-inline-size: 0;
+  }
+
+  .request-controls {
+    flex-shrink: 0;
+  }
+
+  /* After a copy, a filled tag beside the button says so, and it is empty, so unseen, at rest. */
+  .request-copied:empty {
+    display: none;
+  }
+
+  .request-copied {
+    background-color: var(--color-success);
+    border-radius: var(--radius-sm);
+    color: var(--color-on-solid);
+    font: var(--type-ui);
+    padding: var(--space-0-5) var(--space-2);
+  }
+
+  .request-summary {
+    color: var(--color-foreground);
+    font: var(--type-ui-strong);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .request-response-title {
+    border-block-end: var(--border) solid var(--color-border);
+    font: var(--type-ui-strong);
+    margin: 0;
+    padding: calc(var(--space-2) + var(--space-0-5)) var(--space-4);
+  }
+
+  .request-snippet {
+    padding: var(--space-4);
+  }
+
+  /* A long answer scrolls inside the panel, so the panel stays within the window beside the page. */
+  .request-response-body {
+    max-block-size: var(--container-md);
+    overflow: auto;
+    padding: var(--space-2);
+  }
+</style>

@@ -1,0 +1,20 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import Overview from "../../../../../components/api/Overview.astro";
+import { tags } from "../../../../../lib/openapi";
+
+export const getStaticPaths = (() => tags().map((tag) => ({ params: { tag: tag.slug }, props: { tag } }))) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { tag } = Astro.props;
+const headings = [
+  { depth: 2, slug: "overview", text: tag.name },
+  { depth: 2, slug: "operations", text: "Operations" },
+];
+---
+
+<StarlightPage frontmatter={{ title: "Overview" }} {headings}>
+  <Overview {tag} />
+</StarlightPage>

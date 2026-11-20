@@ -1,0 +1,67 @@
+---
+import type { ApiOperation } from "../../lib/openapi";
+import { operationContent } from "../../lib/reference";
+import Link from "../ui/Link.astro";
+import Markdown from "./Markdown.astro";
+import RequestExample from "./RequestExample.astro";
+import Section from "./Section.astro";
+
+interface Props {
+  operation: ApiOperation;
+}
+
+const { operation } = Astro.props;
+const content = operationContent(operation);
+---
+
+{/* The example sits beside the reference on a wide screen and above it on a narrow one. */}
+<div class="operation prose">
+  <div class="operation-example">
+    <RequestExample {operation} />
+  </div>
+  <div class="operation-body prose-flow">
+    {content.description && <Markdown text={content.description} />}
+    {
+      content.docs && (
+        <p>
+          <Link href={content.docs.href} variant="standalone">
+            {content.docs.label}
+          </Link>
+        </p>
+      )
+    }
+    {content.parameters && <Section section={content.parameters} />}
+    {content.requestBody && <Section section={content.requestBody} />}
+    {content.responses && <Section section={content.responses} />}
+  </div>
+</div>
+
+<style>
+  .operation {
+    display: grid;
+    gap: var(--space-8);
+    grid-template-areas: "example" "body";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .operation-example {
+    grid-area: example;
+  }
+
+  .operation-body {
+    grid-area: body;
+  }
+
+  @media (min-width: 72rem) {
+    .operation {
+      align-items: start;
+      grid-template-areas: "body example";
+      grid-template-columns: minmax(0, 1fr) minmax(0, var(--layout-example));
+    }
+
+    .operation-example {
+      inset-block-start: calc(var(--layout-nav-height) + var(--space-4));
+      position: sticky;
+    }
+  }
+</style>

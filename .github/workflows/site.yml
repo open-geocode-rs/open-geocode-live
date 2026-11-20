@@ -1,0 +1,35 @@
+name: site
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - run: npm ci
+      # The system check opens the built system page in a browser to measure it at 390 wide.
+      - run: npx playwright install --with-deps chromium
+      - run: npm run lint
+      - run: npm run lint:probes
+      - run: npm run check
+      - run: node scripts/contrast.mjs
+      - run: node scripts/system-check.mjs
+      - run: npm run check:reference
+      # Drives the dist/ the system check just built.
+      - run: npm run check:behaviour -- --no-build
+      - run: npm run build

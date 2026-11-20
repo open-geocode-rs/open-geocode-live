@@ -1,0 +1,143 @@
+/*
+ * Values one component owns, in named groups, built only from raw material and roles.
+ * Each group is read by the one component file named for it.
+ */
+
+/* Groups that follow the theme are set on every theme wrapper, so they resolve against that wrapper's roles. */
+:root,
+[data-theme] {
+  /* map: the street map's layers. */
+  --map-water: color-mix(in srgb, var(--color-accent) var(--p-alpha-8), transparent);
+  --map-waterway: color-mix(in srgb, var(--color-accent) var(--p-alpha-16), transparent);
+  --map-green: color-mix(in srgb, var(--p-green) var(--p-alpha-8), transparent);
+  --map-building: color-mix(in srgb, var(--color-foreground) var(--p-alpha-4), transparent);
+  --map-building-edge: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
+  --map-road: color-mix(in srgb, var(--color-foreground) var(--p-alpha-16), transparent);
+  --map-label: var(--color-foreground-muted);
+  --map-label-halo: var(--color-background);
+
+  /* button-raised: the landing page's raised buttons, each a cap on a base it sinks into when pressed. The cap shades
+     toward its foot, with a highlight along its top edge and a shade along its foot. The plain cap is the page's own
+     background on a solid base. The solid cap is the solid fill, for the page's primary action, a hairline deeper on
+     a black base, its label pressed into it by a shade under each letter. */
+  --button-raised-cap: linear-gradient(var(--color-background), color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), var(--color-background)));
+  --button-raised-cap-hover: linear-gradient(var(--color-background), color-mix(in srgb, var(--color-foreground) var(--p-alpha-4), var(--color-background)));
+  --button-raised-edge: var(--color-solid);
+  --button-raised-shadow:
+    inset 0 var(--border-strong) 0 var(--color-background),
+    inset 0 calc(var(--border-strong) * -1) 0 color-mix(in srgb, var(--p-black) var(--p-alpha-8), transparent),
+    0 var(--space-1) 0 var(--button-raised-edge),
+    0 var(--space-1-5) var(--space-1-5) color-mix(in srgb, var(--p-black) var(--p-alpha-16), transparent);
+  --button-raised-shadow-pressed:
+    inset 0 var(--border-strong) 0 var(--color-background),
+    inset 0 calc(var(--border-strong) * -1) 0 color-mix(in srgb, var(--p-black) var(--p-alpha-8), transparent),
+    0 0 0 var(--button-raised-edge),
+    0 var(--border) var(--space-0-5) color-mix(in srgb, var(--p-black) var(--p-alpha-8), transparent);
+  --button-raised-solid-cap: linear-gradient(color-mix(in srgb, var(--color-on-solid) var(--p-alpha-16), var(--color-solid)), var(--color-solid), var(--color-solid));
+  --button-raised-solid-cap-hover: linear-gradient(color-mix(in srgb, var(--color-on-solid) var(--p-alpha-16), var(--color-solid-hover)), var(--color-solid-hover), var(--color-solid-hover));
+  --button-raised-solid-edge: var(--p-black);
+  --button-raised-solid-text-shadow: 0 var(--border) 0 color-mix(in srgb, var(--p-black) var(--p-alpha-24), transparent);
+  --button-raised-solid-shadow:
+    inset 0 var(--border-strong) 0 color-mix(in srgb, var(--color-on-solid) var(--p-alpha-16), transparent),
+    inset 0 calc(var(--border-strong) * -1) 0 color-mix(in srgb, var(--p-black) var(--p-alpha-16), transparent),
+    0 calc(var(--space-1) + var(--border)) 0 var(--button-raised-solid-edge),
+    0 calc(var(--space-1-5) + var(--border)) var(--space-1-5) color-mix(in srgb, var(--p-black) var(--p-alpha-16), transparent);
+  --button-raised-solid-shadow-pressed:
+    inset 0 var(--border-strong) 0 color-mix(in srgb, var(--color-on-solid) var(--p-alpha-16), transparent),
+    inset 0 calc(var(--border-strong) * -1) 0 color-mix(in srgb, var(--p-black) var(--p-alpha-16), transparent),
+    0 0 0 var(--button-raised-solid-edge),
+    0 var(--border) var(--space-0-5) color-mix(in srgb, var(--p-black) var(--p-alpha-8), transparent);
+}
+
+:root {
+  /* codeblock: a one-line command block, a step darker than the darkest neutral, as deep as a terminal's well. */
+  --codeblock-command-fill: color-mix(in srgb, var(--p-neutral-900), var(--p-black));
+
+  /* codeblock: the copy feedback on a code block, a filled tag in the brand's green. */
+  --codeblock-feedback-fill: var(--p-green-shade-32);
+  --codeblock-feedback-ink: var(--p-white);
+
+  /* globe: the dithered globe, in the logo's own pair of navy and green. */
+  --globe-land-shadow: var(--p-green-shade-32);
+  --globe-land: var(--p-green);
+  --globe-land-lit: var(--p-green-tint-64);
+  --globe-land-peak: var(--p-white);
+  --globe-ocean: var(--p-navy);
+  --globe-sea: var(--p-navy-tint-32);
+  --globe-sea-lit: var(--p-navy-tint-64);
+
+  /* terminal: the terminal window on the landing page, dark in both themes. */
+  --terminal-background: var(--p-neutral-900);
+  --terminal-bar: var(--p-neutral-800);
+  --terminal-border: var(--p-neutral-700);
+  --terminal-text: var(--p-neutral-200);
+  --terminal-muted: var(--p-neutral-400);
+  --terminal-prompt: var(--p-navy-tint-64);
+  --terminal-success: var(--p-green);
+  --terminal-dot-close: var(--p-red-400);
+  --terminal-dot-minimize: var(--p-amber-400);
+  --terminal-dot-zoom: var(--p-green);
+
+  /* method: fills behind the four HTTP method badges, a 16% tint of each method's colour, and their edges, a stronger
+     tint of the same colour. Each ink keeps 4.5 to 1 on its fill. */
+  --method-get-fill: color-mix(in srgb, var(--p-green) var(--p-alpha-16), transparent);
+  --method-post-fill: color-mix(in srgb, var(--p-navy-tint-64) var(--p-alpha-16), transparent);
+  --method-query-fill: color-mix(in srgb, var(--p-purple-400) var(--p-alpha-16), transparent);
+  --method-delete-fill: color-mix(in srgb, var(--p-red-400) var(--p-alpha-16), transparent);
+  --method-get-edge: color-mix(in srgb, var(--p-green) var(--p-alpha-24), transparent);
+  --method-post-edge: color-mix(in srgb, var(--p-navy-tint-64) var(--p-alpha-24), transparent);
+  --method-query-edge: color-mix(in srgb, var(--p-purple-400) var(--p-alpha-24), transparent);
+  --method-delete-edge: color-mix(in srgb, var(--p-red-400) var(--p-alpha-24), transparent);
+}
+
+:root,
+[data-theme="dark"] {
+  /* codeblock: the bar of a terminal block and its three dots, on a dark page. */
+  --codeblock-bar: var(--p-neutral-700);
+  --codeblock-dot: var(--p-neutral-600);
+
+  /* method: ink of the four HTTP method badges on a dark page. */
+  --method-get-ink: var(--p-green);
+  --method-post-ink: var(--p-navy-tint-64);
+  --method-query-ink: var(--p-purple-400);
+  --method-delete-ink: var(--p-red-400);
+
+  /* syntax: code colouring on a dark page. Keywords red, constants and keys a light navy, functions purple, strings
+     a pale navy, variables amber, as the original's API panel sets them. */
+  --syntax-keyword: var(--p-red-400);
+  --syntax-string: var(--p-navy-vivid-850);
+  --syntax-constant: var(--p-navy-vivid-750);
+  --syntax-function: var(--p-purple-400);
+  --syntax-parameter: var(--p-amber-400);
+  --syntax-comment: var(--color-foreground-muted);
+  --syntax-punctuation: var(--color-foreground);
+  /* syntax-prose: code blocks in prose on a dark page, keys green, strings purple, numbers red, as the original's docs. */
+  --syntax-prose-key: var(--p-green-tint-64);
+  --syntax-prose-string: var(--p-purple-400);
+  --syntax-prose-constant: var(--p-red-400);
+}
+
+[data-theme="light"] {
+  /* codeblock: the bar of a terminal block and its three dots, on a light page. */
+  --codeblock-bar: var(--p-neutral-100);
+  --codeblock-dot: var(--p-neutral-200);
+
+  /* method: ink of the four HTTP method badges on a light page. */
+  --method-get-ink: var(--p-green-shade-33);
+  --method-post-ink: var(--p-navy);
+  --method-query-ink: var(--p-purple-700);
+  --method-delete-ink: var(--p-red-700);
+
+  /* syntax: code colouring on a light page, mapped the same way. */
+  --syntax-keyword: var(--p-red-700);
+  --syntax-string: var(--p-navy);
+  --syntax-constant: var(--p-navy-vivid-500);
+  --syntax-function: var(--p-purple-700);
+  --syntax-parameter: var(--p-amber-700);
+  --syntax-comment: var(--color-foreground-muted);
+  --syntax-punctuation: var(--color-foreground);
+  /* syntax-prose: code blocks in prose on a light page, mapped the same way. */
+  --syntax-prose-key: var(--p-green-shade-32);
+  --syntax-prose-string: var(--p-purple-700);
+  --syntax-prose-constant: var(--p-red-700);
+}

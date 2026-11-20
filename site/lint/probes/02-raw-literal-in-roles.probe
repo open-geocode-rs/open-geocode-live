@@ -1,0 +1,2 @@
+probe {"rule": "og/raw-literal", "file": "src/styles/tokens/roles.css", "replace": "  --color-foreground-muted: var(--p-neutral-400);\n"}
+  --color-foreground-muted: #123456;

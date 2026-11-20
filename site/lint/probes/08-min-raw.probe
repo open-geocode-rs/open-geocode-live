@@ -1,0 +1,2 @@
+probe {"rule": "og/calc", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    inline-size: min(var(--space-4), 13px);

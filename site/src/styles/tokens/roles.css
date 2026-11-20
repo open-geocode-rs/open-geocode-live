@@ -1,0 +1,123 @@
+/*
+ * Colour roles for both themes and type roles, built only from raw material.
+ * Dark is the default and light is set by a data-theme wrapper, so any element can switch theme.
+ */
+:root,
+[data-theme="dark"] {
+  --color-background: var(--p-neutral-900);
+  --color-surface: var(--p-neutral-800);
+  --color-foreground: var(--p-white);
+  --color-foreground-secondary: var(--p-neutral-300);
+  --color-foreground-muted: var(--p-neutral-400);
+  --color-border: var(--p-neutral-700);
+  --color-border-control: color-mix(in srgb, var(--color-foreground) var(--p-alpha-16), transparent);
+  --color-border-strong: color-mix(in srgb, var(--color-foreground) var(--p-alpha-24), transparent);
+  --color-accent: var(--p-green);
+  --color-accent-subtle: var(--p-green-shade-64);
+  --color-accent-strong: var(--p-green-tint-64);
+  --color-control: color-mix(in srgb, var(--color-foreground) var(--p-alpha-4), transparent);
+  --color-control-hover: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
+  --color-selected: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
+  --color-code: color-mix(in srgb, var(--color-foreground) var(--p-alpha-16), transparent);
+  --color-solid: var(--p-white);
+  --color-solid-hover: var(--p-neutral-200);
+  --color-on-solid: var(--p-neutral-900);
+  --color-focus: var(--p-green-tint-64);
+  --color-success: var(--p-green);
+  --color-success-subtle: color-mix(in srgb, var(--p-green) var(--p-alpha-8), transparent);
+  --color-warning: var(--p-amber-400);
+  --color-warning-subtle: color-mix(in srgb, var(--p-amber-400) var(--p-alpha-8), transparent);
+  --color-danger: var(--p-red-400);
+  --color-danger-subtle: color-mix(in srgb, var(--p-red-400) var(--p-alpha-8), transparent);
+  --color-backdrop: color-mix(in srgb, var(--p-black) var(--p-alpha-64), transparent);
+  --color-selection: var(--p-green-shade-32);
+  --color-on-selection: var(--p-white);
+
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --color-background: var(--p-white);
+  --color-surface: var(--p-neutral-50);
+  --color-foreground: var(--p-neutral-900);
+  --color-foreground-secondary: var(--p-neutral-600);
+  --color-foreground-muted: var(--p-neutral-500);
+  --color-border: var(--p-neutral-100);
+  --color-border-control: color-mix(in srgb, var(--color-foreground) var(--p-alpha-16), transparent);
+  --color-border-strong: color-mix(in srgb, var(--color-foreground) var(--p-alpha-24), transparent);
+  --color-accent: var(--p-navy);
+  --color-accent-subtle: color-mix(in srgb, var(--p-green) var(--p-alpha-16), transparent);
+  --color-accent-strong: var(--p-navy-shade-32);
+  --color-control: color-mix(in srgb, var(--color-foreground) var(--p-alpha-4), transparent);
+  --color-control-hover: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
+  --color-selected: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
+  --color-code: color-mix(in srgb, var(--color-foreground) var(--p-alpha-8), transparent);
+  --color-solid: var(--p-neutral-900);
+  --color-solid-hover: var(--p-neutral-700);
+  --color-on-solid: var(--p-white);
+  --color-focus: var(--p-navy);
+  --color-success: var(--p-green-shade-32);
+  --color-success-subtle: color-mix(in srgb, var(--p-green) var(--p-alpha-8), transparent);
+  --color-warning: var(--p-amber-700);
+  --color-warning-subtle: color-mix(in srgb, var(--p-amber-400) var(--p-alpha-8), transparent);
+  --color-danger: var(--p-red-700);
+  --color-danger-subtle: color-mix(in srgb, var(--p-red-400) var(--p-alpha-8), transparent);
+  --color-backdrop: color-mix(in srgb, var(--p-neutral-500) var(--p-alpha-64), transparent);
+  --color-selection: var(--p-green-shade-32);
+  --color-on-selection: var(--p-white);
+
+  color-scheme: light;
+}
+
+/* Each type role is one font shorthand, so a component sets size, leading, weight and family in one line. */
+:root {
+  --type-display: var(--p-weight-medium) clamp(var(--p-font-size-24), var(--p-font-size-fluid), var(--p-font-size-56)) / var(--p-leading-display) var(--p-font-mono);
+  --type-h1: var(--p-weight-display) var(--p-font-size-32) / var(--p-leading-display) var(--p-font-display);
+  --type-h2: var(--p-weight-display) var(--p-font-size-24) / var(--p-leading-heading) var(--p-font-display);
+  --type-h3: var(--p-weight-display) var(--p-font-size-20) / var(--p-leading-heading) var(--p-font-display);
+  --type-h4: var(--p-weight-display) var(--p-font-size-18) / var(--p-leading-heading) var(--p-font-display);
+  --type-lead: var(--p-weight-regular) var(--p-font-size-lead) / var(--p-leading-lead) var(--p-font-sans);
+  --type-body: var(--p-weight-regular) var(--p-font-size-16) / var(--p-leading-prose) var(--p-font-sans);
+  /* A short title set at body size, such as a feature card's, and the short text under it. */
+  --type-body-strong: var(--p-weight-medium) var(--p-font-size-16) / var(--p-leading-heading) var(--p-font-sans);
+  --type-body-sm: var(--p-weight-regular) var(--p-font-size-15) / var(--p-leading-heading) var(--p-font-sans);
+  --type-ui: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
+  --type-ui-strong: var(--p-weight-medium) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
+  /* A tab set in text, at body size on a short line, and the current tab set heavier. */
+  --type-tab: var(--p-weight-regular) var(--p-font-size-16) / var(--p-leading-lead) var(--p-font-sans);
+  --type-tab-current: var(--p-weight-semibold) var(--p-font-size-16) / var(--p-leading-lead) var(--p-font-sans);
+  /* A list of short links read at a glance, such as the contents of a page. */
+  --type-ui-compact: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-heading) var(--p-font-sans);
+  /* The landing page's controls, set at body size, and its call to action, set heavier. */
+  --type-ui-lg: var(--p-weight-medium) var(--p-font-size-16) / var(--p-leading-ui) var(--p-font-sans);
+  --type-ui-lg-strong: var(--p-weight-semibold) var(--p-font-size-16) / var(--p-leading-ui) var(--p-font-sans);
+  /* Small text under a result's title, and its matches set heavier. */
+  --type-ui-sm: var(--p-weight-regular) var(--p-font-size-13) / var(--p-leading-ui) var(--p-font-sans);
+  --type-ui-sm-strong: var(--p-weight-medium) var(--p-font-size-13) / var(--p-leading-ui) var(--p-font-sans);
+  --type-caption: var(--p-weight-regular) var(--p-font-size-12) / var(--p-leading-ui) var(--p-font-sans);
+  --type-label: var(--p-weight-medium) var(--p-font-size-12) / var(--p-leading-1) var(--p-font-sans);
+  --type-label-code: var(--p-weight-medium) var(--p-font-size-12) / var(--p-leading-1) var(--p-font-mono);
+  --type-code: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-mono);
+  /* A code block in prose, on the prose's own line height. */
+  --type-code-block: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-prose) var(--p-font-mono);
+  /* A one-line command, set small so a long one fits a narrow column. */
+  --type-code-sm: var(--p-weight-regular) var(--p-font-size-12) / var(--p-leading-ui) var(--p-font-mono);
+  --type-code-inline: var(--p-weight-regular) var(--p-font-size-inline) / var(--p-leading-1) var(--p-font-mono);
+
+  /* Tracking. Tighter still for the display line, tight for h1, snug for the lead, wide for the call to action, caps for small capitals.
+     Everything else uses the keyword normal. */
+  --tracking-display: var(--p-tracking-display);
+  --tracking-tight: var(--p-tracking-tight);
+  --tracking-snug: var(--p-tracking-snug);
+  --tracking-wide: var(--p-tracking-wide);
+  --tracking-caps: var(--p-tracking-caps);
+}
+
+@media (min-width: 50rem) {
+  :root {
+    --type-h1: var(--p-weight-display) var(--p-font-size-40) / var(--p-leading-display) var(--p-font-display);
+    --type-h2: var(--p-weight-display) var(--p-font-size-32) / var(--p-leading-heading) var(--p-font-display);
+    --type-h3: var(--p-weight-display) var(--p-font-size-24) / var(--p-leading-heading) var(--p-font-display);
+    --type-h4: var(--p-weight-display) var(--p-font-size-20) / var(--p-leading-heading) var(--p-font-display);
+  }
+}

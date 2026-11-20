@@ -1,8 +1,8 @@
+import sitemap from "@astrojs/sitemap";
 import starlight from "@astrojs/starlight";
-import { fileURLToPath } from "node:url";
 import { defineConfig, fontProviders } from "astro/config";
 import starlightLlmsTxt from "starlight-llms-txt";
-import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
+import { apiSidebarGroup } from "./src/lib/openapi.ts";
 
 // example.com, like every other placeholder in this repo, until the domain is picked.
 const site = process.env.SITE_URL ?? "https://example.com";
@@ -18,15 +18,6 @@ export default defineConfig({
   site,
   trailingSlash: "ignore",
   vite: {
-    resolve: {
-      // The plugin's overview row lists a QUERY batch as POST; ours lists it as QUERY.
-      alias: [
-        {
-          find: /^\.\/OverviewNavigationLink\.astro$/,
-          replacement: fileURLToPath(new URL("./src/components/OverviewNavigationLink.astro", import.meta.url)),
-        },
-      ],
-    },
     server: {
       proxy: api ? { "/api/geocode": { target: api, rewrite: (path) => path.replace(/^\/api/, "") } } : undefined,
     },
@@ -53,17 +44,23 @@ export default defineConfig({
     },
   ],
   integrations: [
+    // Listed here so the system page, a page for the people building the site, stays out of the sitemap.
+    sitemap({ filter: (page) => new URL(page).pathname !== "/system/" }),
     starlight({
       title: "OpenGeocode",
       description,
+      // The site draws its own 404 page in src/pages/404.astro, through the docs frame.
+      disable404Route: true,
       logo: {
         light: "./src/assets/logo-light.png",
         dark: "./src/assets/logo-dark.png",
         alt: "OpenGeocode",
         replacesTitle: true,
       },
-      favicon: "/favicon.png",
+      // The SVG follows the browser's theme. The PNG is for browsers that cannot show an SVG icon.
+      favicon: "/favicon.svg",
       head: [
+        { tag: "link", attrs: { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "96x96" } },
         { tag: "link", attrs: { rel: "apple-touch-icon", href: "/apple-touch-icon.png" } },
         // Starlight emits twitter:card summary_large_image but no image, so previews came up blank.
         { tag: "meta", attrs: { property: "og:image", content: `${site}/og.png` } },
@@ -71,29 +68,29 @@ export default defineConfig({
         { tag: "meta", attrs: { property: "og:image:height", content: "630" } },
         { tag: "meta", attrs: { property: "og:image:alt", content: "OpenGeocode logo: fast, lightweight, self-hosted geocoding engine in pure Rust." } },
       ],
-      social: [
-        { icon: "github", label: "GitHub", href: "https://github.com/open-geocode-rs/open-geocode" },
-      ],
       editLink: { baseUrl: "https://github.com/open-geocode-rs/open-geocode-live/edit/main/site/" },
       lastUpdated: true,
-      customCss: ["./src/styles/type.css", "./src/styles/starlight.css", "./src/styles/layout.css", "./src/styles/api.css", "./src/styles/search.css"],
+      customCss: [
+        "./src/styles/tokens/primitives.css",
+        "./src/styles/tokens/roles.css",
+        "./src/styles/tokens/components.css",
+        "./src/styles/tokens/host.css",
+        "./src/styles/global.css",
+      ],
+      // The docs frame is our own components. The frame keeps its routing, page data, content and scripts.
       components: {
-        Head: "./src/components/DocsHead.astro",
-        Header: "./src/components/Header.astro",
-        PageTitle: "./src/components/PageTitle.astro",
+        Head: "./src/components/frame/DocsHead.astro",
+        PageFrame: "./src/components/frame/PageFrame.astro",
+        Header: "./src/components/frame/Header.astro",
+        Sidebar: "./src/components/frame/Sidebar.astro",
+        TwoColumnContent: "./src/components/frame/TwoColumnContent.astro",
+        PageSidebar: "./src/components/frame/PageSidebar.astro",
+        ContentPanel: "./src/components/frame/ContentPanel.astro",
+        PageTitle: "./src/components/frame/PageTitle.astro",
+        Footer: "./src/components/frame/Footer.astro",
         MarkdownContent: "./src/components/MarkdownContent.astro",
-        ThemeSelect: "./src/components/ThemeSelect.astro",
-        Pagination: "./src/components/Pagination.astro",
       },
-      routeMiddleware: "./src/routeData.ts",
       plugins: [
-        starlightOpenAPI([
-          {
-            base: "docs/api",
-            schema: "./public/openapi.json",
-            sidebar: { label: "API reference", collapsed: false, operations: { badges: true } },
-          },
-        ]),
         starlightLlmsTxt({
           projectName: "OpenGeocode",
           description,
@@ -116,7 +113,8 @@ export default defineConfig({
           items: ["docs/guides/build-a-pack", "docs/guides/serve", "docs/guides/batch-csv"],
         },
         { label: "Reference", items: ["docs/responses", "docs/benchmarks"] },
-        ...openAPISidebarGroups,
+        // The API reference pages are our own, made from the OpenAPI document in public/.
+        apiSidebarGroup("API reference"),
       ],
     }),
   ],

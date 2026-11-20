@@ -1,0 +1,392 @@
+---
+import Icon, { type IconName } from "./Icon.astro";
+
+export const menuVariants = ["default", "outline"] as const;
+export const menuSizes = ["2xs", "xs", "sm", "md"] as const;
+export const menuStates = ["closed", "open", "item-hover", "item-focus", "item-current"] as const;
+
+export interface MenuItem {
+  label: string;
+  value: string;
+  icon?: IconName;
+  /** Makes the item a link, for a menu of actions that go somewhere. Such a menu has no current item. */
+  href?: string;
+  /** Opens the link in a new tab. */
+  newTab?: boolean;
+  /** Holds an item state without a pointer, for the system page. */
+  state?: "rest" | "hover" | "focus";
+}
+
+export interface Props {
+  /** Names the menu for assistive technology. */
+  label: string;
+  /** What the trigger shows. Defaults to the current item's label. */
+  trigger?: string;
+  triggerIcon?: IconName;
+  /** The trigger shows only an icon, the current item's or the trigger icon, and reads its label aloud. */
+  iconOnly?: boolean;
+  items: MenuItem[];
+  /** The value of the current item. */
+  current?: string;
+  size?: (typeof menuSizes)[number];
+  /** The edge of the trigger the panel lines up with. A menu at the end of a row opens towards the start. */
+  align?: "start" | "end";
+  /** Holds the menu open without a pointer, for the system page. */
+  state?: "closed" | "open";
+  /** The trigger's look. An outline trigger has the filled, bordered box of an outline button, for a header control. */
+  variant?: (typeof menuVariants)[number];
+  /** Joins the trigger to the control before it, as the second half of a split button. */
+  join?: "end";
+}
+
+const { label, trigger, triggerIcon, iconOnly = false, items, current, size = "sm", align = "start", state = "closed", variant = "default", join } = Astro.props;
+// A trigger with no text of its own follows the current item, so it shows what is chosen.
+const follows = trigger === undefined && items.some((i) => i.value === current);
+const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
+---
+
+<details
+  class="menu"
+  data-menu
+  data-label={label}
+  data-size={size}
+  data-variant={variant}
+  data-join={join}
+  data-icon-only={iconOnly ? "" : undefined}
+  data-align={align}
+  data-state={state === "open" ? "open" : undefined}
+  open={state === "open"}
+>
+  <summary
+    class="menu-trigger"
+    aria-label={iconOnly || !trigger ? `${label}${follows ? `. ${items.find((i) => i.value === current)?.label}` : ""}` : undefined}
+    aria-haspopup="menu"
+  >
+    {
+      follows ? (
+        items.filter(shownItem).map((item) => (
+          <span class="menu-shown" data-value={item.value} hidden={item.value !== current}>
+            {iconOnly ? item.icon && <Icon name={item.icon} size="md" /> : triggerIcon && <Icon name={triggerIcon} size="md" />}
+            {!iconOnly && <span>{item.label}</span>}
+          </span>
+        ))
+      ) : (
+        (triggerIcon || !iconOnly) && (
+          <span class="menu-shown">
+            {triggerIcon && <Icon name={triggerIcon} size="md" />}
+            {!iconOnly && <span>{trigger ?? label}</span>}
+          </span>
+        )
+      )
+    }
+    <span class="menu-chevron"><Icon name="chevrons-up-down" size="md" /></span>
+  </summary>
+  <div class="menu-panel" role="menu" aria-label={label}>
+    {
+      items.map((item) =>
+        item.href ? (
+          <a
+            class="menu-item"
+            role="menuitem"
+            href={item.href}
+            tabindex="-1"
+            target={item.newTab ? "_blank" : undefined}
+            rel={item.newTab ? "noopener" : undefined}
+            data-state={item.state && item.state !== "rest" ? item.state : undefined}
+          >
+            {item.icon && <Icon name={item.icon} size="md" />}
+            <span class="menu-label">{item.label}</span>
+          </a>
+        ) : (
+          <button
+            type="button"
+            class="menu-item"
+            role="menuitemradio"
+            aria-checked={item.value === current ? "true" : "false"}
+            tabindex="-1"
+            data-value={item.value}
+            data-state={item.state && item.state !== "rest" ? item.state : undefined}
+          >
+            {item.icon && <Icon name={item.icon} size="md" />}
+            <span class="menu-label">{item.label}</span>
+            <span class="menu-check"><Icon name="check" size="md" /></span>
+          </button>
+        ),
+      )
+    }
+  </div>
+</details>
+
+<script>
+  type Item = HTMLButtonElement | HTMLAnchorElement;
+  const items = (menu: HTMLDetailsElement) => [...menu.querySelectorAll<Item>('[role="menuitemradio"], [role="menuitem"]')];
+
+  /** A menu the system page holds open to show its open state, which nothing elsewhere on the page closes. */
+  const held = (menu: HTMLDetailsElement) => menu.dataset.state === "open";
+
+  function close(menu: HTMLDetailsElement, refocus: boolean) {
+    menu.open = false;
+    if (refocus) menu.querySelector("summary")?.focus();
+  }
+
+  /** Marks an item current and shows it in the trigger, without announcing a change. */
+  function select(menu: HTMLDetailsElement, value: string) {
+    const chosen = items(menu).find((i) => i.dataset.value === value);
+    if (!chosen) return;
+    for (const i of items(menu)) i.setAttribute("aria-checked", String(i === chosen));
+    for (const shown of menu.querySelectorAll<HTMLElement>(".menu-shown[data-value]")) shown.hidden = shown.dataset.value !== value;
+    const summary = menu.querySelector("summary");
+    if (summary?.hasAttribute("aria-label")) summary.setAttribute("aria-label", `${menu.dataset.label}. ${chosen.textContent?.trim()}`);
+  }
+
+  for (const menu of document.querySelectorAll<HTMLDetailsElement>("details[data-menu]")) {
+    const summary = menu.querySelector("summary");
+    if (menu.dataset.current) select(menu, menu.dataset.current);
+    menu.addEventListener("menu-select", (event) => {
+      if (event instanceof CustomEvent && typeof event.detail === "string") select(menu, event.detail);
+    });
+    menu.addEventListener("toggle", () => {
+      if (!menu.open) return;
+      const list = items(menu);
+      (list.find((i) => i.getAttribute("aria-checked") === "true") ?? list[0])?.focus();
+    });
+    // Tab from an item moves focus out of the menu, so the menu closes behind it. A press elsewhere with the pointer
+    // gives no next target in some browsers, and the document's click handler closes the menu then.
+    menu.addEventListener("focusout", (event) => {
+      const next = event.relatedTarget;
+      if (menu.open && !held(menu) && next instanceof Node && !menu.contains(next)) close(menu, false);
+    });
+    menu.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && menu.open) {
+        event.preventDefault();
+        close(menu, true);
+        return;
+      }
+      const list = items(menu);
+      const index = list.findIndex((i) => i === document.activeElement);
+      if (event.key === "ArrowDown" && document.activeElement === summary && !menu.open) {
+        event.preventDefault();
+        menu.open = true;
+        return;
+      }
+      if (index === -1) return;
+      const last = list.length - 1;
+      const next =
+        event.key === "ArrowDown" ? (index === last ? 0 : index + 1)
+        : event.key === "ArrowUp" ? (index === 0 ? last : index - 1)
+        : event.key === "Home" ? 0
+        : event.key === "End" ? last
+        : -1;
+      if (next === -1) return;
+      event.preventDefault();
+      list[next].focus();
+    });
+    menu.addEventListener("click", (event) => {
+      const link = (event.target as Element).closest('[role="menuitem"]');
+      if (link) {
+        close(menu, false);
+        return;
+      }
+      const item = (event.target as Element).closest<HTMLButtonElement>('[role="menuitemradio"]');
+      if (!item?.dataset.value) return;
+      select(menu, item.dataset.value);
+      close(menu, true);
+      menu.dispatchEvent(new CustomEvent("menu-change", { bubbles: true, detail: item.dataset.value }));
+    });
+  }
+
+  document.addEventListener("click", (event) => {
+    for (const menu of document.querySelectorAll<HTMLDetailsElement>("details[data-menu][open]")) {
+      if (!held(menu) && !menu.contains(event.target as Node)) close(menu, false);
+    }
+  });
+</script>
+
+<style>
+  /* Each menu scopes its own anchor name, so a panel finds its own trigger. */
+  .menu {
+    anchor-scope: --menu-trigger;
+    display: inline-block;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .menu-trigger {
+    align-items: center;
+    anchor-name: --menu-trigger;
+    block-size: var(--control-md);
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+    cursor: pointer;
+    display: inline-flex;
+    font: var(--type-ui-strong);
+    gap: var(--space-2);
+    list-style: none;
+    padding-inline: var(--space-3);
+    user-select: none;
+  }
+
+  .menu[data-variant="outline"] .menu-trigger {
+    background-color: var(--color-control);
+    border: var(--border) solid var(--color-border-control);
+  }
+
+  /* An icon-only trigger shows its icon and the chevron close together, in a box as wide as two medium controls'
+     worth of icons. */
+  .menu[data-icon-only] .menu-trigger {
+    gap: var(--space-1);
+    inline-size: calc(var(--control-md) + var(--space-6));
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  /* The second half of a split button, as wide as a large control, with the chevron at its centre. */
+  .menu[data-join="end"] .menu-trigger {
+    border-end-start-radius: 0;
+    border-start-start-radius: 0;
+    inline-size: var(--control-lg);
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .menu-trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu-shown {
+    align-items: center;
+    display: inline-flex;
+    gap: var(--space-2);
+  }
+
+  .menu-shown[hidden] {
+    display: none;
+  }
+
+  .menu-chevron {
+    display: inline-flex;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .menu-trigger:hover {
+      background-color: var(--color-control-hover);
+    }
+
+    .menu-item:hover {
+      background-color: var(--color-control-hover);
+    }
+  }
+
+  .menu-trigger:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .menu[open] .menu-trigger,
+  .menu[data-state="open"] .menu-trigger {
+    background-color: var(--color-control-hover);
+  }
+
+  .menu-panel {
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-raised);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-0-5);
+    inset-block-start: anchor(bottom);
+    inset-inline-start: anchor(left);
+    margin-block-start: var(--space-1);
+    max-inline-size: 100%;
+    padding: var(--space-1);
+    position: fixed;
+    position-anchor: --menu-trigger;
+    position-try-fallbacks: flip-block;
+    transform-origin: top left;
+    z-index: var(--z-overlay);
+  }
+
+  /* The panel is fixed to its trigger, not placed inside its parent, so no box that clips its content can cut it. */
+  .menu[data-align="end"] .menu-panel {
+    inset-inline-end: anchor(right);
+    inset-inline-start: auto;
+    transform-origin: top right;
+  }
+
+  .menu[data-size="2xs"] .menu-panel {
+    min-inline-size: var(--container-2xs);
+  }
+
+  .menu[data-size="xs"] .menu-panel {
+    min-inline-size: var(--container-xs);
+  }
+
+  .menu[data-size="sm"] .menu-panel {
+    min-inline-size: min(var(--container-sm), calc(100vw - var(--space-12)));
+  }
+
+  .menu[data-size="md"] .menu-panel {
+    min-inline-size: min(var(--container-md), calc(100vw - var(--space-12)));
+  }
+
+  .menu-item {
+    align-items: center;
+    background-color: transparent;
+    block-size: var(--control-md);
+    border: 0;
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+    cursor: pointer;
+    display: flex;
+    font: var(--type-ui);
+    gap: var(--space-2);
+    padding-inline: var(--space-2);
+    text-align: start;
+    text-decoration: none;
+  }
+
+  .menu-label {
+    flex: 1;
+  }
+
+  .menu-check {
+    color: var(--color-accent);
+    display: inline-flex;
+    visibility: hidden;
+  }
+
+  .menu-item[data-state="hover"] {
+    background-color: var(--color-control-hover);
+  }
+
+  .menu-item:focus-visible,
+  .menu-item[data-state="focus"] {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .menu-item[aria-checked="true"] {
+    background-color: var(--color-selected);
+  }
+
+  .menu-item[aria-checked="true"] .menu-check {
+    visibility: visible;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .menu-panel {
+      transition:
+        opacity var(--duration-enter) var(--ease-out),
+        transform var(--duration-enter) var(--ease-out);
+    }
+  }
+
+  @starting-style {
+    .menu-panel {
+      opacity: 0;
+      transform: scale(var(--scale-press));
+    }
+  }
+</style>

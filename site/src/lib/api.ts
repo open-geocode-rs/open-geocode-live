@@ -1,48 +1,7 @@
 import { getCollection } from "astro:content";
 import type { StarlightRouteData } from "@astrojs/starlight/route-data";
-import openapi from "../../public/openapi.json";
+import { operationFor, SERVER, type ApiOperation } from "./openapi";
 import examplesJson from "../data/examples.json";
-
-type Parameter = {
-  name: string;
-  in: string;
-  required?: boolean;
-  description?: string;
-  schema?: { type?: string | string[]; $ref?: string };
-};
-type Operation = {
-  operationId: string;
-  summary?: string;
-  description?: string;
-  parameters?: Parameter[];
-  responses?: Record<string, { description?: string; headers?: Record<string, unknown> }>;
-};
-// `alias` is a second method the operation answers the same, shown beside `method`.
-export type ApiOperation = Operation & { method: string; alias?: string; path: string };
-
-const OPERATIONS_BASE = "docs/api/operations/";
-
-// OpenAPI 3.1 has no QUERY, so the engine documents a QUERY batch on its POST alias
-// and marks it with the Accept-Query header. The site shows it as the QUERY it is.
-function methodOf(method: string, op: Operation): Pick<ApiOperation, "method" | "alias"> {
-  const query = Object.values(op.responses ?? {}).some((r) => r.headers && "Accept-Query" in r.headers);
-  return method === "post" && query ? { method: "query", alias: "post" } : { method };
-}
-
-// starlight-openapi slugs pages by operationId; every og operationId is already a slug.
-const operations = new Map<string, ApiOperation>(
-  Object.entries(openapi.paths as Record<string, Record<string, Operation>>).flatMap(([path, item]) =>
-    Object.entries(item).map(([method, op]) => [op.operationId, { ...op, ...methodOf(method, op), path }] as const),
-  ),
-);
-
-export function allOperations(): ApiOperation[] {
-  return [...operations.values()];
-}
-
-export function operationFor(id: string): ApiOperation | undefined {
-  return id.startsWith(OPERATIONS_BASE) ? operations.get(id.slice(OPERATIONS_BASE.length)) : undefined;
-}
 
 // getEntry would warn on every generated API page, so look ids up in one set.
 let docIds: Promise<Set<string>> | undefined;
@@ -52,22 +11,34 @@ export async function markdownPath(id: string): Promise<string | undefined> {
   return operationFor(id) || (await docIds).has(id) ? `/${id}.md` : undefined;
 }
 
+type RawParameter = {
+  name: string;
+  in: string;
+  required?: boolean;
+  description?: string;
+  schema?: { type?: string | string[]; $ref?: string };
+};
+type RawResponse = { description?: string };
+
+// The Markdown copy of a page reads the document as written, so a parameter typed by a reference is named by it.
 export function operationMarkdown(op: ApiOperation): string {
+  const parameters = op.raw.parameters as RawParameter[] | undefined;
+  const responses = op.raw.responses as Record<string, RawResponse> | undefined;
   const route = `\`${op.method.toUpperCase()} ${op.path}\``;
   const lines = [`# ${op.summary ?? op.operationId}`, "", op.alias ? `${route}, or \`${op.alias.toUpperCase()} ${op.path}\`` : route, ""];
   if (op.description) lines.push(op.description, "");
-  if (op.parameters?.length) {
+  if (parameters?.length) {
     lines.push("## Parameters", "", "| Name | In | Required | Type | Description |", "| --- | --- | --- | --- | --- |");
-    for (const p of op.parameters) {
+    for (const p of parameters) {
       const type = [p.schema?.type ?? p.schema?.$ref?.split("/").pop() ?? ""].flat().join(" | ");
       const description = (p.description ?? "").replace(/\s*\n\s*/g, " ").replaceAll("|", "\\|");
       lines.push(`| \`${p.name}\` | ${p.in} | ${p.required ? "yes" : "no"} | ${type} | ${description} |`);
     }
     lines.push("");
   }
-  if (op.responses) {
+  if (responses) {
     lines.push("## Responses", "");
-    for (const [status, r] of Object.entries(op.responses)) lines.push(`- \`${status}\`: ${r.description ?? ""}`);
+    for (const [status, r] of Object.entries(responses)) lines.push(`- \`${status}\`: ${r.description ?? ""}`);
     lines.push("");
   }
   return lines.join("\n");
@@ -94,8 +65,6 @@ export function breadcrumbs(sidebar: Entry[], trail: Crumb[] = []): Crumb[] | un
     if (found) return found;
   }
 }
-
-export const SERVER = (openapi.servers?.[0]?.url ?? "http://127.0.0.1:8080").replace(/\/$/, "");
 
 // A request is a GET unless it names a method. `body` is sent as JSON, `upload` as a
 // file of that media type, and `answer` is how the reply is read: JSON unless said.
@@ -163,12 +132,3 @@ export function snippetsFor(example: Example): Snippet[] {
     { id: "python", label: "Python", lang: "python", code: python },
   ];
 }
-
-// Each method's icon: GET takes an answer in, POST sends one out, QUERY looks many up,
-// DELETE removes.
-export const METHOD_ICONS: Record<string, string> = {
-  get: "M17 7 7 17M17 17H7V7",
-  post: "M7 17 17 7M7 7h10v10",
-  query: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5",
-  delete: "M18 6 6 18M6 6l12 12",
-};

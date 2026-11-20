@@ -1,0 +1,6 @@
+probe {"rule": "og/selector", "file": "src/components/ui/Badge.astro", "after": "<style>\n"}
+  @media (prefers-color-scheme: dark) {
+    .badge {
+      color: var(--color-foreground);
+    }
+  }

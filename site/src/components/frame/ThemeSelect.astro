@@ -1,0 +1,77 @@
+---
+import Menu, { type MenuItem } from "../ui/Menu.astro";
+
+// The storage key and values are the frame's own, so its theme script reads the same choice before the page paints.
+const items: MenuItem[] = [
+  { value: "light", label: "Light", icon: "sun" },
+  { value: "dark", label: "Dark", icon: "moon" },
+  { value: "auto", label: "Auto", icon: "monitor" },
+];
+---
+
+<og-theme-select class="theme">
+  <Menu label="Select theme" variant="outline" items={items} current="auto" iconOnly size="2xs" align="end" />
+</og-theme-select>
+
+{/* Inline, so the trigger shows the saved choice from the first paint. The menu's own script reads data-current when it runs. */}
+<script is:inline>
+  (() => {
+    let choice = "auto";
+    try {
+      choice = localStorage.getItem("starlight-theme") || "auto";
+    } catch {}
+    for (const menu of document.querySelectorAll("og-theme-select details[data-menu]")) {
+      menu.dataset.current = choice;
+      for (const shown of menu.querySelectorAll("summary [data-value]")) shown.hidden = shown.dataset.value !== choice;
+    }
+  })();
+</script>
+
+<script>
+  type Theme = "auto" | "dark" | "light";
+  const KEY = "starlight-theme";
+
+  const parse = (v: unknown): Theme => (v === "dark" || v === "light" ? v : "auto");
+
+  function load(): Theme {
+    try {
+      return parse(localStorage.getItem(KEY));
+    } catch {
+      return "auto";
+    }
+  }
+
+  // The choice is held here, and storage only keeps it for the next page, so a choice that could not be saved still holds.
+  let chosen = load();
+
+  function apply(theme: Theme) {
+    chosen = theme;
+    const system = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    document.documentElement.dataset.theme = theme === "auto" ? system : theme;
+    try {
+      localStorage.setItem(KEY, theme === "auto" ? "" : theme);
+    } catch {}
+    for (const menu of document.querySelectorAll("og-theme-select details[data-menu]")) {
+      menu.dispatchEvent(new CustomEvent("menu-select", { detail: theme }));
+    }
+  }
+
+  matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => {
+    if (chosen === "auto") apply("auto");
+  });
+
+  class ThemeSelect extends HTMLElement {
+    connectedCallback() {
+      this.addEventListener("menu-change", (event) => {
+        if (event instanceof CustomEvent) apply(parse(event.detail));
+      });
+    }
+  }
+  customElements.define("og-theme-select", ThemeSelect);
+</script>
+
+<style>
+  .theme {
+    display: flex;
+  }
+</style>

@@ -1,0 +1,33 @@
+---
+export interface Props {
+  title: string;
+  note?: string;
+}
+
+const { title, note } = Astro.props;
+---
+
+<section class="section">
+  <h3 class="section-title">{title}</h3>
+  {note && <p class="section-note">{note}</p>}
+  <slot />
+</section>
+
+<style>
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .section-title {
+    font: var(--type-h4);
+    margin: 0;
+  }
+
+  .section-note {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui);
+    margin: 0;
+  }
+</style>

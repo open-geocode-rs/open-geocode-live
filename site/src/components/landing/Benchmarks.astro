@@ -1,4 +1,8 @@
 ---
+import Link from "../ui/Link.astro";
+import Tabs from "../ui/Tabs.astro";
+import Split from "./Split.astro";
+
 // Figures are the benchmarks page's (src/content/docs/benchmarks.mdx); keep the two in step.
 type Row = { name: string; bar: number; value: string; extra: string; og?: boolean };
 type Tab = { id: string; label: string; title: string; sub: string; cols: [string, string]; rows: Row[]; note: string };
@@ -63,96 +67,183 @@ const tabs: Tab[] = [
     note: `${RUN} · page cache included`,
   },
 ];
+
+// Each bar is its share of the tab's longest, never so short it disappears.
+const share = (row: Row, rows: Row[]) => Math.max(0.015, row.bar / Math.max(...rows.map((r) => r.bar)));
 ---
 
-<section class="og-bench" aria-labelledby="og-bench-title">
-  <div class="og-bench-box">
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <span class="og-corner" aria-hidden="true"></span>
-    <div class="og-bench-copy">
-      <p class="og-walk-eyebrow">Benchmarks</p>
-      <h2 id="og-bench-title">Paid-API accuracy. None of the weight.</h2>
-      <p>
-        On real web addresses, og puts more answers in the right city than TomTom or OpenCage, and trails TomTom by
-        1.4 points at street level. Against open-source engines it isn't close: the whole Netherlands on 1&nbsp;vCPU
-        and 1&nbsp;GiB, at 0.72&nbsp;ms a query and 6× the throughput of Photon and Pelias.
-      </p>
-      <a class="og-bench-link" href="/docs/benchmarks/">Read the full benchmarks →</a>
-    </div>
-    <og-bench-tabs class="og-bench-chart">
-      <div class="og-bench-tabs" role="tablist" aria-label="Benchmark">
-        {tabs.map((t, i) => (
-          <button type="button" role="tab" id={`og-bench-tab-${t.id}`} aria-controls={`og-bench-${t.id}`} aria-selected={i === 0 ? "true" : "false"} tabindex={i === 0 ? 0 : -1}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-      {tabs.map((t, i) => {
-        const max = Math.max(...t.rows.map((r) => r.bar));
-        return (
-          <div class:list={["og-bench-panel", { "og-bench-dense": t.rows.length > 4 }]} role="tabpanel" id={`og-bench-${t.id}`} aria-labelledby={`og-bench-tab-${t.id}`} hidden={i !== 0}>
+<Split id="og-bench-title" eyebrow="Benchmarks" title="Paid-API accuracy. None of the weight.">
+  <p>
+    On real web addresses, og puts more answers in the right city than TomTom or OpenCage, and trails TomTom by 1.4
+    points at street level. Against open-source engines it isn't close: the whole Netherlands on 1&nbsp;vCPU and
+    1&nbsp;GiB, at 0.72&nbsp;ms a query and 6× the throughput of Photon and Pelias.
+  </p>
+  <Link variant="standalone" href="/docs/benchmarks/">Read the full benchmarks</Link>
+  <div class="og-bench-chart" slot="aside">
+    <Tabs id="og-bench" label="Benchmark" tabs={tabs.map((t) => ({ id: t.id, label: t.label }))}>
+      {
+        tabs.map((t) => (
+          <div class="og-bench-panel" data-dense={t.rows.length > 4 ? "" : undefined} slot={t.id}>
             <h3>{t.title}</h3>
             <p class="og-bench-sub">{t.sub}</p>
             <table>
               <thead>
                 <tr>
-                  <th scope="col"><span class="sr-only">Geocoder</span></th>
-                  <th scope="col"><span class="sr-only">Bar</span></th>
+                  <th scope="col">
+                    <span class="sr-only">Geocoder</span>
+                  </th>
+                  <th scope="col">
+                    <span class="sr-only">Bar</span>
+                  </th>
                   <th scope="col">{t.cols[0]}</th>
                   <th scope="col">{t.cols[1]}</th>
                 </tr>
               </thead>
               <tbody>
                 {t.rows.map((r) => (
-                  <tr class:list={{ "og-bench-og": r.og }}>
-                    <th scope="row">{r.name}</th>
+                  <tr data-og={r.og ? "" : undefined}>
+                    <th scope="row">{r.og ? <strong>{r.name}</strong> : r.name}</th>
                     <td class="og-bench-bar" aria-hidden="true">
-                      <span style={`width: ${Math.max(1.5, (r.bar / max) * 100)}%`}></span>
+                      <span class="og-bench-fill" style={`--value: ${share(r, t.rows)}`} />
                     </td>
-                    <td class="og-bench-value">{r.value}</td>
+                    <td class="og-bench-value">{r.og ? <strong>{r.value}</strong> : r.value}</td>
                     <td class="og-bench-extra">{r.extra}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <p class="og-bench-note">
-              {t.note}
-              <a href="/docs/benchmarks/">method</a>
+              {t.note} <Link href="/docs/benchmarks/">method</Link>
             </p>
           </div>
-        );
-      })}
-    </og-bench-tabs>
+        ))
+      }
+    </Tabs>
   </div>
-</section>
+</Split>
 
-<script>
-  // Panels are all in the HTML for readers and crawlers; this only switches them.
-  class BenchTabs extends HTMLElement {
-    connectedCallback() {
-      const tabs = [...this.querySelectorAll<HTMLButtonElement>("[role=tab]")];
-      const select = (tab: HTMLButtonElement) => {
-        for (const t of tabs) {
-          const on = t === tab;
-          t.setAttribute("aria-selected", String(on));
-          t.tabIndex = on ? 0 : -1;
-          this.querySelector<HTMLElement>(`#${t.getAttribute("aria-controls")}`)!.hidden = !on;
-        }
-      };
-      tabs.forEach((tab, i) => {
-        tab.addEventListener("click", () => select(tab));
-        tab.addEventListener("keydown", (e) => {
-          const step = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
-          if (!step) return;
-          const next = tabs[(i + step + tabs.length) % tabs.length];
-          select(next);
-          next.focus();
-        });
-      });
-    }
+<style>
+  /* The tab labels sit a tab's padding in from the chart's edge, and the panels line up with them. */
+  .og-bench-chart {
+    padding: var(--space-6) var(--space-2);
   }
 
-  customElements.define("og-bench-tabs", BenchTabs);
-</script>
+  .og-bench-panel {
+    padding-inline: var(--space-3);
+  }
+
+  .og-bench-panel h3 {
+    font: var(--type-h4);
+    margin: 0;
+  }
+
+  .og-bench-sub {
+    color: var(--color-foreground-muted);
+    font: var(--type-caption);
+    margin: var(--space-1) 0 var(--space-6);
+  }
+
+  .og-bench-panel table {
+    border-collapse: collapse;
+    font: var(--type-ui);
+    inline-size: 100%;
+    table-layout: fixed;
+  }
+
+  .og-bench-panel th,
+  .og-bench-panel td {
+    padding: var(--space-1) 0;
+  }
+
+  .og-bench-panel thead th {
+    color: var(--color-foreground-muted);
+    font: var(--type-label);
+    letter-spacing: var(--tracking-caps);
+    text-align: end;
+    text-transform: uppercase;
+  }
+
+  .og-bench-panel th:nth-child(1) {
+    inline-size: 28%;
+  }
+
+  .og-bench-panel th:nth-child(2) {
+    inline-size: 36%;
+  }
+
+  .og-bench-panel th:nth-child(3),
+  .og-bench-panel th:nth-child(4) {
+    inline-size: 18%;
+  }
+
+  .og-bench-panel tbody th {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui);
+    text-align: start;
+  }
+
+  .og-bench-panel [data-og] th {
+    color: var(--color-foreground);
+  }
+
+  .og-bench-bar {
+    padding-inline-end: var(--space-3);
+  }
+
+  /* The bar's length is the row's share of the longest, passed as data. */
+  .og-bench-fill {
+    background-color: var(--color-foreground);
+    block-size: var(--space-6);
+    display: block;
+    inline-size: calc(var(--value) * 100%);
+    min-inline-size: var(--space-1);
+  }
+
+  .og-bench-panel [data-og] .og-bench-fill {
+    background-color: var(--color-success);
+  }
+
+  /* A tab with more rows draws them thinner, so every tab keeps about the height of four. */
+  .og-bench-panel[data-dense] th,
+  .og-bench-panel[data-dense] td {
+    padding-block: var(--space-0-5);
+  }
+
+  .og-bench-panel[data-dense] .og-bench-fill {
+    block-size: var(--space-3);
+  }
+
+  .og-bench-value,
+  .og-bench-extra {
+    font: var(--type-code);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    white-space: nowrap;
+  }
+
+  .og-bench-value {
+    color: var(--color-foreground-secondary);
+  }
+
+  .og-bench-panel [data-og] .og-bench-value {
+    color: var(--color-foreground);
+  }
+
+  .og-bench-extra {
+    color: var(--color-foreground-muted);
+  }
+
+  .og-bench-note {
+    border-block-start: var(--border) solid var(--color-border);
+    color: var(--color-foreground-muted);
+    font: var(--type-caption);
+    margin: var(--space-4) 0 0;
+    padding-block-start: var(--space-3);
+  }
+
+  @media (min-width: 72rem) {
+    .og-bench-chart {
+      padding-inline: var(--space-5);
+    }
+  }
+</style>

@@ -1,0 +1,64 @@
+---
+// One cell of a component grid. The data-cell names the component, variant, size and state it holds.
+export interface Props {
+  component: string;
+  variant: string;
+  size: string;
+  state: string;
+  flag?: string;
+  /** The narrowest the cell gets. */
+  width?: "narrow" | "wide" | "wider";
+  /** Leaves room below for a menu held open. */
+  tall?: boolean;
+}
+
+const { component, variant, size, state, flag, width = "narrow", tall = false } = Astro.props;
+const cell = [component, variant, size, state, ...(flag ? [flag] : [])].join(":");
+const caption = [variant, size, state, flag].filter((p) => p && p !== "default").join(" · ");
+---
+
+<div class="cell" data-cell={cell} data-width={width} data-tall={tall ? "" : undefined}>
+  <div class="cell-body"><slot /></div>
+  <span class="cell-caption">{caption}</span>
+</div>
+
+<style>
+  .cell {
+    align-items: flex-start;
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    flex: 1 1 var(--space-24);
+    justify-content: space-between;
+    padding: var(--space-3);
+  }
+
+  .cell[data-width="wide"] {
+    flex-basis: var(--container-sm);
+    min-inline-size: 0;
+  }
+
+  .cell[data-width="wider"] {
+    flex-basis: var(--container-md);
+    min-inline-size: 0;
+  }
+
+  .cell-body {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    inline-size: 100%;
+  }
+
+  .cell[data-tall] {
+    min-block-size: var(--container-sm);
+  }
+
+  .cell-caption {
+    color: var(--color-foreground-muted);
+    font: var(--type-caption);
+  }
+</style>

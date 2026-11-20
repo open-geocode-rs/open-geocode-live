@@ -1,0 +1,277 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Icon, { type IconName } from "./Icon.astro";
+
+export const buttonVariants = ["solid", "outline", "ghost", "pill", "raised", "raised-solid"] as const;
+export const buttonSizes = ["sm", "md", "lg", "xl"] as const;
+export const buttonStates = ["rest", "hover", "focus", "pressed", "disabled"] as const;
+
+type Base = Omit<HTMLAttributes<"button">, "class" | "class:list" | "style" | "aria-label"> & {
+  variant?: (typeof buttonVariants)[number];
+  size?: (typeof buttonSizes)[number];
+  /** Holds a state without a pointer, for the system page. */
+  state?: (typeof buttonStates)[number];
+  icon?: IconName;
+  /** Joins the button to the control after it, as the first half of a split button. */
+  join?: "start";
+};
+
+/** A button, or a link that looks like the button, for an action that goes to another page. A link cannot be
+    disabled, so a link button takes neither disabled nor the disabled state. */
+type Target =
+  | { href?: undefined }
+  | { href: string; disabled?: never; state?: Exclude<(typeof buttonStates)[number], "disabled"> };
+
+export type Props = Base &
+  Target &
+  ({ iconOnly?: false; label?: string } | { iconOnly: true; icon: IconName; label: string });
+
+const {
+  variant = "solid",
+  size = "md",
+  state = "rest",
+  icon,
+  iconOnly = false,
+  label,
+  type = "button",
+  disabled,
+  href,
+  join,
+  ...attrs
+} = Astro.props;
+
+// No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
+const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
+// An icon-only button's icon carries its whole meaning, so from the default size up it takes the large icon.
+const iconSize = size === "sm" ? "sm" : iconOnly ? "lg" : "md";
+const Tag = href ? "a" : "button";
+---
+
+<Tag
+  {...own(attrs)}
+  class="button"
+  href={href}
+  type={href ? undefined : type}
+  data-variant={variant}
+  data-size={size}
+  data-join={join}
+  data-icon-only={iconOnly ? "" : undefined}
+  data-state={state === "rest" ? undefined : state}
+  disabled={href ? undefined : disabled || state === "disabled"}
+  aria-label={iconOnly ? label : undefined}
+>
+  {
+    icon && (
+      <span class="button-icon">
+        <Icon name={icon} size={iconSize} />
+      </span>
+    )
+  }
+  {!iconOnly && <slot />}
+</Tag>
+
+<style>
+  .button {
+    align-items: center;
+    background-color: transparent;
+    border: var(--border) solid transparent;
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+    cursor: pointer;
+    display: inline-flex;
+    /* A control keeps its size in a crowded row. The text beside it gives way instead. */
+    flex-shrink: 0;
+    font: var(--type-ui-strong);
+    gap: var(--space-2);
+    justify-content: center;
+    padding-block: 0;
+    text-decoration: none;
+    user-select: none;
+    white-space: nowrap;
+  }
+
+  .button-icon {
+    display: inline-flex;
+  }
+
+  .button[data-size="sm"] {
+    block-size: var(--control-sm);
+    padding-inline: var(--space-2);
+  }
+
+  .button[data-size="md"] {
+    block-size: var(--control-md);
+    padding-inline: var(--space-3);
+  }
+
+  .button[data-size="lg"] {
+    block-size: var(--control-lg);
+    padding-inline: var(--space-5);
+  }
+
+  .button[data-size="xl"] {
+    block-size: var(--control-xl);
+    font: var(--type-ui-lg-strong);
+    letter-spacing: var(--tracking-wide);
+    padding-inline: calc(var(--space-6) + var(--space-0-5));
+  }
+
+  .button[data-icon-only][data-size="sm"] {
+    inline-size: var(--control-sm);
+    padding-inline: 0;
+  }
+
+  .button[data-icon-only][data-size="md"] {
+    inline-size: var(--control-md);
+    padding-inline: 0;
+  }
+
+  .button[data-icon-only][data-size="lg"] {
+    inline-size: var(--control-lg);
+    padding-inline: 0;
+  }
+
+  /* The first half of a split button. Its end edge is the next control's start border. */
+  .button[data-join="start"] {
+    border-end-end-radius: 0;
+    border-inline-end-width: 0;
+    border-start-end-radius: 0;
+  }
+
+  .button[data-variant="solid"] {
+    background-color: var(--color-solid);
+    color: var(--color-on-solid);
+  }
+
+  .button[data-variant="outline"] {
+    background-color: var(--color-control);
+    border-color: var(--color-border-control);
+  }
+
+  /* A round outline at body size, half a step shorter than the large control, for the landing page's header. */
+  .button[data-variant="pill"] {
+    border-color: var(--color-border);
+    border-radius: var(--radius-full);
+    font: var(--type-ui-lg);
+  }
+
+  .button[data-variant="pill"][data-size="lg"] {
+    block-size: calc(var(--control-lg) - var(--space-0-5));
+    padding-inline: var(--space-3-5);
+  }
+
+  /* A raised button is a key at body size, half a step taller than the large control, with room for a disc. */
+  .button[data-variant="raised"],
+  .button[data-variant="raised-solid"] {
+    font: var(--type-ui-lg);
+    gap: var(--space-3);
+  }
+
+  .button[data-variant="raised"][data-size="lg"],
+  .button[data-variant="raised-solid"][data-size="lg"] {
+    block-size: calc(var(--control-lg) + var(--space-0-5));
+    padding-inline: var(--space-4);
+  }
+
+  .button[data-variant="raised"] {
+    background: var(--button-raised-cap);
+    border: var(--border-strong) solid var(--button-raised-edge);
+    border-radius: var(--radius-full);
+    box-shadow: var(--button-raised-shadow);
+  }
+
+  .button[data-variant="raised-solid"] {
+    background: var(--button-raised-solid-cap);
+    border: var(--border-strong) solid var(--button-raised-solid-edge);
+    border-radius: var(--radius-full);
+    box-shadow: var(--button-raised-solid-shadow);
+    color: var(--color-on-solid);
+    text-shadow: var(--button-raised-solid-text-shadow);
+  }
+
+  .button[data-variant="raised-solid"][data-size="xl"] {
+    font: var(--type-ui-lg-strong);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .button[data-variant="solid"]:hover {
+      background-color: var(--color-solid-hover);
+    }
+
+    .button[data-variant="outline"]:hover,
+    .button[data-variant="ghost"]:hover {
+      background-color: var(--color-control-hover);
+    }
+
+    .button[data-variant="pill"]:hover {
+      background-color: var(--color-control);
+    }
+
+    .button[data-variant="raised"]:hover {
+      background: var(--button-raised-cap-hover);
+    }
+
+    .button[data-variant="raised-solid"]:hover {
+      background: var(--button-raised-solid-cap-hover);
+    }
+  }
+
+  .button[data-variant="solid"][data-state="hover"] {
+    background-color: var(--color-solid-hover);
+  }
+
+  .button[data-variant="outline"][data-state="hover"],
+  .button[data-variant="ghost"][data-state="hover"] {
+    background-color: var(--color-control-hover);
+  }
+
+  .button[data-variant="pill"][data-state="hover"] {
+    background-color: var(--color-control);
+  }
+
+  .button[data-variant="raised"][data-state="hover"] {
+    background: var(--button-raised-cap-hover);
+  }
+
+  .button[data-variant="raised-solid"][data-state="hover"] {
+    background: var(--button-raised-solid-cap-hover);
+  }
+
+  .button:focus-visible,
+  .button[data-state="focus"] {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .button:disabled,
+  .button[data-state="disabled"] {
+    cursor: not-allowed;
+    opacity: var(--opacity-disabled);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .button {
+      transition:
+        box-shadow var(--duration-press) var(--ease-out),
+        transform var(--duration-press) var(--ease-out),
+        translate var(--duration-press) var(--ease-out);
+    }
+
+    .button:active,
+    .button[data-state="pressed"] {
+      transform: scale(var(--scale-press));
+    }
+
+    .button[data-variant="raised"]:active,
+    .button[data-variant="raised"][data-state="pressed"] {
+      box-shadow: var(--button-raised-shadow-pressed);
+      translate: 0 var(--space-1);
+    }
+
+    .button[data-variant="raised-solid"]:active,
+    .button[data-variant="raised-solid"][data-state="pressed"] {
+      box-shadow: var(--button-raised-solid-shadow-pressed);
+      translate: 0 var(--space-1);
+    }
+  }
+</style>

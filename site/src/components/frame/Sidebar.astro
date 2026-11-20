@@ -1,0 +1,33 @@
+---
+import SidebarPersister from "@astrojs/starlight/components/SidebarPersister.astro";
+import Button from "../ui/Button.astro";
+import SidebarList from "./SidebarList.astro";
+import ThemeSelect from "./ThemeSelect.astro";
+import { repository } from "./links";
+---
+
+<SidebarPersister>
+  <SidebarList entries={Astro.locals.starlightRoute.sidebar} />
+</SidebarPersister>
+
+<div class="sidebar-phone">
+  <Button variant="ghost" iconOnly icon="github" label={repository.label} href={repository.href} />
+  <ThemeSelect />
+</div>
+
+<style>
+  .sidebar-phone {
+    align-items: center;
+    border-block-start: var(--border) solid var(--color-border);
+    display: flex;
+    justify-content: space-between;
+    margin-block-start: auto;
+    padding-block: var(--space-2);
+  }
+
+  @media (min-width: 50rem) {
+    .sidebar-phone {
+      display: none;
+    }
+  }
+</style>

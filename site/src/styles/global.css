@@ -1,0 +1,111 @@
+/*
+ * The global element rules. The body's type, and the elements of the docs prose that are written as Markdown.
+ * Code blocks, asides, headings, links and tabs in the prose are our own components and style themselves.
+ */
+body {
+  font: var(--type-body);
+}
+
+/* Selected text is the brand green on every page, in both themes. */
+::selection {
+  background-color: var(--color-selection);
+  color: var(--color-on-selection);
+}
+
+/* Blocks in the prose sit one step apart, and a heading after other blocks sits further clear of them. */
+.prose-flow > * + *,
+.prose li > * + * {
+  margin-block-start: var(--space-4);
+}
+
+.prose-flow > :not(.prose-heading) + .prose-heading {
+  margin-block-start: var(--space-10);
+}
+
+.prose li {
+  overflow-wrap: anywhere;
+}
+
+.prose li + li {
+  margin-block-start: var(--space-1);
+}
+
+/* In a list whose items hold paragraphs, each item ends a step clear of the next. */
+.prose :is(ul, ol):has(> li > p) > li > :last-child {
+  margin-block-end: var(--space-5);
+}
+
+.prose :not(pre) > code {
+  background-color: var(--color-code);
+  border-radius: var(--radius-sm);
+  font: var(--type-code-inline);
+  padding: 0 var(--space-1);
+}
+
+/* A flag as a heading reads as the heading, not as a chip inside it. */
+.prose .prose-heading code {
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+}
+
+/* A flag broken mid-word reads as two flags. */
+.prose td code {
+  white-space: nowrap;
+}
+
+.prose table {
+  border-spacing: 0;
+  display: block;
+  font: var(--type-ui);
+  font-variant-numeric: tabular-nums;
+  overflow-x: auto;
+}
+
+.prose :is(th, td) {
+  border-block-end: var(--border) solid var(--color-border);
+  padding: var(--space-2) var(--space-4);
+  vertical-align: baseline;
+}
+
+.prose :is(th, td):first-child {
+  padding-inline-start: 0;
+}
+
+.prose :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.prose th {
+  color: var(--color-foreground);
+  font: var(--type-ui-strong);
+}
+
+.prose th:not([align]) {
+  text-align: start;
+}
+
+.prose blockquote {
+  border-inline-start: var(--border) solid var(--color-border);
+  color: var(--color-foreground-secondary);
+  padding-inline-start: var(--space-4);
+}
+
+.prose hr {
+  border: 0;
+  border-block-end: var(--border) solid var(--color-border);
+}
+
+.prose img {
+  block-size: auto;
+  display: block;
+  max-inline-size: 100%;
+}
+
+/* Every scroll area of the docs, the page and each panel in it, takes one thin scrollbar: a thumb in the control edge's
+   colour on no track, so it follows the theme. The landing page keeps the browser's own. */
+:root[data-has-sidebar],
+:root[data-has-sidebar] * {
+  scrollbar-color: var(--color-border-strong) transparent;
+  scrollbar-width: thin;
+}

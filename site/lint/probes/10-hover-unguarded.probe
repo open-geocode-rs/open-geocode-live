@@ -1,0 +1,4 @@
+probe {"rule": "og/motion", "file": "src/components/ui/Badge.astro", "after": "<style>\n"}
+  .badge:hover {
+    translate: 0 var(--space-1);
+  }

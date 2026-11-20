@@ -1,0 +1,186 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import Icon, { type IconName } from "./Icon.astro";
+
+export const inputVariants = ["text", "textarea", "select"] as const;
+export const inputSizes = ["md", "lg"] as const;
+export const inputStates = ["rest", "hover", "focus", "disabled", "invalid"] as const;
+
+type Shared = {
+  size?: (typeof inputSizes)[number];
+  /** Holds a state without a pointer, for the system page. */
+  state?: (typeof inputStates)[number];
+  invalid?: boolean;
+};
+
+type Omitted = "class" | "class:list" | "style" | "size";
+/** A text field may lead with an icon that says what it is for, such as search. */
+type TextProps = Omit<HTMLAttributes<"input">, Omitted> & Shared & { variant?: "text"; icon?: IconName };
+type TextareaProps = Omit<HTMLAttributes<"textarea">, Omitted> & Shared & { variant: "textarea"; value?: string };
+/** A choice among a few options, set in a control's box, with the platform's own list so it is never cut off. Its
+ * options are choices, not page text, so search leaves them out. */
+type SelectProps = Omit<HTMLAttributes<"select">, Omitted> &
+  Shared & { variant: "select"; icon?: IconName; options: { value: string; label: string }[]; value?: string };
+
+export type Props = TextProps | TextareaProps | SelectProps;
+
+const props = Astro.props;
+const { size = "md", state = "rest", invalid = false } = props;
+const shared = {
+  "data-size": size,
+  "data-state": state === "rest" ? undefined : state,
+  "aria-invalid": invalid || state === "invalid" ? ("true" as const) : undefined,
+  disabled: props.disabled || state === "disabled",
+};
+
+// No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
+const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
+
+function textareaAttrs({ variant, size, state, invalid, disabled, value, ...rest }: TextareaProps) {
+  return { attrs: own(rest), value };
+}
+
+function textAttrs({ variant, size, state, invalid, disabled, icon, ...rest }: TextProps) {
+  return own(rest);
+}
+
+function selectAttrs({ variant, size, state, invalid, disabled, icon, options, value, ...rest }: SelectProps) {
+  return own(rest);
+}
+---
+
+{
+  props.variant === "select" ? (
+    <span class="input-field" data-select data-pagefind-ignore>
+      {props.icon && <span class="input-icon"><Icon name={props.icon} size="md" /></span>}
+      <select {...selectAttrs(props)} {...shared} class="input" data-variant="select" data-icon={props.icon ? "" : undefined}>
+        {props.options.map((o) => <option value={o.value} selected={o.value === props.value}>{o.label}</option>)}
+      </select>
+      <span class="input-chevron"><Icon name="chevrons-up-down" size="md" /></span>
+    </span>
+  ) : props.variant === "textarea" ? (
+    <textarea {...textareaAttrs(props).attrs} {...shared} class="input" data-variant="textarea">{textareaAttrs(props).value}</textarea>
+  ) : (
+    props.icon ? (
+      <span class="input-field">
+        <span class="input-icon"><Icon name={props.icon} size="md" /></span>
+        <input type="text" {...textAttrs(props)} {...shared} class="input" data-variant="text" data-icon />
+      </span>
+    ) : (
+      <input type="text" {...textAttrs(props)} {...shared} class="input" data-variant="text" />
+    )
+  )
+}
+
+<style>
+  .input {
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border-control);
+    border-radius: var(--radius-md);
+    box-sizing: border-box;
+    color: var(--color-foreground);
+    font: var(--type-ui);
+    inline-size: 100%;
+    padding-inline: var(--space-3);
+  }
+
+  /* The field with its icon takes the whole width it is given, as a bare field does. */
+  .input-field {
+    display: block;
+    flex: 1;
+    inline-size: 100%;
+    position: relative;
+  }
+
+  .input-icon {
+    align-items: center;
+    color: var(--color-foreground-muted);
+    display: flex;
+    inset-block: 0;
+    inset-inline-start: var(--space-3);
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .input[data-icon] {
+    padding-inline-start: var(--space-8);
+  }
+
+  .input::placeholder {
+    color: var(--color-foreground-muted);
+  }
+
+  .input[data-variant="text"][data-size="md"] {
+    block-size: var(--control-md);
+  }
+
+  .input[data-variant="text"][data-size="lg"] {
+    block-size: var(--control-lg);
+  }
+
+  /* A select sizes to its choice, with the chevrons at its end, and fills like a control. */
+  .input-field[data-select] {
+    display: inline-block;
+    flex: none;
+    inline-size: auto;
+  }
+
+  .input[data-variant="select"] {
+    appearance: none;
+    background-color: var(--color-control);
+    block-size: var(--control-md);
+    cursor: pointer;
+    field-sizing: content;
+    font: var(--type-ui-strong);
+    padding-inline-end: var(--space-8);
+  }
+
+  .input[data-variant="select"][data-size="lg"] {
+    block-size: var(--control-lg);
+  }
+
+  .input-chevron {
+    align-items: center;
+    display: flex;
+    inset-block: 0;
+    inset-inline-end: var(--space-3);
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .input[data-variant="textarea"] {
+    padding-block: var(--space-2);
+    resize: vertical;
+  }
+
+  .input[data-variant="textarea"][data-size="lg"] {
+    padding-block: var(--space-3);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .input:hover {
+      border-color: var(--color-border-strong);
+    }
+  }
+
+  .input[data-state="hover"] {
+    border-color: var(--color-border-strong);
+  }
+
+  .input:focus-visible,
+  .input[data-state="focus"] {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .input[aria-invalid="true"],
+  .input[data-state="invalid"] {
+    border-color: var(--color-danger);
+  }
+
+  .input:disabled,
+  .input[data-state="disabled"] {
+    cursor: not-allowed;
+    opacity: var(--opacity-disabled);
+  }
+</style>

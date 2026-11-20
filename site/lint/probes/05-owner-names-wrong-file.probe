@@ -1,0 +1,2 @@
+probe {"rule": "og/unread-token", "file": "lint/budget.json", "replace": "\"--type-lead\": \"src/pages/index.astro\""}
+"--type-lead": "src/components/landing/Split.astro"

@@ -1,24 +1,29 @@
 ---
 import logoLight from "../../assets/logo-light.png";
-import GitHubMark from "./GitHubMark.astro";
+import Button from "../ui/Button.astro";
+import Icon, { type IconName } from "../ui/Icon.astro";
+import Link from "../ui/Link.astro";
+import Disc from "./Disc.astro";
 
-const menus = [
+const REPO = "https://github.com/open-geocode-rs/open-geocode";
+
+const menus: { label: string; items: { label: string; href: string; icon: IconName }[] }[] = [
   {
     label: "Solutions",
     items: [
-      { label: "Forward geocoding", href: "/docs/api/operations/geocode/", icon: "M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0" },
-      { label: "Autocomplete", href: "/docs/api/operations/autocomplete/", icon: "M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0M21 21l-4.3-4.3" },
-      { label: "Reverse geocoding", href: "/docs/api/operations/reverse/", icon: "M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0M2 12h3M19 12h3M12 2v3M12 19v3" },
-      { label: "Batch geocoding", href: "/docs/guides/batch-csv/", icon: "M3 5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 9h18M3 15h18M9 3v18" },
+      { label: "Forward geocoding", href: "/docs/api/operations/geocode/", icon: "map-pin" },
+      { label: "Autocomplete", href: "/docs/api/operations/autocomplete/", icon: "search" },
+      { label: "Reverse geocoding", href: "/docs/api/operations/reverse/", icon: "crosshair" },
+      { label: "Batch geocoding", href: "/docs/guides/batch-csv/", icon: "table" },
     ],
   },
   {
     label: "Resources",
     items: [
-      { label: "Documentation", href: "/docs/", icon: "M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z" },
-      { label: "API reference", href: "/docs/api/", icon: "m16 18 6-6-6-6M8 6l-6 6 6 6" },
-      { label: "Benchmarks", href: "/docs/benchmarks/", icon: "M3 3v18h18M8 17v-4M13 17V9M18 17V5" },
-      { label: "GitHub", href: "https://github.com/open-geocode-rs/open-geocode", icon: "M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.1-1.3-.3-2.5-1-3.5.3-1.2.3-2.4 0-3.5 0 0-1 0-3 1.5a19 19 0 0 0-8 0C6 2 5 2 5 2c-.3 1.1-.3 2.3 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.4.5-.7 1-.9 1.7-.2.6-.2 1.2-.1 1.8v4M9 18c-4.5 2-5-2-7-2" },
+      { label: "Documentation", href: "/docs/", icon: "book" },
+      { label: "API reference", href: "/docs/api/", icon: "code" },
+      { label: "Benchmarks", href: "/docs/benchmarks/", icon: "chart" },
+      { label: "GitHub", href: REPO, icon: "github" },
     ],
   },
 ];
@@ -29,41 +34,211 @@ const menus = [
     <img src={logoLight.src} width={logoLight.width} height={logoLight.height} alt="" />
   </a>
   <nav class="og-nav" aria-label="Main">
-    {menus.map((menu) => (
-      <div class="og-menu">
-        <button type="button" class="og-pill" aria-haspopup="true">
-          {menu.label}
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></svg>
-        </button>
-        <div class="og-menu-panel">
-          {menu.items.map((item, i) => (
-            <a class="og-key" href={item.href} style={`--i: ${i}`}>
-              <span class="og-key-disc" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d={item.icon} /></svg>
-              </span>
-              {item.label}
-            </a>
-          ))}
+    {
+      menus.map((menu) => (
+        <div class="og-menu">
+          <Button variant="pill" size="lg" aria-haspopup="true">
+            {menu.label}
+            <span class="og-chevron"><Icon name="chevrons-up-down" size="md" /></span>
+          </Button>
+          <div class="og-menu-panel">
+            <div>
+              <div class="og-menu-items">
+              {menu.items.map((item) => (
+                <Button variant="raised" size="lg" href={item.href}>
+                  <Disc icon={item.icon} edge="start" />
+                  {item.label}
+                </Button>
+              ))}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    ))}
+      ))
+    }
     <div class="og-menu">
-      <button type="button" class="og-pill" aria-haspopup="true">
+      <Button variant="pill" size="lg" aria-haspopup="true">
         Pricing
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 15 5 5 5-5M7 9l5-5 5 5" /></svg>
-      </button>
-      <div class="og-menu-panel og-pricing">
-        <p>
-          <strong>$0.</strong> No tiers, no seats, no per-lookup fees, no sales call.
-          It's MIT, so <a href="https://github.com/open-geocode-rs/open-geocode">just take it</a>.
-        </p>
+        <span class="og-chevron"><Icon name="chevrons-up-down" size="md" /></span>
+      </Button>
+      <div class="og-menu-panel">
+        <div>
+          <div class="og-menu-items">
+            <p class="og-pricing">
+              <strong>$0.</strong> No tiers, no seats, no per-lookup fees, no sales call. It's MIT, so <Link href={REPO}>just take it</Link>.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
   <div class="og-actions">
-    <a class="og-pill" href="https://github.com/open-geocode-rs/open-geocode">
-      <GitHubMark />
-      GitHub
-    </a>
+    <Button variant="pill" size="lg" icon="github" href={REPO}>GitHub</Button>
   </div>
 </header>
+
+<script>
+  // Once the first band has opened, the nav is marked, so a neighbour's band opens whole at once. Leaving the nav
+  // clears the mark, so the next first band fades in again.
+  for (const nav of document.querySelectorAll<HTMLElement>(".og-nav")) {
+    nav.addEventListener("transitionend", (event) => {
+      const panel = event.target as Element;
+      if (event.propertyName === "opacity" && panel.matches(".og-menu-panel") && getComputedStyle(panel).opacity === "1") nav.dataset.swap = "";
+    });
+    nav.addEventListener("pointerleave", () => {
+      delete nav.dataset.swap;
+    });
+  }
+</script>
+
+<style>
+  /* Logo and menus on the left, actions pushed to the right. Above the hero, so an open menu's band lies over it. */
+  .og-header {
+    align-items: center;
+    background-color: var(--color-background);
+    block-size: var(--layout-landing-nav-height);
+    border-block-end: var(--border) dashed var(--color-border);
+    display: flex;
+    gap: var(--space-8);
+    padding-inline: var(--layout-gutter);
+    position: relative;
+    z-index: var(--z-sticky);
+  }
+
+  .og-logo {
+    display: flex;
+  }
+
+  .og-logo img {
+    block-size: var(--space-8);
+    inline-size: auto;
+  }
+
+  /* Each menu fills the header's height, so the pointer stays on it from the trigger down to the band. */
+  .og-nav {
+    align-self: stretch;
+    display: none;
+    gap: var(--space-2);
+  }
+
+  @media (min-width: 52rem) {
+    .og-nav {
+      display: flex;
+    }
+  }
+
+  /* Static, so the band positions against the whole header. */
+  .og-menu {
+    align-items: center;
+    display: flex;
+    position: static;
+  }
+
+  /* A full-width band just under the header's rule, the header's last pixel. It is revealed downward from the rule by
+     its clip and fades in, and on leaving it waits a short grace before it closes, so crossing the rule or the gap to a
+     neighbour on the way does not shut it. Only the clip, the opacity and the visibility change, never the layout.
+     Open, the clip reaches past the band's foot so its shadow shows. */
+  .og-menu-panel {
+    background-color: var(--color-background);
+    border-block-end: var(--border) dashed var(--color-border);
+    box-shadow: var(--shadow-raised);
+    clip-path: inset(0 0 100% 0);
+    inset-block-start: var(--layout-landing-nav-height);
+    inset-inline: 0;
+    opacity: 0;
+    position: absolute;
+    visibility: hidden;
+  }
+
+  .og-menu:focus-within .og-menu-panel {
+    clip-path: inset(0 0 calc(var(--space-12) * -1) 0);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .og-menu:hover .og-menu-panel {
+      clip-path: inset(0 0 calc(var(--space-12) * -1) 0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Only the band under the pointer shows. A band that focus holds open closes while the pointer is on another
+       menu, so two bands never lie over each other. */
+    :where(.og-nav:has(.og-menu:hover)) .og-menu:not(:hover) .og-menu-panel {
+      clip-path: inset(0 0 100% 0);
+      opacity: 0;
+      visibility: hidden;
+    }
+  }
+
+  .og-menu-items {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-4);
+    padding: var(--space-4) var(--layout-gutter) var(--space-5);
+  }
+
+  /* The chevron sits close to the pill's end, a step into its padding. */
+  .og-chevron {
+    color: var(--color-foreground-muted);
+    display: inline-flex;
+    margin-inline-end: calc(var(--space-1) * -1);
+  }
+
+  .og-pricing {
+    color: var(--color-foreground-muted);
+    font: var(--type-ui);
+    margin: 0;
+    padding-block: var(--space-2);
+  }
+
+  .og-pricing strong {
+    color: var(--color-foreground);
+  }
+
+  .og-actions {
+    display: flex;
+    gap: var(--space-2);
+    margin-inline-start: auto;
+  }
+
+  /* Closing waits the grace, then clips and fades, and the band stays visible until that is done. Opening starts at
+     once. */
+  @media (prefers-reduced-motion: no-preference) {
+    .og-menu-panel {
+      transition:
+        clip-path var(--duration-enter) var(--ease-out) var(--duration-press),
+        opacity var(--duration-hover) var(--ease-out) var(--duration-press),
+        visibility var(--duration-enter) linear var(--duration-press);
+    }
+
+    .og-menu:focus-within .og-menu-panel {
+      transition:
+        clip-path var(--duration-panel) var(--ease-out),
+        opacity var(--duration-enter) var(--ease-out),
+        visibility var(--duration-enter) linear;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
+    .og-menu:hover .og-menu-panel {
+      transition:
+        clip-path var(--duration-panel) var(--ease-out),
+        opacity var(--duration-enter) var(--ease-out),
+        visibility var(--duration-enter) linear;
+    }
+
+    /* Moving to a neighbour swaps the bands at once instead of stacking two. */
+    :where(.og-nav:has(.og-menu:hover)) .og-menu:not(:hover) .og-menu-panel {
+      transition: none;
+    }
+
+    /* Once a band is open, the neighbour's band shows whole at once, so no frame passes with no band, while the band
+       being left keeps its grace across the gap. Only the first band to open fades in. */
+    :where(.og-nav[data-swap]) .og-menu:hover .og-menu-panel {
+      transition: none;
+    }
+  }
+</style>

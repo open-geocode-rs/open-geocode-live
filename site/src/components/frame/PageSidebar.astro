@@ -1,0 +1,222 @@
+---
+import Icon from "../ui/Icon.astro";
+import TocList from "./TocList.astro";
+
+const { toc } = Astro.locals.starlightRoute;
+const title = Astro.locals.t("tableOfContents.onThisPage");
+---
+
+{
+  toc && (
+    <og-contents class="contents" data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
+      <nav class="contents-bar" aria-labelledby="og-contents-bar-title">
+        <details class="contents-disclosure" data-contents-disclosure>
+          <summary class="contents-toggle">
+            <span id="og-contents-bar-title">{title}</span>
+            <span class="contents-caret">
+              <Icon name="chevron-down" size="sm" />
+            </span>
+          </summary>
+          <div class="contents-dropdown">
+            <TocList items={toc.items} />
+          </div>
+        </details>
+        <span class="contents-current" data-contents-current />
+      </nav>
+      <nav class="contents-column" aria-labelledby="starlight__on-this-page">
+        <h2 class="contents-title" id="starlight__on-this-page">
+          {title}
+        </h2>
+        <TocList items={toc.items} />
+      </nav>
+    </og-contents>
+  )
+}
+
+<script>
+  // Marks the section being read. A heading is current once it has scrolled up to where a jump to it lands.
+  class Contents extends HTMLElement {
+    connectedCallback() {
+      const min = Number(this.dataset.minH);
+      const max = Number(this.dataset.maxH);
+      const levels = Array.from({ length: max - min + 1 }, (_, i) => `h${min + i}`).join();
+      const headings = [...document.querySelectorAll<HTMLElement>(`main h1#_top, main :where(${levels})[id]`)];
+      const links = [...this.querySelectorAll<HTMLAnchorElement>("a[href^='#']")];
+      const current = this.querySelector<HTMLElement>("[data-contents-current]");
+      const disclosure = this.querySelector<HTMLDetailsElement>("[data-contents-disclosure]");
+      let shown = "";
+
+      const mark = () => {
+        const line = Number.parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+        const reached = headings.filter((h) => h.getBoundingClientRect().top <= line + 1);
+        const heading = reached.at(-1) ?? headings[0];
+        if (!heading || heading.id === shown) return;
+        shown = heading.id;
+        for (const link of links) {
+          if (decodeURIComponent(link.hash.slice(1)) === heading.id) link.setAttribute("aria-current", "true");
+          else link.removeAttribute("aria-current");
+        }
+        const active = links.find((l) => l.hasAttribute("aria-current"));
+        if (current && active) current.textContent = active.textContent?.trim() ?? "";
+      };
+
+      let queued = false;
+      const queue = () => {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(() => {
+          queued = false;
+          mark();
+        });
+      };
+      addEventListener("scroll", queue, { passive: true });
+      addEventListener("resize", queue);
+      mark();
+
+      if (!disclosure) return;
+      const close = () => {
+        disclosure.open = false;
+      };
+      for (const link of disclosure.querySelectorAll("a")) link.addEventListener("click", close);
+      addEventListener("click", (event) => {
+        if (!disclosure.contains(event.target as Node)) close();
+      });
+      addEventListener("keydown", (event) => {
+        if (event.key !== "Escape" || !disclosure.open) return;
+        const focused = disclosure.contains(document.activeElement);
+        close();
+        if (focused) disclosure.querySelector("summary")?.focus();
+      });
+    }
+  }
+  customElements.define("og-contents", Contents);
+</script>
+
+<style>
+  /* No box of its own, so the column sticks within the whole height of the row. */
+  .contents {
+    display: contents;
+  }
+
+  /* On a phone and a tablet the list opens from a bar under the header, --space-12 tall. */
+  .contents-bar {
+    align-items: center;
+    background-color: var(--color-surface);
+    block-size: var(--space-12);
+    border-block-end: var(--border) solid var(--color-border);
+    display: flex;
+    gap: var(--space-3);
+    inset-block-start: var(--layout-nav-height);
+    inset-inline: 0;
+    padding-inline: var(--space-4);
+    position: fixed;
+    z-index: var(--z-raised);
+  }
+
+  .contents-disclosure {
+    flex-shrink: 0;
+  }
+
+  .contents-toggle {
+    align-items: center;
+    background-color: var(--color-background);
+    block-size: var(--control-md);
+    border: var(--border) solid var(--color-border-control);
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+    cursor: pointer;
+    display: flex;
+    font: var(--type-ui);
+    gap: var(--space-2);
+    list-style: none;
+    padding-inline: var(--space-3) var(--space-2);
+    user-select: none;
+  }
+
+  .contents-toggle::-webkit-details-marker {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .contents-toggle:hover {
+      background-color: var(--color-control-hover);
+    }
+  }
+
+  .contents-toggle:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .contents-caret {
+    color: var(--color-foreground-muted);
+    display: inline-flex;
+    rotate: -90deg;
+  }
+
+  [open] > .contents-toggle > .contents-caret {
+    rotate: 0deg;
+  }
+
+  .contents-current {
+    color: var(--color-foreground);
+    font: var(--type-ui);
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .contents-dropdown {
+    background-color: var(--color-background);
+    border-block: var(--border) solid var(--color-border);
+    box-shadow: var(--shadow-overlay);
+    inset-block-start: calc(var(--layout-nav-height) + var(--space-12));
+    inset-inline: 0;
+    max-block-size: calc(100dvh - var(--layout-nav-height) - var(--space-24));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-2) var(--space-4);
+    position: fixed;
+  }
+
+  .contents-column {
+    display: none;
+  }
+
+  @media (min-width: 50rem) {
+    .contents-bar,
+    .contents-dropdown {
+      inset-inline-start: calc(var(--layout-sidebar-width) + var(--layout-gutter) - var(--space-6));
+    }
+  }
+
+  /* From the contents breakpoint up the list is a column beside the text that stays in view. */
+  @media (min-width: 72rem) {
+    .contents-bar {
+      display: none;
+    }
+
+    .contents-column {
+      display: block;
+      inset-block-start: var(--layout-nav-height);
+      max-block-size: calc(100vh - var(--layout-nav-height));
+      overflow-y: auto;
+      padding-block: var(--space-4);
+      position: sticky;
+      scrollbar-width: none;
+    }
+  }
+
+  .contents-title {
+    color: var(--color-foreground);
+    font: var(--type-ui);
+    margin: 0 0 var(--space-1-5);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .contents-caret {
+      transition: rotate var(--duration-enter) var(--ease-in-out);
+    }
+  }
+</style>

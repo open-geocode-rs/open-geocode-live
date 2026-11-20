@@ -1,0 +1,30 @@
+---
+// A colour chip painted from the value read out of the token file, for colours only token files may read by name.
+export interface Props {
+  colour?: { hex: string; alpha: number };
+}
+
+const { colour } = Astro.props;
+---
+
+{
+  colour ? (
+    <svg class="chip" viewBox="0 0 1 1" aria-hidden="true" focusable="false"><rect width="1" height="1" fill={colour.hex} fill-opacity={colour.alpha} /></svg>
+  ) : (
+    <span class="chip chip-none" aria-hidden="true" />
+  )
+}
+
+<style>
+  .chip {
+    block-size: var(--control-sm);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    inline-size: var(--control-sm);
+  }
+
+  .chip-none {
+    border-style: dashed;
+  }
+</style>

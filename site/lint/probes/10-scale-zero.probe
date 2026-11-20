@@ -1,0 +1,2 @@
+probe {"rule": "og/motion", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    transform: scale(0);

@@ -1,0 +1,63 @@
+---
+import Button from "../ui/Button.astro";
+import Menu from "../ui/Menu.astro";
+
+interface Props {
+  markdown: string;
+}
+
+const { markdown } = Astro.props;
+const url = new URL(markdown, Astro.site ?? Astro.url).href;
+const prompt = encodeURIComponent(`Read ${url} so I can ask questions about it.`);
+const items = [
+  { value: "markdown", label: "View as Markdown", href: markdown },
+  { value: "claude", label: "Open in Claude", href: `https://claude.ai/new?q=${prompt}`, newTab: true },
+  { value: "chatgpt", label: "Open in ChatGPT", href: `https://chatgpt.com/?q=${prompt}`, newTab: true },
+];
+---
+
+<div class="actions">
+  <Button variant="outline" icon="copy" join="start" data-copy-markdown={markdown}>
+    <span data-copy-label>Copy Markdown</span>
+  </Button>
+  <Menu label="More page actions" variant="outline" items={items} iconOnly size="xs" align="end" join="end" />
+</div>
+
+<script>
+  import { after } from "../../lib/motion";
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>("button[data-copy-markdown]")) {
+    const label = button.querySelector<HTMLElement>("[data-copy-label]")!;
+    const rest = label.textContent;
+    let cancel = () => {};
+    button.addEventListener("click", async () => {
+      // The copy starts inside the click, which some browsers require of a clipboard write, and takes the page's
+      // Markdown once it arrives. A failed request leaves the clipboard as it was and the label unchanged, so the
+      // button can be pressed again.
+      const markdown = fetch(button.dataset.copyMarkdown!).then((response) => {
+        if (!response.ok) throw new Error(`Markdown request failed with ${response.status}`);
+        return response.blob();
+      });
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "text/plain": markdown.then((blob) => new Blob([blob], { type: "text/plain" })) })]);
+      } catch {
+        return;
+      }
+      label.textContent = "Copied";
+      cancel();
+      // The message stays for the feedback duration, then clears.
+      cancel = after("--duration-feedback", () => {
+        label.textContent = rest;
+      });
+    });
+  }
+</script>
+
+<style>
+  /* One split button, the copy action and the menu of the others. */
+  .actions {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+  }
+</style>

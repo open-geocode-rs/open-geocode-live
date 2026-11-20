@@ -1,0 +1,2 @@
+probe {"rule": "og/unread-token", "file": "src/styles/tokens/roles.css", "after": "  --color-backdrop: color-mix(in srgb, var(--p-black) var(--p-alpha-64), transparent);\n", "also": [{"file": "src/components/ui/Badge.astro", "after": "  .badge {\n", "text": "    outline-color: var(--color-probe);\n"}, {"file": "src/components/ui/Card.astro", "after": "  .card {\n", "text": "    /* outline-color: var(--color-probe); */\n"}]}
+  --color-probe: var(--p-white);

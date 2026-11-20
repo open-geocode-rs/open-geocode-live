@@ -1,0 +1,2 @@
+probe {"rule": "og/unread-token", "file": "src/components/ui/Badge.astro", "after": "  .badge {\n"}
+    min-inline-size: var(--icon-sm);

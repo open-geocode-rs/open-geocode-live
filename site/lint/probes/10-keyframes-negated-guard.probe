@@ -1,0 +1,8 @@
+probe {"rule": "og/motion", "file": "src/components/ui/Badge.astro", "after": "<style>\n"}
+  @media not all and (prefers-reduced-motion: no-preference) {
+    @keyframes probe-slide {
+      to {
+        translate: var(--space-4) 0;
+      }
+    }
+  }

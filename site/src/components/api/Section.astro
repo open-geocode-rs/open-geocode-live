@@ -1,0 +1,45 @@
+---
+import type { Section } from "../../lib/reference";
+import Heading from "../prose/Heading.astro";
+import Badge from "../ui/Badge.astro";
+import Blocks from "./Blocks.astro";
+import Markdown from "./Markdown.astro";
+import Media from "./Media.astro";
+
+interface Props {
+  section: Section & { required?: boolean };
+  /** Where the section sits, to keep its tab ids unique on the page. */
+  path?: string;
+}
+
+const { section, path = section.id } = Astro.props;
+const levels = [2, 3, 4, 5, 6] as const;
+const level = levels[Math.min(Math.max(section.level, 2), 6) - 2];
+// The reference's headings are a step smaller than the prose's. A section names an operation's part, a status
+// names one answer, and a response's headers are a part of that answer.
+const looks = { 2: "h3", 3: "quiet", 4: "h4", 5: "h4", 6: "h4" } as const;
+---
+
+{/* The parts follow one another in the page's flow, so the flow spaces them as it spaces the prose. The anchor reads
+    the heading's whole text, its required mark included. */}
+<Heading level={level} look={looks[level]} id={section.id} label={`Section titled “${section.title}${section.required ? " required" : ""}”`}>
+  {section.title}{
+    section.required && (
+      <span class="required">
+        <Badge variant="accent">required</Badge>
+      </span>
+    )
+  }
+</Heading>
+{section.description && <Markdown text={section.description} />}
+{section.media && section.media.length > 0 && <Media id={`${path}-media`} media={section.media} />}
+{section.fields && <Blocks blocks={[{ kind: "object", open: true, tags: [], fields: section.fields }]} density="body" />}
+{section.sections?.map((s) => <Astro.self section={s} path={`${path}-${s.id}`} />)}
+
+<style>
+  .required {
+    display: inline-flex;
+    margin-inline-start: var(--space-2);
+    vertical-align: middle;
+  }
+</style>

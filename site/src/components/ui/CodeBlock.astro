@@ -1,0 +1,371 @@
+---
+import type { ComponentProps } from "astro/types";
+import { Code } from "astro:components";
+import Button from "./Button.astro";
+
+export const codeBlockVariants = ["plain", "terminal", "titled", "command", "numbered"] as const;
+export const codeBlockSizes = ["default"] as const;
+export const codeBlockStates = ["rest", "copied"] as const;
+
+type CodeProps = ComponentProps<typeof Code>;
+type Transformer = NonNullable<CodeProps["transformers"]>[number];
+
+type Shared = {
+  code: string;
+  lang?: Extract<CodeProps["lang"], string>;
+  /** Holds a state without a pointer, for the system page. */
+  state?: (typeof codeBlockStates)[number];
+};
+
+/** A terminal block is shell set under a bar with three dots, so a reader sees at once that it is typed at a prompt.
+ * A command is one line of shell, set compactly after a prompt that is not copied with it. A numbered block numbers its
+ * lines and has no box or copy button of its own, for a panel that frames it and owns the copy action. */
+export type Props = (Shared & { variant?: "plain" | "terminal" | "command" | "numbered" }) | (Shared & { variant: "titled"; title: string });
+
+const { code, lang = "plaintext", state = "rest", variant = "plain" } = Astro.props;
+const title = Astro.props.variant === "titled" ? Astro.props.title : undefined;
+
+// The highlighter names each token's colour by a variable. Turn that into a data attribute our own style reads,
+// and drop the inline styles, so the block's look lives in this file and nowhere else.
+const syntax: Record<string, string> = {
+  "token-keyword": "keyword",
+  "token-string": "string",
+  "token-string-expression": "string",
+  "token-constant": "constant",
+  "token-function": "function",
+  "token-link": "function",
+  "token-parameter": "parameter",
+  "token-comment": "comment",
+  "token-punctuation": "punctuation",
+};
+const owned: Transformer = {
+  pre(node) {
+    node.properties = { class: "codeblock-pre", tabindex: "0", "data-language": lang };
+  },
+  code(node) {
+    node.properties = { class: "codeblock-code" };
+  },
+  line(node) {
+    node.properties = { class: "codeblock-line" };
+  },
+  span(node) {
+    const kind = /--astro-code-([\w-]+)/.exec(String(node.properties.style ?? ""))?.[1];
+    node.properties = kind && syntax[kind] ? { "data-syntax": syntax[kind] } : {};
+  },
+};
+---
+
+<figure class="codeblock" data-codeblock data-variant={variant} data-state={state === "copied" ? "copied" : undefined}>
+  {
+    title && (
+      <figcaption class="codeblock-bar">
+        <span class="codeblock-title">{title}</span>
+      </figcaption>
+    )
+  }
+  {
+    /* The bar names the block for a screen reader, so a reader hears that it is typed in a terminal. */
+    variant === "terminal" && (
+      <figcaption class="codeblock-bar">
+        <span class="codeblock-dot" aria-hidden="true" />
+        <span class="codeblock-dot" aria-hidden="true" />
+        <span class="codeblock-dot" aria-hidden="true" />
+        <span class="sr-only">Terminal window</span>
+      </figcaption>
+    )
+  }
+  {variant === "command" && <span class="codeblock-prompt" aria-hidden="true">$</span>}
+  <div class="codeblock-actions" data-codeblock-float={variant === "plain" || variant === "terminal" ? "" : undefined}>
+    <span class="codeblock-status" role="status" data-status>{state === "copied" ? "Copied!" : ""}</span>
+    {
+      variant === "command" ? (
+        <Button variant="outline" size="sm" iconOnly icon="copy" label="Copy code" data-copy />
+      ) : (
+        <Button variant="outline" iconOnly icon="copy" label="Copy code" data-copy />
+      )
+    }
+  </div>
+  <div class="codeblock-body">
+    <Code code={code} lang={lang} theme="css-variables" wrap={null} transformers={[owned]} />
+  </div>
+  <template data-code>{code}</template>
+</figure>
+
+<script>
+  import { after } from "../../lib/motion";
+
+  // Copies through the clipboard, or where the browser refuses it, through a selection of the text. True when either worked.
+  async function copy(text: string, near: HTMLElement): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      const holder = document.createElement("pre");
+      holder.setAttribute("aria-hidden", "true");
+      holder.textContent = text;
+      near.append(holder);
+      const selection = getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(holder);
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+      try {
+        // The older command is the one way left to copy when the clipboard is refused.
+        return document.execCommand("copy");
+      } catch {
+        return false;
+      } finally {
+        selection?.removeAllRanges();
+        holder.remove();
+      }
+    }
+  }
+
+  for (const block of document.querySelectorAll<HTMLElement>("[data-codeblock]")) {
+    const button = block.querySelector<HTMLButtonElement>("[data-copy]");
+    const source = block.querySelector<HTMLTemplateElement>("template[data-code]");
+    const status = block.querySelector<HTMLElement>("[data-status]");
+    if (!button || !source || !status) continue;
+    let cancel = () => {};
+    button.addEventListener("click", async () => {
+      if (!(await copy(source.content.textContent ?? "", block))) return;
+      cancel();
+      block.dataset.state = "copied";
+      status.textContent = "Copied!";
+      // The message stays for the feedback duration, then clears.
+      cancel = after("--duration-feedback", () => {
+        block.removeAttribute("data-state");
+        status.textContent = "";
+      });
+    });
+  }
+</script>
+
+<style>
+  .codeblock {
+    background-color: var(--color-surface);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+    display: grid;
+    grid-template-areas: "bar actions" "body body";
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin: 0;
+    position: relative;
+  }
+
+  .codeblock[data-variant="plain"] {
+    grid-template-areas: "body";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .codeblock[data-variant="terminal"] {
+    grid-template-areas: "bar" "body";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .codeblock[data-variant="terminal"] .codeblock-bar {
+    background-color: var(--codeblock-bar);
+    block-size: var(--space-8);
+    border-start-end-radius: var(--radius-md);
+    border-start-start-radius: var(--radius-md);
+    gap: var(--space-2);
+  }
+
+  .codeblock-dot {
+    background-color: var(--codeblock-dot);
+    block-size: var(--space-3);
+    border-radius: var(--radius-full);
+    inline-size: var(--space-3);
+  }
+
+  /* One line in a well darker than the page, with no visible edge, the prompt before it and the copy button inside it. */
+  .codeblock[data-variant="command"] {
+    align-items: center;
+    background-color: var(--codeblock-command-fill);
+    border: 0;
+    border-radius: var(--radius-md);
+    grid-template-areas: "prompt body actions";
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .codeblock[data-variant="numbered"] {
+    background-color: transparent;
+    border: 0;
+    border-radius: 0;
+    grid-template-areas: "body";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .codeblock[data-variant="numbered"] .codeblock-actions {
+    display: none;
+  }
+
+  /* A numbered block is an example in the API panel, set tighter than prose. The panel pads it. */
+  .codeblock[data-variant="numbered"] :global(.codeblock-pre) {
+    font: var(--type-code);
+    padding: 0;
+  }
+
+  .codeblock[data-variant="numbered"] :global(.codeblock-code) {
+    counter-reset: codeblock-line;
+  }
+
+  /* Line numbers are a guide, not text to read, so they take the faint tint of a strong border. */
+  [data-variant="numbered"] :global(.codeblock-line)::before {
+    color: var(--color-border-strong);
+    content: counter(codeblock-line);
+    counter-increment: codeblock-line;
+    display: inline-block;
+    inline-size: var(--space-4);
+    margin-inline-end: var(--space-4);
+    text-align: end;
+    user-select: none;
+  }
+
+  .codeblock-prompt {
+    color: var(--color-success);
+    font: var(--type-code-sm);
+    grid-area: prompt;
+    padding-inline-start: var(--space-3-5);
+    user-select: none;
+  }
+
+  .codeblock-bar {
+    align-items: center;
+    block-size: var(--control-lg);
+    border-block-end: var(--border) solid var(--color-border);
+    display: flex;
+    grid-area: bar;
+    padding-inline: var(--space-4);
+  }
+
+  .codeblock-title {
+    color: var(--color-foreground-secondary);
+    font: var(--type-caption);
+  }
+
+  .codeblock-actions {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+    grid-area: actions;
+    padding-inline: var(--space-2);
+  }
+
+  .codeblock[data-variant="titled"] .codeblock-actions {
+    border-block-end: var(--border) solid var(--color-border);
+  }
+
+  /* On a plain or terminal block the copy button lies over the code's top end. Where a pointer can hover, it shows
+     while the pointer or the focus is in the block, or while it says the code was copied. Elsewhere it always shows. */
+  [data-codeblock-float] {
+    background-color: var(--color-surface);
+    inset-block-start: var(--space-2);
+    inset-inline-end: 0;
+    position: absolute;
+  }
+
+  .codeblock[data-variant="terminal"] [data-codeblock-float] {
+    inset-block-start: calc(var(--space-8) + var(--space-2));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    [data-codeblock-float] {
+      opacity: 0;
+      transition: opacity var(--duration-hover) var(--ease-hover);
+    }
+
+    .codeblock:hover [data-codeblock-float],
+    .codeblock:focus-within [data-codeblock-float],
+    .codeblock[data-state="copied"] [data-codeblock-float] {
+      opacity: 1;
+    }
+  }
+
+  .codeblock[data-variant="command"] .codeblock-actions {
+    padding-inline: var(--space-1-5);
+  }
+
+  /* After a copy, a filled tag beside the button says so. */
+  .codeblock-status {
+    background-color: var(--codeblock-feedback-fill);
+    border-radius: var(--radius-sm);
+    color: var(--codeblock-feedback-ink);
+    font: var(--type-ui);
+    padding: var(--space-0-5) var(--space-2);
+    visibility: hidden;
+  }
+
+  .codeblock[data-state="copied"] .codeblock-status {
+    visibility: visible;
+  }
+
+  .codeblock-body {
+    grid-area: body;
+    min-inline-size: 0;
+  }
+
+  .codeblock :global(.codeblock-pre) {
+    font: var(--type-code-block);
+    margin: 0;
+    overflow-x: auto;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .codeblock[data-variant="command"] :global(.codeblock-pre) {
+    font: var(--type-code-sm);
+    padding: calc(var(--space-2) + var(--space-0-5)) var(--space-3-5) calc(var(--space-2) + var(--space-0-5)) var(--space-2);
+    scrollbar-width: none;
+  }
+
+  .codeblock :global(.codeblock-code) {
+    font: inherit;
+  }
+
+  .codeblock :global([data-syntax="keyword"]) {
+    color: var(--syntax-keyword);
+  }
+
+  .codeblock :global([data-syntax="string"]) {
+    color: var(--syntax-string);
+  }
+
+  .codeblock :global([data-syntax="constant"]) {
+    color: var(--syntax-constant);
+  }
+
+  /* In data, the highlighter marks a key as a keyword. A key is a name, so it takes the constants' colour. */
+  :where(.codeblock) :global([data-language="json"] [data-syntax="keyword"]) {
+    color: var(--syntax-constant);
+  }
+
+  .codeblock :global([data-syntax="function"]) {
+    color: var(--syntax-function);
+  }
+
+  .codeblock :global([data-syntax="parameter"]) {
+    color: var(--syntax-parameter);
+  }
+
+  .codeblock :global([data-syntax="comment"]) {
+    color: var(--syntax-comment);
+  }
+
+  .codeblock :global([data-syntax="punctuation"]) {
+    color: var(--syntax-punctuation);
+  }
+
+  /* A block in prose has its own colouring. Only the API panel's numbered examples keep the colouring above. */
+  :where(.codeblock:not([data-variant="numbered"])) :global([data-language="json"] [data-syntax="keyword"]) {
+    color: var(--syntax-prose-key);
+  }
+
+  .codeblock:not([data-variant="numbered"]) :global([data-syntax="string"]) {
+    color: var(--syntax-prose-string);
+  }
+
+  .codeblock:not([data-variant="numbered"]) :global([data-syntax="constant"]) {
+    color: var(--syntax-prose-constant);
+  }
+</style>

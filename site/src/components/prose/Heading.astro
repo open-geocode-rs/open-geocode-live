@@ -1,0 +1,76 @@
+---
+import type { Level } from "../../lib/prose";
+import Icon from "../ui/Icon.astro";
+
+export interface Props {
+  level: Level;
+  id: string;
+  /** Read aloud for the link to the heading. */
+  label: string;
+  /** The type role, when it is not the one the level takes. A quiet heading names a small part, such as a response's status. */
+  look?: "h2" | "h3" | "h4" | "quiet";
+}
+
+const { level, id, label } = Astro.props;
+const look = Astro.props.look ?? (level === 2 ? "h2" : level === 3 ? "h3" : "h4");
+const Tag = `h${level}` as const;
+---
+
+<div class="prose-heading" data-look={look}>
+  <Tag class="heading-text" id={id}><slot /></Tag>
+  <a class="heading-anchor" href={`#${id}`}><Icon name="link" /><span class="sr-only" data-pagefind-ignore>{label}</span></a>
+</div>
+
+<style>
+  .prose-heading {
+    color: var(--color-foreground);
+    font: var(--type-h4);
+  }
+
+  .prose-heading[data-look="h2"] {
+    font: var(--type-h2);
+  }
+
+  .prose-heading[data-look="h3"] {
+    font: var(--type-h3);
+  }
+
+  .prose-heading[data-look="quiet"] {
+    color: var(--color-foreground-muted);
+    font: var(--type-body);
+  }
+
+  .heading-text {
+    display: inline;
+    font: inherit;
+  }
+
+  .heading-anchor {
+    border-radius: var(--radius-sm);
+    color: var(--color-accent);
+    display: inline-flex;
+    margin-inline-start: var(--space-2);
+    vertical-align: middle;
+  }
+
+  .heading-anchor:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  /* With a pointer the link shows on the heading's hover or the link's focus, and on touch it always shows. */
+  @media (hover: hover) and (pointer: fine) {
+    .heading-anchor {
+      opacity: 0;
+    }
+
+    .prose-heading:hover .heading-anchor,
+    .heading-anchor:focus-visible {
+      opacity: 1;
+    }
+
+    .heading-anchor:hover {
+      color: var(--color-accent-strong);
+    }
+  }
+</style>

@@ -1,0 +1,29 @@
+---
+export const kbdVariants = ["default"] as const;
+export const kbdSizes = ["default"] as const;
+export const kbdStates = ["rest"] as const;
+
+export interface Props {
+  /** The key or keys, as text. */
+  children: string;
+}
+---
+
+<kbd class="kbd"><slot /></kbd>
+
+<style>
+  .kbd {
+    align-items: center;
+    background-color: var(--color-surface);
+    block-size: var(--icon-lg);
+    border: var(--border) solid var(--color-border-control);
+    border-block-end-width: var(--border-strong);
+    border-radius: var(--radius-sm);
+    color: var(--color-foreground-secondary);
+    display: inline-flex;
+    font: var(--type-label);
+    justify-content: center;
+    min-inline-size: var(--icon-lg);
+    padding-inline: var(--space-1);
+  }
+</style>

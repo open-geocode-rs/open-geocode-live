@@ -1,0 +1,193 @@
+---
+import Button from "../ui/Button.astro";
+
+const { hasSidebar, toc } = Astro.locals.starlightRoute;
+const menu = Astro.locals.t("menuButton.accessibleLabel");
+---
+
+<div class="frame">
+  <header class="frame-header">
+    <div class="frame-header-content"><slot name="header" /></div>
+    {
+      hasSidebar && (
+        <og-menu-toggle class="frame-toggle print:hidden">
+          <span class="frame-toggle-open">
+            <Button variant="ghost" iconOnly icon="menu" label={menu} popovertarget="starlight__sidebar" />
+          </span>
+          <span class="frame-toggle-close">
+            <Button variant="ghost" iconOnly icon="x" label={menu} popovertarget="starlight__sidebar" />
+          </span>
+        </og-menu-toggle>
+      )
+    }
+  </header>
+  {
+    hasSidebar && (
+      <nav class="frame-sidebar print:hidden" aria-label={Astro.locals.t("sidebarNav.accessibleLabel")}>
+        {/* The id is the one the frame's sidebar scripts look for, so the scroll position and open groups are kept between pages. */}
+        <og-sidebar-pane popover="auto" id="starlight__sidebar" class="frame-pane">
+          <div class="frame-sidebar-content">
+            <slot name="sidebar" />
+          </div>
+        </og-sidebar-pane>
+      </nav>
+    )
+  }
+  <div class="frame-main" data-has-sidebar={hasSidebar ? "" : undefined} data-has-toc={toc ? "" : undefined}>
+    <slot />
+  </div>
+</div>
+
+<script>
+  const wide = matchMedia("(min-width: 50rem)");
+
+  // While the menu is open, only the header and the menu take focus, and the page behind it holds still.
+  function menuOpen(open: boolean) {
+    for (const el of document.querySelectorAll<HTMLElement>(".frame-main, .sl-skip-link")) el.inert = open;
+    for (const toggle of document.querySelectorAll<HTMLElement>("og-menu-toggle")) toggle.toggleAttribute("data-open", open);
+    document.documentElement.toggleAttribute("data-menu-open", open);
+  }
+
+  // On a phone the sidebar is a popover menu. From the sidebar breakpoint up it is always shown, so it is no popover.
+  class SidebarPane extends HTMLElement {
+    connectedCallback() {
+      const reset = () => {
+        // Taking the popover away closes an open menu without a toggle event, so the page is let go here.
+        if (wide.matches) menuOpen(false);
+        this.popover = wide.matches ? null : "auto";
+      };
+      reset();
+      wide.addEventListener("change", reset);
+      this.addEventListener("toggle", (event) => {
+        menuOpen(event instanceof ToggleEvent && event.newState === "open");
+      });
+    }
+  }
+  customElements.define("og-sidebar-pane", SidebarPane);
+
+  // The open and close buttons swap places, so focus follows to the one now shown.
+  class MenuToggle extends HTMLElement {
+    connectedCallback() {
+      this.addEventListener("click", (event) => {
+        const pressed = (event.target as Element).closest("button");
+        if (!pressed) return;
+        const other = [...this.querySelectorAll("button")].find((b) => b !== pressed);
+        requestAnimationFrame(() => other?.focus());
+      });
+    }
+  }
+  customElements.define("og-menu-toggle", MenuToggle);
+</script>
+
+<style>
+  :global(:root[data-menu-open]) {
+    overflow: hidden;
+  }
+
+  .frame {
+    display: flex;
+    flex-direction: column;
+    min-block-size: 100vh;
+  }
+
+  .frame-header {
+    align-items: center;
+    background-color: var(--color-surface);
+    block-size: var(--layout-nav-height);
+    border-block-end: var(--border) solid var(--color-border);
+    display: flex;
+    gap: var(--space-4);
+    inset-block-start: 0;
+    inset-inline: 0;
+    padding: var(--space-3) var(--space-4);
+    position: fixed;
+    z-index: var(--z-sticky);
+  }
+
+  .frame-header-content {
+    block-size: 100%;
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .frame-toggle {
+    display: flex;
+  }
+
+  .frame-toggle-close,
+  .frame-toggle[data-open] .frame-toggle-open {
+    display: none;
+  }
+
+  .frame-toggle[data-open] .frame-toggle-close {
+    display: flex;
+  }
+
+  .frame-pane {
+    background-color: var(--color-background);
+    block-size: auto;
+    border: 0;
+    color: var(--color-foreground);
+    inline-size: 100%;
+    inset-block: var(--layout-nav-height) 0;
+    inset-inline-start: 0;
+    margin: 0;
+    max-block-size: none;
+    max-inline-size: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0;
+    position: fixed;
+    scrollbar-gutter: stable;
+    z-index: var(--z-overlay);
+  }
+
+  .frame-sidebar-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-block-size: 100%;
+    padding: var(--space-4);
+  }
+
+  .frame-main {
+    padding-block-start: var(--layout-nav-height);
+  }
+
+  /* On a phone and a tablet the contents column is a bar under the header, --space-12 tall. */
+  .frame-main[data-has-toc] {
+    padding-block-start: calc(var(--layout-nav-height) + var(--space-12));
+  }
+
+  @media (min-width: 50rem) {
+    .frame-header {
+      padding-inline: var(--layout-gutter);
+    }
+
+    .frame-toggle {
+      display: none;
+    }
+
+    /* The sidebar grows with the gutter past the page's widest step, so its links keep their width on wide screens. */
+    .frame-pane {
+      border-inline-end: var(--border) solid var(--color-border);
+      display: block;
+      inline-size: calc(var(--layout-sidebar-width) + var(--layout-gutter) - var(--space-6));
+      z-index: var(--z-sticky);
+    }
+
+    .frame-sidebar-content {
+      padding: var(--space-4) var(--space-4) var(--space-8) var(--layout-gutter);
+    }
+
+    .frame-main[data-has-sidebar] {
+      padding-inline: calc(var(--layout-sidebar-width) + var(--layout-gutter) - var(--space-6)) var(--layout-gutter);
+    }
+  }
+
+  @media (min-width: 72rem) {
+    .frame-main[data-has-toc] {
+      padding-block-start: var(--layout-nav-height);
+    }
+  }
+</style>

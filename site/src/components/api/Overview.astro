@@ -1,0 +1,142 @@
+---
+import { allOperations, info, openapiVersion, isNode, type ApiOperation, type Tag } from "../../lib/openapi";
+import Heading from "../prose/Heading.astro";
+import Badge from "../ui/Badge.astro";
+import Card from "../ui/Card.astro";
+import Icon from "../ui/Icon.astro";
+import Link from "../ui/Link.astro";
+import Markdown from "./Markdown.astro";
+
+interface Props {
+  /** The tag the page is the overview of. Without it, the page is the overview of the whole API. */
+  tag?: Tag;
+}
+
+const { tag } = Astro.props;
+const title = String(info.title);
+const version = String(info.version);
+const description = tag ? tag.description : typeof info.description === "string" ? info.description : undefined;
+const license = isNode(info.license) ? info.license : undefined;
+const operations: ApiOperation[] = allOperations().filter((op) => !tag || op.tag === tag.name);
+---
+
+<div class="overview prose prose-flow">
+  {
+    tag ? (
+      <Heading level={2} look="h3" id="overview" label={`Section titled “${tag.name}”`}>
+        {tag.name}
+      </Heading>
+    ) : (
+      <Heading level={2} look="h3" id="overview" label={`Section titled “${title} ${version}”`}>
+        {title}{" "}
+        <span class="version">
+          <Badge>{version}</Badge>
+        </span>
+      </Heading>
+    )
+  }
+  {description && <Markdown text={description} />}
+  {
+    !tag && (
+      <Card>
+        <p class="card-title">
+          <span class="card-icon">
+            <Icon name="info" size="md" />
+          </span>
+          Information
+        </p>
+        <ul class="card-list">
+          {license && (
+            <li>
+              License:{" "}
+              {typeof license.url === "string" ? <Link href={license.url}>{String(license.name)}</Link> : String(license.name)}
+            </li>
+          )}
+          <li>
+            OpenAPI version: <code>{openapiVersion}</code>
+          </li>
+        </ul>
+      </Card>
+    )
+  }
+  {
+    operations.length > 0 && (
+      <>
+        <Heading level={2} look="h3" id="operations" label="Section titled “Operations”">
+          Operations
+        </Heading>
+        <ul class="operations">
+          {operations.map((op) => (
+            <li class="operation">
+              <a class="operation-link" href={op.href}>
+                <Badge variant={op.method} size="sm">{op.method.toUpperCase()}</Badge>
+                <span class="operation-path">{op.path}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+</div>
+
+<style>
+  .version {
+    display: inline-flex;
+    vertical-align: middle;
+  }
+
+  .card-title {
+    align-items: center;
+    color: var(--color-foreground);
+    display: flex;
+    font: var(--type-ui-strong);
+    gap: var(--space-2);
+  }
+
+  .card-icon {
+    color: var(--color-foreground-muted);
+    display: inline-flex;
+  }
+
+  .card-list {
+    font: var(--type-ui);
+    padding-inline-start: var(--space-6);
+  }
+
+  .operations {
+    border-block-start: var(--border) solid var(--color-border);
+    list-style: none;
+    padding: 0;
+  }
+
+  .operation {
+    border-block-end: var(--border) solid var(--color-border);
+  }
+
+  .operation-link {
+    align-items: center;
+    border-radius: var(--radius-sm);
+    color: var(--color-foreground);
+    display: flex;
+    gap: var(--space-2);
+    padding-block: var(--space-3);
+    text-decoration: none;
+  }
+
+  .operation-path {
+    font: var(--type-code);
+    overflow-wrap: anywhere;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .operation-link:hover .operation-path {
+      text-decoration-line: underline;
+    }
+  }
+
+  .operation-link:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+</style>

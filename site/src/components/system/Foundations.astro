@@ -1,0 +1,728 @@
+---
+import Button from "../ui/Button.astro";
+import Chip from "./Chip.astro";
+import Section from "./Section.astro";
+import { breakpoints, byGroup, contrast, paint, written, type Theme } from "./tokens";
+
+export interface Props {
+  theme: Theme;
+}
+
+const { theme } = Astro.props;
+
+// Roles that colour text are shown as text, with their contrast. The rest are shown as fills.
+const textRoles = new Set([
+  "--color-foreground",
+  "--color-foreground-secondary",
+  "--color-foreground-muted",
+  "--color-accent",
+  "--color-success",
+  "--color-warning",
+  "--color-danger",
+]);
+// Marks that must stand out from the page, at 3 to 1.
+const markRoles = new Set(["--color-focus"]);
+const ratio = (n: number | undefined) => (n === undefined ? "" : `${n.toFixed(2)} : 1`);
+
+const rawGroups = ["p-colour", "p-alpha", "p-font-size", "p-leading", "p-weight", "p-tracking", "p-family"];
+const componentGroups = ["map", "globe", "terminal", "syntax", "method", "button-raised", "codeblock"];
+const ladders = ["space", "radius", "border", "control", "icon", "container", "layout", "shadow", "blur", "z", "opacity", "scale"];
+const sample = "Forward, reverse and batch geocoding from one file";
+---
+
+<div class="foundations">
+  <Section title="Colour roles" note="Text roles on the background and on the surface, with contrast. Fill roles as swatches.">
+    <div class="rows">
+      {
+        byGroup("color").map((t) => (
+          <div class="row role" data-token={t.name}>
+            <code class="name">{t.name}</code>
+            <code class="value">{written(theme, t)}</code>
+            {textRoles.has(t.name) ? (
+              <div class="pair">
+                <span class="tile tile-background">
+                  <span class="role-text">Aa {sample}</span>
+                  <span class="ratio">{ratio(contrast(theme, t.name, "--color-background"))}</span>
+                </span>
+                <span class="tile tile-surface">
+                  <span class="role-text">Aa {sample}</span>
+                  <span class="ratio">{ratio(contrast(theme, t.name, "--color-surface"))}</span>
+                </span>
+              </div>
+            ) : (
+              <div class="pair">
+                <span class="tile tile-background">
+                  <span class="role-fill" />
+                  <span class="ratio">{markRoles.has(t.name) ? ratio(contrast(theme, t.name, "--color-background")) : ""}</span>
+                </span>
+                <span class="tile tile-surface">
+                  <span class="role-fill" />
+                </span>
+              </div>
+            )}
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section title="Type roles" note="One line of real text per role.">
+    <div class="rows">
+      {
+        byGroup("type").map((t) => (
+          <div class="row type" data-token={t.name}>
+            <code class="name">{t.name}</code>
+            <p class="type-sample">{sample}</p>
+          </div>
+        ))
+      }
+      {
+        byGroup("tracking").map((t) => (
+          <div class="row type" data-token={t.name}>
+            <code class="name">{t.name}</code>
+            <code class="value">{written(theme, t)}</code>
+            <p class="type-sample">{t.name === "--tracking-caps" ? "SMALL CAPITALS" : sample}</p>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section title="Raw material" note="Read only by the token files. Colours are painted from the value in the file.">
+    {
+      rawGroups.map((g) => (
+        <div class="rows">
+          {byGroup(g).map((t) => (
+            <div class="row raw" data-token={t.name}>
+              {g === "p-colour" && <Chip colour={paint(theme, t.name)} />}
+              <code class="name">{t.name}</code>
+              <code class="value">{written(theme, t)}</code>
+            </div>
+          ))}
+        </div>
+      ))
+    }
+  </Section>
+
+  <Section title="Scales" note="Spacing, radius, border, sizes, layout, shadow, blur, stacking, opacity and press scale as ladders.">
+    {
+      ladders.map((g) => (
+        <div class="rows">
+          {byGroup(g).map((t) => (
+            <div class="row ladder" data-group={g} data-token={t.name}>
+              <code class="name">{t.name}</code>
+              <code class="value">{written(theme, t)}</code>
+              <span class="ladder-track">
+                <span class="ladder-mark" />
+              </span>
+            </div>
+          ))}
+        </div>
+      ))
+    }
+  </Section>
+
+  <Section title="Motion" note="Press play to move each box with that duration or easing. Feedback is read by scripts only and never moves anything.">
+    <div class="rows">
+      {
+        [...byGroup("duration"), ...byGroup("ease")].map((t) => (
+          <div class="row motion" data-token={t.name} data-motion>
+            <code class="name">{t.name}</code>
+            <code class="value">{written(theme, t)}</code>
+            {t.name === "--duration-feedback" ? (
+              <span class="value">Scripts only</span>
+            ) : (
+              <span class="motion-track">
+                <span class="motion-box" />
+              </span>
+            )}
+            {t.name !== "--duration-feedback" && <Button variant="outline" size="sm" icon="arrow-right" data-play>Play</Button>}
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section title="Component groups" note="Each group is read by its one component. Colours are painted from the value in the file.">
+    {
+      componentGroups.map((g) => (
+        <div class="rows">
+          {byGroup(g).map((t) => (
+            <div class="row raw" data-token={t.name}>
+              <Chip colour={paint(theme, t.name)} />
+              <code class="name">{t.name}</code>
+              <code class="value">{written(theme, t)}</code>
+            </div>
+          ))}
+        </div>
+      ))
+    }
+  </Section>
+
+  <Section title="Docs frame" note="The variables the docs frame reads, each set from a role or a scale.">
+    <div class="rows">
+      {
+        byGroup("host").map((t) => (
+          <div class="row raw" data-token={t.name}>
+            <Chip colour={paint(theme, t.name)} />
+            <code class="name">{t.name}</code>
+            <code class="value">{written(theme, t)}</code>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section title="Breakpoints" note="Media queries take only these widths, in the min-width form.">
+    <div class="rows">
+      {
+        breakpoints.map((b) => (
+          <div class="row raw">
+            <code class="name">(min-width: {b})</code>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+</div>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>("[data-play]")) {
+    button.addEventListener("click", () => {
+      const row = button.closest<HTMLElement>("[data-motion]");
+      row?.toggleAttribute("data-moved");
+    });
+  }
+</script>
+
+<style>
+  .foundations {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-10);
+  }
+
+  .rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .name {
+    color: var(--color-foreground);
+    font: var(--type-code);
+  }
+
+  .value {
+    color: var(--color-foreground-muted);
+    font: var(--type-caption);
+    overflow-wrap: anywhere;
+  }
+
+  .pair {
+    display: grid;
+    flex-basis: 100%;
+    gap: var(--space-2);
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tile {
+    align-items: center;
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-md);
+    display: flex;
+    gap: var(--space-2);
+    justify-content: space-between;
+    min-inline-size: 0;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .tile-background {
+    background-color: var(--color-background);
+  }
+
+  .tile-surface {
+    background-color: var(--color-surface);
+  }
+
+  .role-text {
+    font: var(--type-ui);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .role-fill {
+    block-size: var(--control-sm);
+    border-radius: var(--radius-sm);
+    flex-grow: 1;
+  }
+
+  .ratio {
+    color: var(--color-foreground-secondary);
+    flex-shrink: 0;
+    font: var(--type-caption);
+  }
+
+  .type {
+    align-items: baseline;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .type-sample {
+    margin: 0;
+  }
+
+  .ladder-track {
+    display: flex;
+    flex-basis: var(--container-sm);
+    flex-grow: 1;
+    min-inline-size: 0;
+  }
+
+  .ladder-mark {
+    background-color: var(--color-accent-subtle);
+    border: var(--border) solid var(--color-accent);
+    block-size: var(--space-4);
+    max-inline-size: 100%;
+  }
+
+  @media (min-width: 40rem) {
+    .ladder {
+      display: grid;
+      grid-template-columns: var(--layout-toc-width) var(--space-24) minmax(0, 1fr);
+    }
+  }
+
+  .motion-track {
+    border-block-end: var(--border) solid var(--color-border);
+    flex-grow: 1;
+    min-inline-size: var(--space-24);
+    padding-block: var(--space-1);
+  }
+
+  .motion-box {
+    background-color: var(--color-accent);
+    block-size: var(--space-4);
+    border-radius: var(--radius-sm);
+    display: block;
+    inline-size: var(--space-4);
+  }
+
+  /* One rule per token, so each row shows the token itself. */
+
+  .role[data-token="--color-background"] .role-fill {
+    background-color: var(--color-background);
+  }
+
+  .role[data-token="--color-surface"] .role-fill {
+    background-color: var(--color-surface);
+  }
+
+  .role[data-token="--color-foreground"] .role-text {
+    color: var(--color-foreground);
+  }
+
+  .role[data-token="--color-foreground-secondary"] .role-text {
+    color: var(--color-foreground-secondary);
+  }
+
+  .role[data-token="--color-foreground-muted"] .role-text {
+    color: var(--color-foreground-muted);
+  }
+
+  .role[data-token="--color-border"] .role-fill {
+    background-color: var(--color-border);
+  }
+
+  .role[data-token="--color-border-strong"] .role-fill {
+    background-color: var(--color-border-strong);
+  }
+
+  .role[data-token="--color-accent"] .role-text {
+    color: var(--color-accent);
+  }
+
+  .role[data-token="--color-accent-subtle"] .role-fill {
+    background-color: var(--color-accent-subtle);
+  }
+
+  .role[data-token="--color-accent-strong"] .role-fill {
+    background-color: var(--color-accent-strong);
+  }
+
+  .role[data-token="--color-control"] .role-fill {
+    background-color: var(--color-control);
+  }
+
+  .role[data-token="--color-control-hover"] .role-fill {
+    background-color: var(--color-control-hover);
+  }
+
+  .role[data-token="--color-selected"] .role-fill {
+    background-color: var(--color-selected);
+  }
+
+  .role[data-token="--color-solid"] .role-fill {
+    background-color: var(--color-solid);
+  }
+
+  .role[data-token="--color-solid-hover"] .role-fill {
+    background-color: var(--color-solid-hover);
+  }
+
+  .role[data-token="--color-on-solid"] .role-fill {
+    background-color: var(--color-on-solid);
+  }
+
+  .role[data-token="--color-focus"] .role-fill {
+    background-color: var(--color-focus);
+  }
+
+  .role[data-token="--color-success"] .role-text {
+    color: var(--color-success);
+  }
+
+  .role[data-token="--color-success-subtle"] .role-fill {
+    background-color: var(--color-success-subtle);
+  }
+
+  .role[data-token="--color-warning"] .role-text {
+    color: var(--color-warning);
+  }
+
+  .role[data-token="--color-warning-subtle"] .role-fill {
+    background-color: var(--color-warning-subtle);
+  }
+
+  .role[data-token="--color-danger"] .role-text {
+    color: var(--color-danger);
+  }
+
+  .role[data-token="--color-danger-subtle"] .role-fill {
+    background-color: var(--color-danger-subtle);
+  }
+
+  .role[data-token="--color-backdrop"] .role-fill {
+    background-color: var(--color-backdrop);
+  }
+
+  .type[data-token="--type-display"] .type-sample {
+    font: var(--type-display);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .type[data-token="--type-h1"] .type-sample {
+    font: var(--type-h1);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .type[data-token="--tracking-tight"] .type-sample {
+    font: var(--type-h1);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .type[data-token="--tracking-caps"] .type-sample {
+    font: var(--type-label);
+    letter-spacing: var(--tracking-caps);
+  }
+
+  .type[data-token="--type-h2"] .type-sample {
+    font: var(--type-h2);
+  }
+
+  .type[data-token="--type-h3"] .type-sample {
+    font: var(--type-h3);
+  }
+
+  .type[data-token="--type-h4"] .type-sample {
+    font: var(--type-h4);
+  }
+
+  .type[data-token="--type-lead"] .type-sample {
+    font: var(--type-lead);
+  }
+
+  .type[data-token="--type-body"] .type-sample {
+    font: var(--type-body);
+  }
+
+  .type[data-token="--type-ui"] .type-sample {
+    font: var(--type-ui);
+  }
+
+  .type[data-token="--type-ui-strong"] .type-sample {
+    font: var(--type-ui-strong);
+  }
+
+  .type[data-token="--type-caption"] .type-sample {
+    font: var(--type-caption);
+  }
+
+  .type[data-token="--type-label"] .type-sample {
+    font: var(--type-label);
+  }
+
+  .type[data-token="--type-code"] .type-sample {
+    font: var(--type-code);
+  }
+
+  .type[data-token="--type-code-inline"] .type-sample {
+    font: var(--type-code-inline);
+  }
+
+  .ladder[data-token="--blur-backdrop"] .ladder-mark {
+    backdrop-filter: var(--blur-backdrop);
+  }
+
+  .ladder[data-group="radius"] .ladder-mark,
+  .ladder[data-group="shadow"] .ladder-mark,
+  .ladder[data-group="border"] .ladder-mark {
+    block-size: var(--control-lg);
+    inline-size: var(--control-lg);
+  }
+
+  .ladder[data-group="z"] .ladder-mark,
+  .ladder[data-group="opacity"] .ladder-mark,
+  .ladder[data-group="scale"] .ladder-mark {
+    inline-size: var(--control-lg);
+  }
+
+  .ladder[data-group="shadow"] .ladder-mark {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+  }
+
+  .ladder[data-group="control"] .ladder-mark {
+    inline-size: var(--space-16);
+  }
+
+  .ladder[data-token="--space-0-5"] .ladder-mark {
+    inline-size: var(--space-0-5);
+  }
+
+  .ladder[data-token="--space-1"] .ladder-mark {
+    inline-size: var(--space-1);
+  }
+
+  .ladder[data-token="--space-1-5"] .ladder-mark {
+    inline-size: var(--space-1-5);
+  }
+
+  .ladder[data-token="--space-2"] .ladder-mark {
+    inline-size: var(--space-2);
+  }
+
+  .ladder[data-token="--space-3"] .ladder-mark {
+    inline-size: var(--space-3);
+  }
+
+  .ladder[data-token="--space-4"] .ladder-mark {
+    inline-size: var(--space-4);
+  }
+
+  .ladder[data-token="--space-5"] .ladder-mark {
+    inline-size: var(--space-5);
+  }
+
+  .ladder[data-token="--space-6"] .ladder-mark {
+    inline-size: var(--space-6);
+  }
+
+  .ladder[data-token="--space-8"] .ladder-mark {
+    inline-size: var(--space-8);
+  }
+
+  .ladder[data-token="--space-10"] .ladder-mark {
+    inline-size: var(--space-10);
+  }
+
+  .ladder[data-token="--space-12"] .ladder-mark {
+    inline-size: var(--space-12);
+  }
+
+  .ladder[data-token="--space-16"] .ladder-mark {
+    inline-size: var(--space-16);
+  }
+
+  .ladder[data-token="--space-20"] .ladder-mark {
+    inline-size: var(--space-20);
+  }
+
+  .ladder[data-token="--space-24"] .ladder-mark {
+    inline-size: var(--space-24);
+  }
+
+  .ladder[data-token="--radius-sm"] .ladder-mark {
+    border-radius: var(--radius-sm);
+  }
+
+  .ladder[data-token="--radius-md"] .ladder-mark {
+    border-radius: var(--radius-md);
+  }
+
+  .ladder[data-token="--radius-lg"] .ladder-mark {
+    border-radius: var(--radius-lg);
+  }
+
+  .ladder[data-token="--radius-xl"] .ladder-mark {
+    border-radius: var(--radius-xl);
+  }
+
+  .ladder[data-token="--radius-full"] .ladder-mark {
+    border-radius: var(--radius-full);
+  }
+
+  .ladder[data-token="--border"] .ladder-mark {
+    border-width: var(--border);
+  }
+
+  .ladder[data-token="--border-strong"] .ladder-mark {
+    border-width: var(--border-strong);
+  }
+
+  .ladder[data-token="--control-sm"] .ladder-mark {
+    block-size: var(--control-sm);
+  }
+
+  .ladder[data-token="--control-md"] .ladder-mark {
+    block-size: var(--control-md);
+  }
+
+  .ladder[data-token="--control-lg"] .ladder-mark {
+    block-size: var(--control-lg);
+  }
+
+  .ladder[data-token="--icon-sm"] .ladder-mark {
+    block-size: var(--icon-sm);
+    inline-size: var(--icon-sm);
+  }
+
+  .ladder[data-token="--icon-md"] .ladder-mark {
+    block-size: var(--icon-md);
+    inline-size: var(--icon-md);
+  }
+
+  .ladder[data-token="--icon-lg"] .ladder-mark {
+    block-size: var(--icon-lg);
+    inline-size: var(--icon-lg);
+  }
+
+  .ladder[data-token="--container-sm"] .ladder-mark {
+    inline-size: var(--container-sm);
+  }
+
+  .ladder[data-token="--container-md"] .ladder-mark {
+    inline-size: var(--container-md);
+  }
+
+  .ladder[data-token="--container-lg"] .ladder-mark {
+    inline-size: var(--container-lg);
+  }
+
+  .ladder[data-token="--layout-nav-height"] .ladder-mark {
+    inline-size: var(--layout-nav-height);
+  }
+
+  .ladder[data-token="--layout-sidebar-width"] .ladder-mark {
+    inline-size: var(--layout-sidebar-width);
+  }
+
+  .ladder[data-token="--layout-toc-width"] .ladder-mark {
+    inline-size: var(--layout-toc-width);
+  }
+
+  .ladder[data-token="--layout-content"] .ladder-mark {
+    inline-size: var(--layout-content);
+  }
+
+  .ladder[data-token="--layout-content-wide"] .ladder-mark {
+    inline-size: var(--layout-content-wide);
+  }
+
+  .ladder[data-token="--layout-page-max"] .ladder-mark {
+    inline-size: var(--layout-page-max);
+  }
+
+  .ladder[data-token="--layout-gutter"] .ladder-mark {
+    inline-size: var(--layout-gutter);
+  }
+
+  .ladder[data-token="--shadow-raised"] .ladder-mark {
+    box-shadow: var(--shadow-raised);
+  }
+
+  .ladder[data-token="--shadow-overlay"] .ladder-mark {
+    box-shadow: var(--shadow-overlay);
+  }
+
+  .ladder[data-token="--shadow-dialog"] .ladder-mark {
+    box-shadow: var(--shadow-dialog);
+  }
+
+  .ladder[data-token="--z-raised"] .ladder-mark {
+    position: relative;
+    z-index: var(--z-raised);
+  }
+
+  .ladder[data-token="--z-sticky"] .ladder-mark {
+    position: relative;
+    z-index: var(--z-sticky);
+  }
+
+  .ladder[data-token="--z-overlay"] .ladder-mark {
+    position: relative;
+    z-index: var(--z-overlay);
+  }
+
+  .ladder[data-token="--opacity-disabled"] .ladder-mark {
+    opacity: var(--opacity-disabled);
+  }
+
+  .ladder[data-token="--scale-press"] .ladder-mark {
+    transform: scale(var(--scale-press));
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+
+    .motion[data-token="--duration-press"] .motion-box {
+      transition: translate var(--duration-press) var(--ease-out);
+    }
+
+    .motion[data-token="--duration-hover"] .motion-box {
+      transition: translate var(--duration-hover) var(--ease-out);
+    }
+
+    .motion[data-token="--duration-enter"] .motion-box {
+      transition: translate var(--duration-enter) var(--ease-out);
+    }
+
+    .motion[data-token="--duration-panel"] .motion-box {
+      transition: translate var(--duration-panel) var(--ease-out);
+    }
+
+    .motion[data-token="--ease-out"] .motion-box {
+      transition: translate var(--duration-panel) var(--ease-out);
+    }
+
+    .motion[data-token="--ease-in-out"] .motion-box {
+      transition: translate var(--duration-panel) var(--ease-in-out);
+    }
+
+    .motion[data-token="--ease-hover"] .motion-box {
+      transition: translate var(--duration-panel) var(--ease-hover);
+    }
+
+    .motion[data-moved] .motion-box {
+      translate: var(--space-20) 0;
+    }
+  }
+</style>

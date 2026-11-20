@@ -1,0 +1,53 @@
+---
+export const cardVariants = ["plain", "framed"] as const;
+export const cardSizes = ["default"] as const;
+export const cardStates = ["rest"] as const;
+
+export interface Props {
+  variant?: (typeof cardVariants)[number];
+}
+
+const { variant = "plain" } = Astro.props;
+---
+
+{
+  variant === "framed" ? (
+    <div class="card-frame">
+      <div class="card">
+        <slot />
+      </div>
+    </div>
+  ) : (
+    <div class="card">
+      <slot />
+    </div>
+  )
+}
+
+<style>
+  .card {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-lg);
+    color: var(--color-foreground);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .card-frame {
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-1);
+  }
+
+  .card-frame .card {
+    border: var(--border) solid var(--color-border);
+  }
+
+  @media (min-width: 40rem) {
+    .card {
+      padding: var(--space-6);
+    }
+  }
+</style>

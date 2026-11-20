@@ -30,7 +30,7 @@
         canvas.height = Math.round(height * dpr);
         const ctx = canvas.getContext("2d")!;
         ctx.scale(dpr, dpr);
-        ctx.fillStyle = getComputedStyle(this).getPropertyValue("--og-halftone-dot").trim() || "#ffffff";
+        ctx.fillStyle = getComputedStyle(this).getPropertyValue("--color-foreground").trim();
         const cx = width / 2;
         const rx = width * RX;
         const ry = height * RY;
@@ -53,3 +53,19 @@
 
   customElements.define("og-halftone", HalftoneField);
 </script>
+
+<style>
+  /* Behind the content of the positioned box it sits in, filling it. */
+  .og-halftone {
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: calc(var(--z-raised) * -1);
+  }
+
+  .og-halftone canvas {
+    block-size: 100%;
+    display: block;
+    inline-size: 100%;
+  }
+</style>

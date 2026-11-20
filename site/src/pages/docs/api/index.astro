@@ -1,0 +1,15 @@
+---
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import Overview from "../../../components/api/Overview.astro";
+import { info } from "../../../lib/openapi";
+
+// The contents column names the API with its version.
+const headings = [
+  { depth: 2, slug: "overview", text: `${String(info.title)} (${String(info.version)})` },
+  { depth: 2, slug: "operations", text: "Operations" },
+];
+---
+
+<StarlightPage frontmatter={{ title: "Overview" }} {headings}>
+  <Overview />
+</StarlightPage>

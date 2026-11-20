@@ -1,0 +1,2 @@
+probe {"rule": "og/markup", "file": "src/components/system/Section.astro", "after": "<section class=\"section\">\n"}
+  <textarea aria-label="Probe"></textarea>

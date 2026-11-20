@@ -1,0 +1,191 @@
+---
+export const tabsVariants = ["default", "underline"] as const;
+export const tabsSizes = ["md"] as const;
+export const tabsStates = ["rest", "hover", "focus", "current"] as const;
+
+export interface Tab {
+  id: string;
+  label: string;
+  /** Holds a state without a pointer, for the system page. Current comes from the tabs' own `current`. */
+  state?: "rest" | "hover" | "focus";
+}
+
+export interface Props {
+  /** Prefix for the ids of the tabs and panels, unique on the page. */
+  id: string;
+  /** Names the tab list for assistive technology. */
+  label: string;
+  tabs: Tab[];
+  /** The id of the tab shown first. Defaults to the first tab. */
+  current?: string;
+  /** The underline tabs sit in text, at body size on a heavier rule, with the current one marked in the accent. */
+  variant?: (typeof tabsVariants)[number];
+}
+
+const { id: uid, label, tabs, current = tabs[0]?.id, variant = "default" } = Astro.props;
+const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.render(t.id)] as const));
+---
+
+<div class="tabs" data-tabs data-variant={variant}>
+  <div class="tabs-list" role="tablist" aria-label={label}>
+    {
+      tabs.map((t) => (
+        <button
+          type="button"
+          class="tabs-tab"
+          role="tab"
+          id={`${uid}-tab-${t.id}`}
+          aria-controls={`${uid}-panel-${t.id}`}
+          aria-selected={t.id === current ? "true" : "false"}
+          tabindex={t.id === current ? 0 : -1}
+          data-state={t.state && t.state !== "rest" ? t.state : undefined}
+        >
+          {t.label}
+        </button>
+      ))
+    }
+  </div>
+  {
+    panels.map(([id, html]) => (
+      <div
+        class="tabs-panel"
+        role="tabpanel"
+        id={`${uid}-panel-${id}`}
+        aria-labelledby={`${uid}-tab-${id}`}
+        hidden={id !== current}
+        inert={id !== current}
+        set:html={html}
+      />
+    ))
+  }
+</div>
+
+<script>
+  // A panel may hold tabs of its own, so each set of tabs touches only the tabs whose nearest set it is.
+  const owns = (root: HTMLElement, tab: Element | null) => !!tab && tab.closest("[data-tabs]") === root;
+  const tabsOf = (root: HTMLElement) => [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')].filter((t) => owns(root, t));
+
+  function select(root: HTMLElement, tab: HTMLButtonElement, focus: boolean) {
+    for (const t of tabsOf(root)) {
+      const on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      const panel = document.getElementById(t.getAttribute("aria-controls") ?? "");
+      if (panel) {
+        panel.hidden = !on;
+        panel.inert = !on;
+      }
+    }
+    if (focus) tab.focus();
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>("[data-tabs]")) {
+    const tabs = tabsOf(root);
+    root.addEventListener("click", (event) => {
+      const tab = (event.target as Element).closest<HTMLButtonElement>('[role="tab"]');
+      if (tab && owns(root, tab)) select(root, tab, false);
+    });
+    root.addEventListener("keydown", (event) => {
+      const index = tabs.indexOf(document.activeElement as HTMLButtonElement);
+      if (index === -1) return;
+      const last = tabs.length - 1;
+      const next =
+        event.key === "ArrowRight" ? (index === last ? 0 : index + 1)
+        : event.key === "ArrowLeft" ? (index === 0 ? last : index - 1)
+        : event.key === "Home" ? 0
+        : event.key === "End" ? last
+        : -1;
+      if (next === -1) return;
+      event.preventDefault();
+      select(root, tabs[next], true);
+    });
+  }
+</script>
+
+<style>
+  /* Every panel sits in the one cell under the list, so the tabs are as tall as the tallest panel
+     and choosing a tab never moves what follows. */
+  .tabs {
+    display: grid;
+    gap: var(--space-4);
+    grid-template-areas: "list" "panel";
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tabs-panel {
+    grid-area: panel;
+    min-inline-size: 0;
+  }
+
+  /* A hidden panel keeps its place, so it still sizes the cell. A child may set its own visibility, so the panel is
+     also made fully transparent, which no child can undo, and inert, so nothing in it takes a pointer or the focus. */
+  .tabs-panel[hidden] {
+    display: block;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .tabs-list {
+    grid-area: list;
+    border-block-end: var(--border) solid var(--color-border);
+    display: flex;
+    gap: var(--space-1);
+  }
+
+  .tabs-tab {
+    align-items: center;
+    background-color: transparent;
+    block-size: var(--control-md);
+    border: 0;
+    border-block-end: var(--border-strong) solid transparent;
+    border-start-end-radius: var(--radius-md);
+    border-start-start-radius: var(--radius-md);
+    color: var(--color-foreground-muted);
+    cursor: pointer;
+    display: inline-flex;
+    font: var(--type-ui-strong);
+    padding-inline: var(--space-3);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tabs-tab:hover {
+      background-color: var(--color-control);
+      color: var(--color-foreground);
+    }
+  }
+
+  .tabs-tab[data-state="hover"] {
+    background-color: var(--color-control);
+    color: var(--color-foreground);
+  }
+
+  .tabs-tab:focus-visible,
+  .tabs-tab[data-state="focus"] {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .tabs-tab[aria-selected="true"] {
+    border-block-end-color: var(--color-foreground);
+    color: var(--color-foreground);
+  }
+
+  /* The current tab's mark lies on the list's rule, so the rule runs on under it. */
+  .tabs[data-variant="underline"] .tabs-list {
+    border-block-end: var(--border-strong) solid var(--color-border-control);
+    gap: 0;
+  }
+
+  .tabs[data-variant="underline"] .tabs-tab {
+    block-size: auto;
+    border-radius: 0;
+    font: var(--type-tab);
+    margin-block-end: calc(var(--space-0-5) * -1);
+    padding: var(--space-1) var(--space-5);
+  }
+
+  .tabs[data-variant="underline"] [aria-selected="true"] {
+    border-block-end-color: var(--color-accent);
+    font: var(--type-tab-current);
+  }
+</style>

@@ -1,0 +1,2 @@
+probe {"rule": "og/unread-token", "file": "src/components/frame/Search.astro", "replace": "var(--color-backdrop)"}
+var(--color-background)

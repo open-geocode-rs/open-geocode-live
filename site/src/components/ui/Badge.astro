@@ -1,0 +1,128 @@
+---
+import Icon, { type IconName } from "./Icon.astro";
+
+export const badgeVariants = ["neutral", "code", "accent", "success", "warning", "danger", "get", "post", "query", "delete"] as const;
+export const badgeSizes = ["default", "sm"] as const;
+export const badgeStates = ["rest"] as const;
+
+export interface Props {
+  variant?: (typeof badgeVariants)[number];
+  /** The small badge is as tall as a large icon, for a method beside a title or a link. */
+  size?: (typeof badgeSizes)[number];
+}
+
+const { variant = "neutral", size = "default" } = Astro.props;
+const method = ["get", "post", "query", "delete"].includes(variant);
+// A badge with no text shows only its icon, in a square tile.
+const iconOnly = !Astro.slots.has("default");
+
+// Each HTTP method carries the arrow it has across the API reference.
+const methodIcons: Partial<Record<(typeof badgeVariants)[number], IconName>> = {
+  get: "arrow-down-left",
+  post: "arrow-up-right",
+  query: "search",
+  delete: "x",
+};
+const icon = methodIcons[variant];
+---
+
+<span class="badge" data-variant={variant} data-size={size} data-method={method ? "" : undefined} data-icon-only={iconOnly ? "" : undefined}>
+  {icon && <Icon name={icon} size="sm" />}
+  <slot />
+</span>
+
+<style>
+  .badge {
+    align-items: center;
+    block-size: var(--control-sm);
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    flex: none;
+    font: var(--type-label);
+    gap: var(--space-1);
+    padding-inline: var(--space-2);
+    white-space: nowrap;
+  }
+
+  .badge[data-size="sm"] {
+    block-size: var(--icon-lg);
+  }
+
+  /* A method badge names an HTTP method, so it is set in code, tight around its icon, and edged in its own colour. */
+  .badge[data-method] {
+    border: var(--border) solid transparent;
+    font: var(--type-label-code);
+    gap: var(--space-0-5);
+    padding-inline: var(--space-0-5);
+  }
+
+  .badge[data-icon-only] {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .badge[data-icon-only][data-size="default"] {
+    inline-size: var(--control-sm);
+  }
+
+  .badge[data-icon-only][data-size="sm"] {
+    inline-size: var(--icon-lg);
+  }
+
+  .badge[data-variant="neutral"] {
+    background-color: var(--color-control-hover);
+    color: var(--color-foreground-secondary);
+  }
+
+  /* A value from the API, such as an enum member or a limit, set as code. */
+  .badge[data-variant="code"] {
+    background-color: var(--color-control-hover);
+    color: var(--color-foreground);
+    font: var(--type-code-sm);
+    padding-inline: var(--space-1-5);
+  }
+
+  .badge[data-variant="accent"] {
+    background-color: var(--color-accent-subtle);
+    color: var(--color-accent-strong);
+  }
+
+  .badge[data-variant="success"] {
+    background-color: var(--color-success-subtle);
+    color: var(--color-success);
+  }
+
+  .badge[data-variant="warning"] {
+    background-color: var(--color-warning-subtle);
+    color: var(--color-warning);
+  }
+
+  .badge[data-variant="danger"] {
+    background-color: var(--color-danger-subtle);
+    color: var(--color-danger);
+  }
+
+  .badge[data-variant="get"] {
+    background-color: var(--method-get-fill);
+    border-color: var(--method-get-edge);
+    color: var(--method-get-ink);
+  }
+
+  .badge[data-variant="post"] {
+    background-color: var(--method-post-fill);
+    border-color: var(--method-post-edge);
+    color: var(--method-post-ink);
+  }
+
+  .badge[data-variant="query"] {
+    background-color: var(--method-query-fill);
+    border-color: var(--method-query-edge);
+    color: var(--method-query-ink);
+  }
+
+  .badge[data-variant="delete"] {
+    background-color: var(--method-delete-fill);
+    border-color: var(--method-delete-edge);
+    color: var(--method-delete-ink);
+  }
+</style>

@@ -1,0 +1,13 @@
+---
+import { markdownProse } from "../../lib/markdown";
+import Prose from "../prose/Prose.astro";
+
+interface Props {
+  /** A description from the OpenAPI document. */
+  text: string;
+}
+
+const nodes = await markdownProse(Astro.props.text);
+---
+
+<Prose nodes={nodes} />

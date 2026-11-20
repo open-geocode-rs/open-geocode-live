@@ -1,0 +1,2 @@
+probe {"rule": "og/unread-token", "file": "src/styles/tokens/primitives.css", "after": "  --shadow-dialog: 0 24px 48px rgb(0 0 0 / 0.24);\n"}
+  --shadow-probe: 0 2px 4px rgb(0 0 0 / 0.12);
