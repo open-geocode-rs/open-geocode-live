@@ -15,7 +15,7 @@
     "z": { "kind": "scale", "file": "primitives.css", "pattern": "^--z-[a-z]+$", "count": 3 },
     "opacity": { "kind": "scale", "file": "primitives.css", "pattern": "^--opacity-[a-z]+$", "count": 1 },
     "scale": { "kind": "scale", "file": "primitives.css", "pattern": "^--scale-press$", "count": 1 },
-    "p-font-size": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-font-size-([0-9]+|inline|fluid|lead)$", "count": 13 },
+    "p-font-size": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-font-size-([0-9]+|inline|fluid|lead)$", "count": 14 },
     "p-leading": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-leading-([0-9]+|[a-z]+)$", "count": 6 },
     "p-weight": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-weight-[a-z]+$", "count": 4 },
     "p-tracking": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-tracking-[a-z]+$", "count": 5 },
@@ -23,7 +23,7 @@
     "p-colour": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-(white|black|(neutral|purple|red|amber)-[0-9]+|(navy|green)(-(tint|shade)-[0-9]+)?)$", "count": 26 },
     "p-alpha": { "kind": "raw", "file": "primitives.css", "pattern": "^--p-alpha-[0-9]+$", "count": 5 },
     "color": { "kind": "role", "file": "roles.css", "pattern": "^--color-[a-z-]+$", "count": 28 },
-    "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 21 },
+    "type": { "kind": "role", "file": "roles.css", "pattern": "^--type-[a-z0-9-]+$", "count": 23 },
     "tracking": { "kind": "role", "file": "roles.css", "pattern": "^--tracking-[a-z]+$", "count": 5 },
     "codeblock": { "kind": "component", "file": "components.css", "pattern": "^--codeblock-[a-z-]+$", "count": 5, "reader": "src/components/ui/CodeBlock.astro" },
     "map": { "kind": "component", "file": "components.css", "pattern": "^--map-[a-z-]+$", "count": 8, "reader": "src/components/landing/StreetMap.astro" },
@@ -74,6 +74,8 @@
     "--type-label-code": "src/components/ui/Badge.astro",
     "--color-code": "src/styles/global.css",
     "--type-code-block": "src/components/ui/CodeBlock.astro",
-    "--type-ui-compact": "src/components/frame/TocList.astro"
+    "--type-ui-compact": "src/components/frame/TocList.astro",
+    "--type-ui-sm": "src/components/frame/Search.astro",
+    "--type-ui-sm-strong": "src/components/frame/Search.astro"
   }
 }

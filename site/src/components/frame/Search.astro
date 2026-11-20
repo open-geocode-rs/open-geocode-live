@@ -1,5 +1,6 @@
 ---
 import Button from "../ui/Button.astro";
+import Icon from "../ui/Icon.astro";
 import Input from "../ui/Input.astro";
 
 const t = Astro.locals.t;
@@ -47,7 +48,8 @@ const strings = {
 
     <template data-search-page>
       <li class="search-result">
-        <a class="search-hit">
+        <a class="search-hit search-page">
+          <span class="search-page-icon"><Icon name="file-text" size="md" /></span>
           <span class="search-title"></span>
           <span class="search-excerpt"></span>
         </a>
@@ -78,6 +80,8 @@ const strings = {
 </script>
 
 <script>
+  import { pagefindUserConfig } from "virtual:starlight/pagefind-config";
+
   /** The part of the search index's script this component uses. */
   interface Section {
     url: string;
@@ -90,7 +94,7 @@ const strings = {
     sub_results: Section[];
   }
   interface Pagefind {
-    options(options: { baseUrl: string; excerptLength: number }): Promise<void>;
+    options(options: { baseUrl: string; excerptLength: number; ranking?: Record<string, number> }): Promise<void>;
     debouncedSearch(term: string): Promise<{ results: { data(): Promise<Page> }[] } | null>;
   }
 
@@ -103,7 +107,8 @@ const strings = {
   let index: Promise<Pagefind> | undefined;
   function load(): Promise<Pagefind> {
     index ??= import(/* @vite-ignore */ `${base}pagefind/pagefind.js`).then(async (module: Pagefind) => {
-      await module.options({ baseUrl: base, excerptLength: EXCERPT_WORDS });
+      // The ranking is the site's search setting, so results come in the order the site is set to give them.
+      await module.options({ baseUrl: base, excerptLength: EXCERPT_WORDS, ranking: pagefindUserConfig.ranking });
       return module;
     });
     return index;
@@ -151,17 +156,21 @@ const strings = {
         node.querySelector(".search-excerpt")!.innerHTML = section.excerpt;
       };
 
-      // The sections under a page, without the page itself, and at most the few with the most matches, in page order.
+      // A page's first section is the page itself when it starts at the page's own address. That one is the page's row.
+      // The sections under it are at most the few with the most matches, in page order, and the top of the page counts
+      // as one of them.
+      const hasRoot = (page: Page) => page.sub_results[0]?.url === page.url;
       const sections = (page: Page) => {
-        const own = page.sub_results.filter((s) => s.url !== page.url && !s.url.endsWith("#_top"));
+        const own = hasRoot(page) ? page.sub_results.slice(1) : page.sub_results;
         if (own.length <= SECTIONS) return own;
         const top = [...own].sort((a, b) => (b.locations?.length ?? 0) - (a.locations?.length ?? 0)).slice(0, SECTIONS);
         return own.filter((s) => top.includes(s));
       };
 
+      // A page's row shows its excerpt only when its first section is the page itself. Otherwise the sections say it.
       const render = (page: Page) => {
         const item = pageTemplate.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
-        fill(item.querySelector("a")!, { url: page.url, title: page.meta.title ?? page.url, excerpt: page.excerpt });
+        fill(item.querySelector("a")!, { url: page.url, title: page.meta.title ?? page.url, excerpt: hasRoot(page) ? page.excerpt : "" });
         for (const section of sections(page)) {
           const link = sectionTemplate.content.firstElementChild!.cloneNode(true) as HTMLAnchorElement;
           fill(link, section);
@@ -303,8 +312,9 @@ const strings = {
 
   .search-message {
     color: var(--color-foreground-muted);
-    font: var(--type-caption);
+    font: var(--type-ui-sm-strong);
     margin: 0;
+    padding-block-start: var(--space-1);
   }
 
   .search-message:empty {
@@ -338,9 +348,50 @@ const strings = {
     text-decoration: none;
   }
 
+  /* A page's row and its sections share one inset. The page's row holds a page icon in it, and each section a branch
+     of the tree that joins it to the page, as the reader scans down. */
+  .search-page,
+  .search-section {
+    padding-inline-start: calc(var(--space-10) + var(--space-1));
+    position: relative;
+  }
+
+  .search-page-icon {
+    align-items: center;
+    color: var(--color-foreground-muted);
+    display: flex;
+    inset-block: 0;
+    inset-inline-start: var(--space-4);
+    position: absolute;
+  }
+
   .search-section {
     border-block-start: var(--border) solid var(--color-border);
-    padding-inline-start: var(--space-8);
+  }
+
+  .search-section::before,
+  .search-section::after {
+    border: 0 solid var(--color-border-control);
+    content: "";
+    inset-inline-start: calc(var(--space-5) + var(--space-0-5));
+    position: absolute;
+  }
+
+  /* The trunk runs the section's full height, and stops at the branch on the last section. */
+  .search-section::before {
+    border-inline-start-width: var(--border);
+    inset-block: 0;
+  }
+
+  .search-section:last-child::before {
+    block-size: calc(var(--space-5) + var(--space-0-5));
+    inset-block-end: auto;
+  }
+
+  .search-section::after {
+    border-block-start-width: var(--border);
+    inline-size: var(--space-3);
+    inset-block-start: calc(var(--space-5) + var(--space-0-5));
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -356,18 +407,24 @@ const strings = {
   }
 
   .search-title {
+    color: var(--color-foreground-secondary);
     font: var(--type-ui-strong);
   }
 
   .search-excerpt {
     color: var(--color-foreground-muted);
-    font: var(--type-caption);
+    font: var(--type-ui-sm);
+  }
+
+  .search-excerpt:empty {
+    display: none;
   }
 
   /* A match reads in the text's full colour, not on a fill. */
   .search-excerpt :global(mark) {
     background-color: transparent;
     color: var(--color-foreground);
+    font: var(--type-ui-sm-strong);
   }
 
   .search-more {

@@ -88,6 +88,9 @@
   /* The landing page's controls, set at body size, and its call to action, set heavier. */
   --type-ui-lg: var(--p-weight-medium) var(--p-font-size-16) / var(--p-leading-ui) var(--p-font-sans);
   --type-ui-lg-strong: var(--p-weight-semibold) var(--p-font-size-16) / var(--p-leading-ui) var(--p-font-sans);
+  /* Small text under a result's title, and its matches set heavier. */
+  --type-ui-sm: var(--p-weight-regular) var(--p-font-size-13) / var(--p-leading-ui) var(--p-font-sans);
+  --type-ui-sm-strong: var(--p-weight-medium) var(--p-font-size-13) / var(--p-leading-ui) var(--p-font-sans);
   --type-caption: var(--p-weight-regular) var(--p-font-size-12) / var(--p-leading-ui) var(--p-font-sans);
   --type-label: var(--p-weight-medium) var(--p-font-size-12) / var(--p-leading-1) var(--p-font-sans);
   --type-label-code: var(--p-weight-medium) var(--p-font-size-12) / var(--p-leading-1) var(--p-font-mono);

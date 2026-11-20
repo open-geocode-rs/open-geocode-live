@@ -104,6 +104,7 @@
 
   /* Raw font size. Nothing below 12px exists. */
   --p-font-size-12: 0.75rem;
+  --p-font-size-13: 0.8125rem;
   --p-font-size-14: 0.875rem;
   --p-font-size-15: 0.9375rem;
   --p-font-size-16: 1rem;
