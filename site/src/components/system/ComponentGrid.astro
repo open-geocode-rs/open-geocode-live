@@ -1,0 +1,232 @@
+---
+import Badge, { badgeSizes, badgeVariants } from "../ui/Badge.astro";
+import Button, { buttonSizes, buttonStates, buttonVariants } from "../ui/Button.astro";
+import Card, { cardVariants } from "../ui/Card.astro";
+import CodeBlock, { codeBlockStates } from "../ui/CodeBlock.astro";
+import Icon, { iconNames } from "../ui/Icon.astro";
+import Input, { inputSizes, inputStates } from "../ui/Input.astro";
+import Kbd from "../ui/Kbd.astro";
+import Link, { linkStates, linkVariants } from "../ui/Link.astro";
+import Menu, { menuSizes } from "../ui/Menu.astro";
+import Tabs from "../ui/Tabs.astro";
+import Cell from "./Cell.astro";
+import Matrix from "./Matrix.astro";
+import Section from "./Section.astro";
+import type { Theme } from "./tokens";
+
+export interface Props {
+  theme: Theme;
+}
+
+const { theme } = Astro.props;
+
+const themeItems = [
+  { label: "Light", value: "light", icon: "sun" as const },
+  { label: "Dark", value: "dark", icon: "moon" as const },
+  { label: "Auto", value: "auto", icon: "monitor" as const },
+];
+const menuCells = [
+  { state: "closed", open: false, item: "rest" },
+  { state: "open", open: true, item: "rest" },
+  { state: "item-hover", open: true, item: "hover" },
+  { state: "item-focus", open: true, item: "focus" },
+  { state: "item-current", open: true, item: "rest" },
+] as const;
+
+const tabCells = ["rest", "hover", "focus", "current"] as const;
+const tabs = (state: (typeof tabCells)[number]) => [
+  { id: "forward", label: "Forward" },
+  { id: "reverse", label: "Reverse", state: state === "hover" || state === "focus" ? state : undefined },
+  { id: "batch", label: "Batch" },
+];
+
+const shell = 'curl "http://localhost:8080/geocode?q=10+Downing+Street+London"';
+const json = `{
+  "type": "FeatureCollection",
+  "features": [{ "properties": { "label": "10 Downing Street", "score": 0.98 } }]
+}`;
+const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(v) ? v.toUpperCase() : v);
+---
+
+<div class="components">
+  <Section title="Button" note="Each variant by size and state, then icon only.">
+    {
+      buttonVariants.map((variant) => (
+        <div class="pair">
+          <Matrix caption={variant} rows={buttonStates} cols={buttonSizes} cell={(state, size) => `Button:${variant}:${size}:${state}`}>
+            {(state: (typeof buttonStates)[number], size: (typeof buttonSizes)[number]) => (
+              <Button variant={variant} size={size} state={state}>
+                Search
+              </Button>
+            )}
+          </Matrix>
+          <Matrix caption={`${variant}, icon only`} rows={["rest"]} cols={buttonSizes} cell={(_, size) => `Button:${variant}:${size}:rest:icon-only`}>
+            {(_: string, size: (typeof buttonSizes)[number]) => <Button variant={variant} size={size} iconOnly icon="search" label="Search" />}
+          </Matrix>
+        </div>
+      ))
+    }
+  </Section>
+
+  <Section title="Input" note="Each variant by size and state.">
+    <Matrix caption="text" rows={inputStates} cols={inputSizes} cell={(state, size) => `Input:text:${size}:${state}`}>
+      {(state: (typeof inputStates)[number], size: (typeof inputSizes)[number]) => (
+        <Input size={size} state={state} aria-label="Address" placeholder="10 Downing Street" />
+      )}
+    </Matrix>
+    <Matrix caption="textarea" rows={inputStates} cols={inputSizes} cell={(state, size) => `Input:textarea:${size}:${state}`}>
+      {(state: (typeof inputStates)[number], size: (typeof inputSizes)[number]) => (
+        <Input variant="textarea" size={size} state={state} rows={2} aria-label="Notes" placeholder="Notes" />
+      )}
+    </Matrix>
+  </Section>
+
+  <Section title="Badge" note="Each variant by size. A badge has one state.">
+    <Matrix caption="rest" rows={badgeVariants} cols={badgeSizes} cell={(variant, size) => `Badge:${variant}:${size}:rest`}>
+      {(variant: (typeof badgeVariants)[number], size: (typeof badgeSizes)[number]) => (
+        <Badge variant={variant} size={size}>
+          {methodLabel(variant)}
+        </Badge>
+      )}
+    </Matrix>
+  </Section>
+
+  <Section title="Kbd">
+    <div class="grid">
+      <Cell component="Kbd" variant="default" size="default" state="rest">
+        <Kbd>Ctrl</Kbd>
+        <Kbd>K</Kbd>
+        <Kbd>Enter</Kbd>
+      </Cell>
+    </div>
+  </Section>
+
+  <Section title="Menu" note="Size by state. Open menus are held open.">
+    {
+      menuSizes.map((size) => (
+        <div class="grid">
+          {menuCells.map((c) => (
+            <Cell component="Menu" variant="default" size={size} state={c.state} width={size === "md" ? "wider" : "wide"} tall={c.open}>
+              <Menu
+                label="Theme"
+                size={size}
+                state={c.open ? "open" : "closed"}
+                current="dark"
+                items={themeItems.map((i, n) => ({ ...i, state: n === 0 ? c.item : "rest" }))}
+              />
+            </Cell>
+          ))}
+        </div>
+      ))
+    }
+  </Section>
+
+  <Section title="Tabs" note="One tab in each state.">
+    <div class="grid">
+      {
+        tabCells.map((state) => (
+          <Cell component="Tabs" variant="default" size="md" state={state} width="wide">
+            <Tabs id={`${theme}-tabs-${state}`} label="Request" tabs={tabs(state)} current={state === "current" ? "reverse" : "forward"}>
+              <p class="panel" slot="forward">Forward geocoding.</p>
+              <p class="panel" slot="reverse">Reverse geocoding.</p>
+              <p class="panel" slot="batch">Batch geocoding.</p>
+            </Tabs>
+          </Cell>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section title="Card">
+    <div class="grid">
+      {
+        cardVariants.map((variant) => (
+          <Cell component="Card" variant={variant} size="default" state="rest" width="wide">
+            <Card variant={variant}>
+              <strong class="card-title">One file</strong>
+              <p class="panel">A Pack holds a region's addresses in one memory-mapped file.</p>
+            </Card>
+          </Cell>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section title="CodeBlock" note="Variant by state.">
+    <div class="grid">
+      {
+        codeBlockStates.map((state) => (
+          <Cell component="CodeBlock" variant="plain" size="default" state={state} width="wider">
+            <CodeBlock code={shell} lang="shell" state={state} />
+          </Cell>
+        ))
+      }
+      {
+        codeBlockStates.map((state) => (
+          <Cell component="CodeBlock" variant="titled" size="default" state={state} width="wider">
+            <CodeBlock variant="titled" title="Response" code={json} lang="json" state={state} />
+          </Cell>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section title="Icon" note="Every icon in the set, at each size.">
+    <div class="grid">
+      {
+        (["sm", "md", "lg"] as const).map((size) => (
+          <Cell component="Icon" variant="default" size={size} state="rest" width="wide">
+            {iconNames.map((name) => (
+              <Icon name={name} size={size} label={name} />
+            ))}
+          </Cell>
+        ))
+      }
+    </div>
+  </Section>
+
+  <Section title="Link" note="Each variant by state. Size comes from the text around it.">
+    <Matrix caption="inherit" rows={linkVariants} cols={linkStates} cell={(variant, state) => `Link:${variant}:inherit:${state}`}>
+      {(variant: (typeof linkVariants)[number], state: (typeof linkStates)[number]) => (
+        <span class="prose">
+          Read the <Link href="/docs/quickstart/" variant={variant} state={state}>quickstart</Link>
+        </span>
+      )}
+    </Matrix>
+  </Section>
+</div>
+
+<style>
+  .components {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-10);
+  }
+
+  .grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .pair {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .panel {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui);
+    margin: 0;
+  }
+
+  .card-title {
+    font: var(--type-ui-strong);
+  }
+
+  .prose {
+    font: var(--type-body);
+  }
+</style>

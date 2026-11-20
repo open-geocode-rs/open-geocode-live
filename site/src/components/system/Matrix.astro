@@ -1,0 +1,74 @@
+---
+// A table of one component: rows by columns, each cell holding one combination and named by its data-cell.
+export interface Props {
+  caption: string;
+  rows: readonly string[];
+  cols: readonly string[];
+  /** The data-cell name of the cell at a row and column. */
+  cell: (row: string, col: string) => string;
+}
+
+const { caption, rows, cols, cell } = Astro.props;
+const body = await Promise.all(
+  rows.map(async (row) => ({
+    row,
+    cells: await Promise.all(cols.map(async (col) => ({ col, html: await Astro.slots.render("default", [row, col]) }))),
+  })),
+);
+---
+
+<div class="matrix">
+  <table class="matrix-table">
+    <caption class="matrix-caption">{caption}</caption>
+    <thead>
+      <tr>
+        <td class="matrix-corner"></td>
+        {cols.map((col) => <th class="matrix-head" scope="col">{col}</th>)}
+      </tr>
+    </thead>
+    <tbody>
+      {
+        body.map(({ row, cells }) => (
+          <tr>
+            <th class="matrix-head" scope="row">{row}</th>
+            {cells.map(({ col, html }) => (
+              <td class="matrix-cell" data-cell={cell(row, col)} set:html={html} />
+            ))}
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .matrix {
+    max-inline-size: 100%;
+    overflow-x: auto;
+  }
+
+  .matrix-table {
+    border-collapse: collapse;
+  }
+
+  .matrix-caption {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui-strong);
+    padding-block-end: var(--space-2);
+    text-align: start;
+  }
+
+  .matrix-head {
+    color: var(--color-foreground-muted);
+    font: var(--type-caption);
+    padding: var(--space-1) var(--space-2);
+    text-align: start;
+    white-space: nowrap;
+  }
+
+  .matrix-cell {
+    border: var(--border) solid var(--color-border);
+    padding: var(--space-3);
+    vertical-align: middle;
+  }
+</style>
