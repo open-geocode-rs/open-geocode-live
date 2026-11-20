@@ -131,15 +131,15 @@ const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(
   <Section title="Tabs" note="One tab in each state.">
     <div class="grid">
       {
-        tabCells.map((state) => (
-          <Cell component="Tabs" variant="default" size="md" state={state} width="wide">
-            <Tabs id={`${theme}-tabs-${state}`} label="Request" tabs={tabs(state)} current={state === "current" ? "reverse" : "forward"}>
+        (["default", "underline"] as const).flatMap((variant) => tabCells.map((state) => (
+          <Cell component="Tabs" variant={variant} size="md" state={state} width="wide">
+            <Tabs variant={variant} id={`${theme}-tabs-${variant}-${state}`} label="Request" tabs={tabs(state)} current={state === "current" ? "reverse" : "forward"}>
               <p class="panel" slot="forward">Forward geocoding.</p>
               <p class="panel" slot="reverse">Reverse geocoding.</p>
               <p class="panel" slot="batch">Batch geocoding.</p>
             </Tabs>
           </Cell>
-        ))
+        )))
       }
     </div>
   </Section>

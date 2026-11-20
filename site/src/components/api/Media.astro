@@ -24,7 +24,7 @@ const tabs = media.map((m, i) => ({ id: `media-${i + 1}`, label: m.mediaType }))
     </div>
   ) : (
     media.length > 1 && (
-      <Tabs id={id} label="Media type" tabs={tabs}>
+      <Tabs variant="underline" id={id} label="Media type" tabs={tabs}>
         {media.map((m, i) => (
           <div slot={tabs[i].id}>
             <Blocks blocks={m.blocks} density="body" />

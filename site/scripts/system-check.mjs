@@ -43,7 +43,7 @@ const table = {
   },
   Kbd: { variants: ["default"], sizes: ["default"], states: ["rest"] },
   Menu: { variants: ["default", "outline"], sizes: ["2xs", "xs", "sm", "md"], states: ["closed", "open", "item-hover", "item-focus", "item-current"] },
-  Tabs: { variants: ["default"], sizes: ["md"], states: ["rest", "hover", "focus", "current"] },
+  Tabs: { variants: ["default", "underline"], sizes: ["md"], states: ["rest", "hover", "focus", "current"] },
   Card: { variants: ["plain", "framed"], sizes: ["default"], states: ["rest"] },
   CodeBlock: { variants: ["plain", "terminal", "titled", "command", "numbered"], sizes: ["default"], states: ["rest", "copied"] },
   Icon: { variants: ["default"], sizes: ["sm", "md", "lg", "xl"], states: ["rest"] },

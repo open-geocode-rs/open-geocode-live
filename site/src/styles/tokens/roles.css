@@ -83,6 +83,9 @@
   --type-body-sm: var(--p-weight-regular) var(--p-font-size-15) / var(--p-leading-heading) var(--p-font-sans);
   --type-ui: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
   --type-ui-strong: var(--p-weight-medium) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
+  /* A tab set in text, at body size on a short line, and the current tab set heavier. */
+  --type-tab: var(--p-weight-regular) var(--p-font-size-16) / var(--p-leading-lead) var(--p-font-sans);
+  --type-tab-current: var(--p-weight-semibold) var(--p-font-size-16) / var(--p-leading-lead) var(--p-font-sans);
   /* A list of short links read at a glance, such as the contents of a page. */
   --type-ui-compact: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-heading) var(--p-font-sans);
   /* The landing page's controls, set at body size, and its call to action, set heavier. */

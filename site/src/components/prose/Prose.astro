@@ -50,7 +50,7 @@ const shell = new Set(["sh", "bash", "shell", "shellscript", "zsh", "console", "
         );
       case "tabs":
         return (
-          <Tabs id={node.id} label={node.label} tabs={node.tabs.map((t) => ({ id: t.id, label: t.label }))}>
+          <Tabs variant="underline" id={node.id} label={node.label} tabs={node.tabs.map((t) => ({ id: t.id, label: t.label }))}>
             {node.tabs.map((t) => (
               <div slot={t.id} class="prose-flow">
                 <Astro.self nodes={t.children} />

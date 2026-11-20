@@ -1,5 +1,5 @@
 ---
-export const tabsVariants = ["default"] as const;
+export const tabsVariants = ["default", "underline"] as const;
 export const tabsSizes = ["md"] as const;
 export const tabsStates = ["rest", "hover", "focus", "current"] as const;
 
@@ -18,13 +18,15 @@ export interface Props {
   tabs: Tab[];
   /** The id of the tab shown first. Defaults to the first tab. */
   current?: string;
+  /** The underline tabs sit in text, at body size on a heavier rule, with the current one marked in the accent. */
+  variant?: (typeof tabsVariants)[number];
 }
 
-const { id: uid, label, tabs, current = tabs[0]?.id } = Astro.props;
+const { id: uid, label, tabs, current = tabs[0]?.id, variant = "default" } = Astro.props;
 const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.render(t.id)] as const));
 ---
 
-<div class="tabs" data-tabs>
+<div class="tabs" data-tabs data-variant={variant}>
   <div class="tabs-list" role="tablist" aria-label={label}>
     {
       tabs.map((t) => (
@@ -155,5 +157,24 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
   .tabs-tab[aria-selected="true"] {
     border-block-end-color: var(--color-foreground);
     color: var(--color-foreground);
+  }
+
+  /* The current tab's mark lies on the list's rule, so the rule runs on under it. */
+  .tabs[data-variant="underline"] .tabs-list {
+    border-block-end: var(--border-strong) solid var(--color-border-control);
+    gap: 0;
+  }
+
+  .tabs[data-variant="underline"] .tabs-tab {
+    block-size: auto;
+    border-radius: 0;
+    font: var(--type-tab);
+    margin-block-end: calc(var(--space-0-5) * -1);
+    padding: var(--space-1) var(--space-5);
+  }
+
+  .tabs[data-variant="underline"] [aria-selected="true"] {
+    border-block-end-color: var(--color-accent);
+    font: var(--type-tab-current);
   }
 </style>

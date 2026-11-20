@@ -61,7 +61,7 @@ try {
   for (const p of probes) {
     apply(p.head, p.body);
     for (const extra of p.head.also ?? []) apply(extra, extra.text);
-    const which = /og\/(scripts|markup)/.test(p.head.rule) ? "script" : "style";
+    const which = /og\/(scripts|markup|content)/.test(p.head.rule) ? "script" : "style";
     const fresh = [...findings(which)].filter((f) => !standing.has(f));
     const hit = fresh.filter((f) => f.startsWith(`${p.head.rule}|`));
     if (hit.length > 0) {

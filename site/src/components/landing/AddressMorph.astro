@@ -123,6 +123,11 @@ const { examples, placeholder } = Astro.props;
     #morphing = false;
     #measure?: CanvasRenderingContext2D;
     #searching = false;
+    // An input method (Japanese, Chinese, Korean and others) confirms its characters with Enter. That Enter is part of
+    // typing, not a search. Some browsers send it while the composition runs, others just after it ends, and the next
+    // key up closes that window either way.
+    #composing = false;
+    #justComposed = false;
     #resume?: () => void;
     #examples: string[][] = [];
     #text!: HTMLElement;
@@ -148,10 +153,22 @@ const { examples, placeholder } = Astro.props;
       for (const key of [this.#enter, this.#clear]) key.addEventListener("mousedown", (event) => event.preventDefault());
       this.#enter.addEventListener("click", () => this.geocode());
       this.#clear.addEventListener("click", () => this.clear());
+      this.#input.addEventListener("compositionstart", () => {
+        this.#composing = true;
+      });
+      this.#input.addEventListener("compositionend", () => {
+        this.#composing = false;
+        this.#justComposed = true;
+      });
+      this.#input.addEventListener("keyup", () => {
+        this.#justComposed = false;
+      });
       this.#input.addEventListener("keydown", (event) => {
-        // Enter also confirms the characters of an input method (Japanese, Chinese,
-        // Korean...); that Enter is part of typing, not a search.
-        if (event.isComposing || event.keyCode === 229) return;
+        if (event.isComposing || this.#composing) return;
+        if (this.#justComposed && event.key === "Enter") {
+          this.#justComposed = false;
+          return;
+        }
         if (event.key === "Enter") this.geocode();
         // Esc presses Clear while it shows; with nothing to clear it leaves search.
         if (event.key === "Escape" && !this.#searching) {

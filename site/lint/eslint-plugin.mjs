@@ -1,4 +1,5 @@
-// Script and markup rules 11 and 12 of the design system. Each message names what to use instead.
+// Script and markup rules 11 and 12 of the design system, and the content rule for docs written in MDX. Each message
+// names what to use instead.
 
 const colourLiteral = /#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|hwb|oklch|oklab|lab|lch)\(/i;
 const timers = new Set(["setTimeout", "setInterval"]);
@@ -151,8 +152,54 @@ const astroScripts = {
   supportsAutofix: false,
 };
 
+// An MDX page is docs content. The docs prose reads the frame's rendered markup and draws each part through the
+// system, so a page may use only the parts it knows how to draw, and no markup of its own that sets a look.
+// The parts it draws, by the name a page imports them under from the frame's components.
+const proseParts = new Set(["Tabs", "TabItem"]);
+const frameComponents = "@astrojs/starlight/components";
+
+/** Parses an MDX page to an empty program, so the content rule can read its text. */
+export const mdxParser = {
+  meta: { name: "og-mdx" },
+  parseForESLint(text) {
+    const lines = text.split("\n");
+    const end = { line: lines.length, column: lines.at(-1).length };
+    const ast = { type: "Program", body: [], sourceType: "module", range: [0, text.length], loc: { start: { line: 1, column: 0 }, end }, tokens: [], comments: [] };
+    return { ast, visitorKeys: { Program: [] } };
+  },
+};
+
+const content = {
+  meta: { type: "problem", schema: [] },
+  create(context) {
+    return {
+      Program(node) {
+        const text = context.sourceCode.text;
+        const at = (index) => context.sourceCode.getLocFromIndex(index);
+        const say = (index, message) => context.report({ node, loc: at(index), message });
+        // Code blocks are content, so what they show is not checked.
+        const prose = text.replace(/^(```|~~~)[\s\S]*?^\1/gm, (block) => block.replace(/[^\n]/g, " "));
+        for (const m of prose.matchAll(/^import\s+(.+?)\s+from\s+["']([^"']+)["'];?\s*$/gm)) {
+          if (m[2] !== frameComponents) {
+            say(m.index, `An MDX page imports from ${m[2]}. Docs content takes only the frame's ${[...proseParts].join(", ")}, which the docs prose draws through the system`);
+            continue;
+          }
+          const names = m[1].replace(/[{}]/g, "").split(",").map((n) => n.trim()).filter(Boolean);
+          for (const n of names) if (!proseParts.has(n)) say(m.index, `An MDX page imports ${n}, which the docs prose cannot draw. Use ${[...proseParts].join(", ")} or Markdown`);
+        }
+        for (const m of prose.matchAll(/<([A-Za-z][\w.]*)([^>]*)>/g)) {
+          const [, tag, attrs] = m;
+          if (/^[A-Z]/.test(tag) && !proseParts.has(tag)) say(m.index, `An MDX page uses <${tag}>, which the docs prose cannot draw. Use ${[...proseParts].join(", ")} or Markdown`);
+          if (/^[a-z]/.test(tag)) say(m.index, `An MDX page writes the element <${tag}>. Write Markdown, so the docs prose draws it through the system`);
+          if (/\b(style|class|className)\s*=/.test(attrs)) say(m.index, `An MDX page sets a look on <${tag}> with an attribute. Style lives in the system's components`);
+        }
+      },
+    };
+  },
+};
+
 export default {
   meta: { name: "og" },
-  rules: { scripts, markup },
+  rules: { scripts, markup, content },
   processors: { "astro-scripts": astroScripts },
 };
