@@ -176,15 +176,22 @@ const strings = {
 
       let shown = 0;
       let hits: { data(): Promise<Page> }[] = [];
+      // Counts the queries typed. Work for an older query is dropped when it finishes, so it never lands in a newer
+      // query's list, or in the box after it was cleared.
+      let query = 0;
       const showMore = async () => {
+        const asked = query;
         const next = hits.slice(shown, shown + PAGE_SIZE);
         shown += next.length;
-        list.append(...(await Promise.all(next.map(async (hit) => render(await hit.data())))));
+        const items = await Promise.all(next.map(async (hit) => render(await hit.data())));
+        if (asked !== query) return;
+        list.append(...items);
         more.hidden = shown >= hits.length;
       };
       more.querySelector("button")?.addEventListener("click", () => void showMore());
 
       input.addEventListener("input", async () => {
+        const asked = ++query;
         const term = input.value.trim();
         if (!term) {
           list.replaceChildren();
@@ -197,12 +204,12 @@ const strings = {
         try {
           pagefind = await load();
         } catch {
-          message.textContent = strings.unavailable ?? "";
+          if (asked === query) message.textContent = strings.unavailable ?? "";
           return;
         }
         const search = await pagefind.debouncedSearch(term);
         // A newer keystroke replaced this search.
-        if (!search) return;
+        if (!search || asked !== query) return;
         hits = search.results;
         shown = 0;
         list.replaceChildren();
