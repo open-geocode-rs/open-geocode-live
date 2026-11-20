@@ -20,6 +20,13 @@ export const include = [
   "src/components/MarkdownContent.astro",
   "src/lib/prose.ts",
   "src/styles/global.css",
+  "src/components/api/**",
+  "src/pages/docs/api/**",
+  "src/pages/*.md.ts",
+  "src/lib/openapi.ts",
+  "src/lib/reference.ts",
+  "src/lib/markdown.ts",
+  "src/lib/api.ts",
 ];
 
 export const tokenDir = "src/styles/tokens/";

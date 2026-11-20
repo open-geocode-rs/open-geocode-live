@@ -1,0 +1,48 @@
+---
+import type { Media } from "../../lib/reference";
+import Badge from "../ui/Badge.astro";
+import Tabs from "../ui/Tabs.astro";
+import Blocks from "./Blocks.astro";
+
+interface Props {
+  /** Unique on the page, for the tabs when there is more than one media type. */
+  id: string;
+  media: Media[];
+}
+
+const { id, media } = Astro.props;
+const tabs = media.map((m, i) => ({ id: `media-${i + 1}`, label: m.mediaType }));
+---
+
+{
+  media.length === 1 ? (
+    <div class="media">
+      <p class="media-type">
+        <Badge>{media[0].mediaType}</Badge>
+      </p>
+      <Blocks blocks={media[0].blocks} density="body" />
+    </div>
+  ) : (
+    media.length > 1 && (
+      <Tabs id={id} label="Media type" tabs={tabs}>
+        {media.map((m, i) => (
+          <div slot={tabs[i].id}>
+            <Blocks blocks={m.blocks} density="body" />
+          </div>
+        ))}
+      </Tabs>
+    )
+  )
+}
+
+<style>
+  .media {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .media-type {
+    display: flex;
+  }
+</style>

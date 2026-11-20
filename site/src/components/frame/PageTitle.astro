@@ -1,6 +1,7 @@
 ---
-import { breadcrumbs, markdownPath, operationFor } from "../../lib/api";
-import MethodBadge from "../MethodBadge.astro";
+import { breadcrumbs, markdownPath } from "../../lib/api";
+import { operationFor } from "../../lib/openapi";
+import Badge from "../ui/Badge.astro";
 import Icon from "../ui/Icon.astro";
 import PageActions from "./PageActions.astro";
 
@@ -36,12 +37,12 @@ const operation = operationFor(route.id);
 <h1 class="title" id="_top" data-has-toc={route.toc ? "" : undefined}>{route.entry.data.title}</h1>
 {
   operation && (
-    <p class="og-endpoint">
-      <MethodBadge method={operation.method} />
-      <code>{operation.path}</code>
+    <p class="endpoint">
+      <Badge variant={operation.method}>{operation.method.toUpperCase()}</Badge>
+      <code class="endpoint-path">{operation.path}</code>
       {operation.alias && (
-        <span class="og-endpoint-alias">
-          or <MethodBadge method={operation.alias} />
+        <span class="endpoint-alias">
+          or <Badge variant={operation.alias}>{operation.alias.toUpperCase()}</Badge>
         </span>
       )}
     </p>
@@ -103,6 +104,29 @@ const operation = operationFor(route.id);
     font: var(--type-h1);
     letter-spacing: var(--tracking-tight);
     margin-block-start: var(--space-10);
+  }
+
+  /* An operation's method and path sit under its title. */
+  .endpoint {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block: var(--space-3) var(--space-2);
+  }
+
+  .endpoint-path {
+    color: var(--color-foreground);
+    font: var(--type-code);
+  }
+
+  /* A second method the route answers the same, such as a QUERY batch's POST. */
+  .endpoint-alias {
+    align-items: center;
+    color: var(--color-foreground-secondary);
+    display: inline-flex;
+    font: var(--type-ui);
+    gap: var(--space-2);
   }
 
   /* Pages with a contents column sit higher, the breadcrumbs right under the header. */

@@ -1,23 +1,17 @@
 ---
-import Default from "@astrojs/starlight/components/MarkdownContent.astro";
-import { isApiPage, operationFor } from "../lib/api";
+import { isApiPage } from "../lib/openapi";
 import { proseOf } from "../lib/prose";
-import ExamplePanel from "./ExamplePanel.astro";
 import Prose from "./prose/Prose.astro";
 
 const { id } = Astro.locals.starlightRoute;
-const operation = operationFor(id);
-// The API pages keep the frame's own content wrapper until they are rendered by our own components.
+// The API reference pages are drawn by their own components, and every other page is the docs prose.
 const api = isApiPage(id);
 const nodes = api ? [] : proseOf(await Astro.slots.render("default"));
 ---
 
 {
   api ? (
-    <Default>
-      {operation && <ExamplePanel {operation} />}
-      <slot />
-    </Default>
+    <slot />
   ) : (
     <div class="prose prose-flow">
       <Prose nodes={nodes} />

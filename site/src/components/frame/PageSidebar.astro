@@ -23,8 +23,8 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
         </details>
         <span class="contents-current" data-contents-current />
       </nav>
-      <nav class="contents-column" aria-labelledby="og-contents-title">
-        <h2 class="contents-title" id="og-contents-title">
+      <nav class="contents-column" aria-labelledby="starlight__on-this-page">
+        <h2 class="contents-title" id="starlight__on-this-page">
           {title}
         </h2>
         <TocList items={toc.items} />

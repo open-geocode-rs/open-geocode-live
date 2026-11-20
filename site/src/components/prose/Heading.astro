@@ -7,13 +7,16 @@ export interface Props {
   id: string;
   /** Read aloud for the link to the heading. */
   label: string;
+  /** The type role, when it is not the one the level takes. A quiet heading names a small part, such as a response's status. */
+  look?: "h2" | "h3" | "h4" | "quiet";
 }
 
 const { level, id, label } = Astro.props;
+const look = Astro.props.look ?? (level === 2 ? "h2" : level === 3 ? "h3" : "h4");
 const Tag = `h${level}` as const;
 ---
 
-<div class="prose-heading" data-level={level}>
+<div class="prose-heading" data-look={look}>
   <Tag class="heading-text" id={id}><slot /></Tag>
   <a class="heading-anchor" href={`#${id}`}><Icon name="link" label={label} /></a>
 </div>
@@ -24,12 +27,17 @@ const Tag = `h${level}` as const;
     font: var(--type-h4);
   }
 
-  .prose-heading[data-level="2"] {
+  .prose-heading[data-look="h2"] {
     font: var(--type-h2);
   }
 
-  .prose-heading[data-level="3"] {
+  .prose-heading[data-look="h3"] {
     font: var(--type-h3);
+  }
+
+  .prose-heading[data-look="quiet"] {
+    color: var(--color-foreground-muted);
+    font: var(--type-body);
   }
 
   .heading-text {

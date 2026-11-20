@@ -18,7 +18,7 @@ const hasCurrent = (entry: Entry): boolean => (entry.type === "link" ? entry.isC
 
 // An operation's badge names its method. The badge shows the method's icon, and the name is read aloud.
 const methods = ["get", "post", "query", "delete"] as const;
-const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split(/\s+/).includes(`sl-openapi-method-${m}`));
+const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split(/\s+/).includes(`method-${m}`));
 ---
 
 <ul class="nav-list" data-depth={Math.min(depth, 2)}>

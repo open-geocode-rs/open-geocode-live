@@ -1,0 +1,45 @@
+---
+import type { Example } from "../../lib/reference";
+import Badge from "../ui/Badge.astro";
+import CodeBlock from "../ui/CodeBlock.astro";
+
+interface Props {
+  example: Example;
+}
+
+const { example } = Astro.props;
+// The heading follows the level of the section the example sits in.
+const headings = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
+const Tag = headings[Math.min(Math.max(example.level, 1), 6) - 1];
+---
+
+<div class="example">
+  <Tag class="example-heading">
+    Example
+    {
+      example.generated && (
+        <>
+          {" "}
+          <Badge>generated</Badge>
+        </>
+      )
+    }
+  </Tag>
+  {example.code.length > 0 && <CodeBlock code={example.code} lang={example.lang} />}
+</div>
+
+<style>
+  .example {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .example-heading {
+    align-items: center;
+    color: var(--color-foreground-muted);
+    display: flex;
+    font: var(--type-ui);
+    gap: var(--space-2);
+  }
+</style>

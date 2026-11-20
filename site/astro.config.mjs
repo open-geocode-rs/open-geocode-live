@@ -1,9 +1,8 @@
 import sitemap from "@astrojs/sitemap";
 import starlight from "@astrojs/starlight";
-import { fileURLToPath } from "node:url";
 import { defineConfig, fontProviders } from "astro/config";
 import starlightLlmsTxt from "starlight-llms-txt";
-import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
+import { apiSidebarGroup } from "./src/lib/openapi.ts";
 
 // example.com, like every other placeholder in this repo, until the domain is picked.
 const site = process.env.SITE_URL ?? "https://example.com";
@@ -19,15 +18,6 @@ export default defineConfig({
   site,
   trailingSlash: "ignore",
   vite: {
-    resolve: {
-      // The plugin's overview row lists a QUERY batch as POST; ours lists it as QUERY.
-      alias: [
-        {
-          find: /^\.\/OverviewNavigationLink\.astro$/,
-          replacement: fileURLToPath(new URL("./src/components/OverviewNavigationLink.astro", import.meta.url)),
-        },
-      ],
-    },
     server: {
       proxy: api ? { "/api/geocode": { target: api, rewrite: (path) => path.replace(/^\/api/, "") } } : undefined,
     },
@@ -82,7 +72,6 @@ export default defineConfig({
         "./src/styles/tokens/components.css",
         "./src/styles/tokens/host.css",
         "./src/styles/global.css",
-        "./src/styles/api.css",
       ],
       // The docs frame is our own components. The frame keeps its routing, page data, content and scripts.
       components: {
@@ -97,15 +86,7 @@ export default defineConfig({
         Footer: "./src/components/frame/Footer.astro",
         MarkdownContent: "./src/components/MarkdownContent.astro",
       },
-      routeMiddleware: "./src/routeData.ts",
       plugins: [
-        starlightOpenAPI([
-          {
-            base: "docs/api",
-            schema: "./public/openapi.json",
-            sidebar: { label: "API reference", collapsed: false, operations: { badges: true } },
-          },
-        ]),
         starlightLlmsTxt({
           projectName: "OpenGeocode",
           description,
@@ -128,7 +109,8 @@ export default defineConfig({
           items: ["docs/guides/build-a-pack", "docs/guides/serve", "docs/guides/batch-csv"],
         },
         { label: "Reference", items: ["docs/responses", "docs/benchmarks"] },
-        ...openAPISidebarGroups,
+        // The API reference pages are our own, made from the OpenAPI document in public/.
+        apiSidebarGroup("API reference"),
       ],
     }),
   ],
