@@ -4,7 +4,7 @@ import { Code } from "astro:components";
 import Button from "./Button.astro";
 import Icon from "./Icon.astro";
 
-export const codeBlockVariants = ["plain", "titled"] as const;
+export const codeBlockVariants = ["plain", "titled", "command"] as const;
 export const codeBlockSizes = ["default"] as const;
 export const codeBlockStates = ["rest", "copied"] as const;
 
@@ -18,7 +18,8 @@ type Shared = {
   state?: (typeof codeBlockStates)[number];
 };
 
-export type Props = (Shared & { variant?: "plain" }) | (Shared & { variant: "titled"; title: string });
+/** A command is one line of shell, set compactly after a prompt that is not copied with it. */
+export type Props = (Shared & { variant?: "plain" | "command" }) | (Shared & { variant: "titled"; title: string });
 
 const { code, lang = "plaintext", state = "rest", variant = "plain" } = Astro.props;
 const title = Astro.props.variant === "titled" ? Astro.props.title : undefined;
@@ -61,6 +62,7 @@ const owned: Transformer = {
       </div>
     )
   }
+  {variant === "command" && <span class="codeblock-prompt" aria-hidden="true">$</span>}
   <div class="codeblock-actions">
     <span class="codeblock-status"><Icon name="check" size="sm" /><span role="status" data-status>{state === "copied" ? "Copied" : ""}</span></span>
     <Button variant="ghost" size="sm" iconOnly icon="copy" label="Copy code" data-copy />
@@ -109,6 +111,24 @@ const owned: Transformer = {
     grid-template-areas: "body actions" "body .";
   }
 
+  /* One line on the page's own background, with no visible edge, the prompt before it and the copy button inside it. */
+  .codeblock[data-variant="command"] {
+    align-items: center;
+    background-color: var(--color-background);
+    border-color: transparent;
+    border-radius: var(--radius-md);
+    grid-template-areas: "prompt body actions";
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .codeblock-prompt {
+    color: var(--color-success);
+    font: var(--type-code);
+    grid-area: prompt;
+    padding-inline-start: var(--space-3);
+    user-select: none;
+  }
+
   .codeblock-bar {
     align-items: center;
     block-size: var(--control-lg);
@@ -139,6 +159,10 @@ const owned: Transformer = {
     block-size: var(--control-lg);
   }
 
+  .codeblock[data-variant="command"] .codeblock-actions {
+    padding-inline: var(--space-1-5);
+  }
+
   .codeblock-status {
     align-items: center;
     color: var(--color-success);
@@ -162,6 +186,11 @@ const owned: Transformer = {
     margin: 0;
     overflow-x: auto;
     padding: var(--space-4);
+  }
+
+  .codeblock[data-variant="command"] :global(.codeblock-pre) {
+    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+    scrollbar-width: none;
   }
 
   .codeblock :global(.codeblock-code) {

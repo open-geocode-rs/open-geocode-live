@@ -33,7 +33,7 @@ const steps = [
 <Split id="og-walk-title" eyebrow="Quickstart" title="From an extract to answers in one binary.">
   <span class="og-walk-pre" slot="top"><Link variant="standalone" href={REPO}>Pre-release, from main</Link></span>
   <div class="og-walk-install" data-theme="dark">
-    <CodeBlock code={INSTALL} lang="bash" />
+    <CodeBlock variant="command" code={INSTALL} lang="bash" />
   </div>
   <Tabs id="og-walk" label="Quickstart steps" tabs={steps.map((s) => ({ id: s.id, label: s.label }))}>
     {

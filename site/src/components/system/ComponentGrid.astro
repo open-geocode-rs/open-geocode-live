@@ -41,6 +41,7 @@ const tabs = (state: (typeof tabCells)[number]) => [
 ];
 
 const shell = 'curl "http://localhost:8080/geocode?q=10+Downing+Street+London"';
+const command = "og serve canada-ontario";
 const json = `{
   "type": "FeatureCollection",
   "features": [{ "properties": { "label": "10 Downing Street", "score": 0.98 } }]
@@ -165,6 +166,13 @@ const methodLabel = (v: string) => (["get", "post", "query", "delete"].includes(
         codeBlockStates.map((state) => (
           <Cell component="CodeBlock" variant="titled" size="default" state={state} width="wider">
             <CodeBlock variant="titled" title="Response" code={json} lang="json" state={state} />
+          </Cell>
+        ))
+      }
+      {
+        codeBlockStates.map((state) => (
+          <Cell component="CodeBlock" variant="command" size="default" state={state} width="wider">
+            <CodeBlock variant="command" code={command} lang="shell" state={state} />
           </Cell>
         ))
       }
