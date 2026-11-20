@@ -1,0 +1,155 @@
+---
+import SidebarRestorePoint from "@astrojs/starlight/components/SidebarRestorePoint.astro";
+import type { StarlightRouteData } from "@astrojs/starlight/route-data";
+import Badge from "../ui/Badge.astro";
+import Icon from "../ui/Icon.astro";
+
+type Entry = StarlightRouteData["sidebar"][number];
+
+interface Props {
+  entries: Entry[];
+  /** How deep the list sits. The top list holds the groups, and each nested list hangs off a hairline. */
+  depth?: number;
+}
+
+const { entries, depth = 0 } = Astro.props;
+
+const hasCurrent = (entry: Entry): boolean => (entry.type === "link" ? entry.isCurrent : entry.entries.some(hasCurrent));
+
+// An operation's badge names its method. The badge shows the method's icon, and the name is read aloud.
+const methods = ["get", "post", "query", "delete"] as const;
+const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split(/\s+/).includes(`sl-openapi-method-${m}`));
+---
+
+<ul class="nav-list" data-depth={Math.min(depth, 2)}>
+  {
+    entries.map((entry) => (
+      <li class="nav-entry">
+        {entry.type === "link" ? (
+          <a class="nav-link" href={entry.href} aria-current={entry.isCurrent ? "page" : undefined}>
+            {methodOf(entry) ? (
+              <>
+                <Badge variant={methodOf(entry)} />
+                <span class="sr-only">{entry.badge?.text}</span>
+              </>
+            ) : (
+              entry.badge && <Badge>{entry.badge.text}</Badge>
+            )}
+            <span>{entry.label}</span>
+          </a>
+        ) : (
+          <details class="nav-group" open={hasCurrent(entry) || !entry.collapsed}>
+            <summary class="nav-summary">
+              <span>{entry.label}</span>
+              <span class="nav-caret">
+                <Icon name="chevron-down" size="sm" />
+              </span>
+            </summary>
+            <SidebarRestorePoint />
+            <Astro.self entries={entry.entries} depth={depth + 1} />
+          </details>
+        )}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  [data-depth="0"] > .nav-entry + .nav-entry {
+    margin-block-start: var(--space-1);
+  }
+
+  .nav-list[data-depth="1"],
+  .nav-list[data-depth="2"] {
+    border-inline-start: var(--border) solid var(--color-border);
+  }
+
+  .nav-list[data-depth="2"] {
+    margin-inline-start: var(--space-3);
+  }
+
+  .nav-entry {
+    overflow-wrap: anywhere;
+  }
+
+  .nav-summary {
+    align-items: center;
+    color: var(--color-foreground);
+    cursor: pointer;
+    display: flex;
+    font: var(--type-ui-strong);
+    gap: var(--space-1);
+    list-style: none;
+    padding-block: var(--space-1-5);
+    user-select: none;
+  }
+
+  .nav-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .nav-caret {
+    color: var(--color-foreground-muted);
+    display: inline-flex;
+    rotate: -90deg;
+  }
+
+  [open] > .nav-summary > .nav-caret {
+    rotate: 0deg;
+  }
+
+  /* A link, and a group inside a group, covers its list's hairline with a border that marks the current page. */
+  .nav-link,
+  .nav-list:not([data-depth="0"]) .nav-summary {
+    border-inline-start: var(--border-strong) solid transparent;
+    margin-inline-start: calc(var(--space-0-5) * -1);
+    padding-inline: var(--space-3);
+  }
+
+  .nav-link {
+    align-items: flex-start;
+    color: var(--color-foreground);
+    display: flex;
+    font: var(--type-ui);
+    gap: var(--space-2);
+    padding-block: var(--space-1-5);
+    text-decoration: none;
+    transition-duration: var(--duration-hover);
+    transition-property: background-color;
+    transition-timing-function: var(--ease-hover);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nav-link:hover {
+      background-color: var(--color-control);
+    }
+
+    .nav-summary:hover .nav-caret {
+      color: var(--color-foreground);
+    }
+  }
+
+  .nav-link[aria-current="page"] {
+    background-color: var(--color-selected);
+    border-inline-start-color: var(--color-accent);
+    font: var(--type-ui-strong);
+  }
+
+  .nav-link:focus-visible,
+  .nav-summary:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: calc(var(--space-0-5) * -1);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .nav-caret {
+      transition: rotate var(--duration-enter) var(--ease-out);
+    }
+  }
+</style>

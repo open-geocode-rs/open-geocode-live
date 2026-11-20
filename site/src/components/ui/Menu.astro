@@ -9,6 +9,10 @@ export interface MenuItem {
   label: string;
   value: string;
   icon?: IconName;
+  /** Makes the item a link, for a menu of actions that go somewhere. Such a menu has no current item. */
+  href?: string;
+  /** Opens the link in a new tab. */
+  newTab?: boolean;
   /** Holds an item state without a pointer, for the system page. */
   state?: "rest" | "hover" | "focus";
 }
@@ -19,55 +23,118 @@ export interface Props {
   /** What the trigger shows. Defaults to the current item's label. */
   trigger?: string;
   triggerIcon?: IconName;
+  /** The trigger shows only an icon, the current item's or the trigger icon, and reads its label aloud. */
+  iconOnly?: boolean;
   items: MenuItem[];
   /** The value of the current item. */
   current?: string;
   size?: (typeof menuSizes)[number];
+  /** The edge of the trigger the panel lines up with. A menu at the end of a row opens towards the start. */
+  align?: "start" | "end";
   /** Holds the menu open without a pointer, for the system page. */
   state?: "closed" | "open";
 }
 
-const { label, trigger, triggerIcon, items, current, size = "sm", state = "closed" } = Astro.props;
-const shown = trigger ?? items.find((i) => i.value === current)?.label ?? label;
+const { label, trigger, triggerIcon, iconOnly = false, items, current, size = "sm", align = "start", state = "closed" } = Astro.props;
+// A trigger with no text of its own follows the current item, so it shows what is chosen.
+const follows = trigger === undefined && items.some((i) => i.value === current);
+const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
 ---
 
-<details class="menu" data-menu data-size={size} data-state={state === "open" ? "open" : undefined} open={state === "open"}>
-  <summary class="menu-trigger" aria-label={trigger ? undefined : `${label}. ${shown}`} aria-haspopup="menu">
-    {triggerIcon && <Icon name={triggerIcon} size="md" />}
-    <span>{shown}</span>
+<details
+  class="menu"
+  data-menu
+  data-label={label}
+  data-size={size}
+  data-align={align}
+  data-state={state === "open" ? "open" : undefined}
+  open={state === "open"}
+>
+  <summary
+    class="menu-trigger"
+    aria-label={iconOnly || !trigger ? `${label}${follows ? `. ${items.find((i) => i.value === current)?.label}` : ""}` : undefined}
+    aria-haspopup="menu"
+  >
+    {
+      follows ? (
+        items.filter(shownItem).map((item) => (
+          <span class="menu-shown" data-value={item.value} hidden={item.value !== current}>
+            {iconOnly ? item.icon && <Icon name={item.icon} size="md" /> : triggerIcon && <Icon name={triggerIcon} size="md" />}
+            {!iconOnly && <span>{item.label}</span>}
+          </span>
+        ))
+      ) : (
+        (triggerIcon || !iconOnly) && (
+          <span class="menu-shown">
+            {triggerIcon && <Icon name={triggerIcon} size="md" />}
+            {!iconOnly && <span>{trigger ?? label}</span>}
+          </span>
+        )
+      )
+    }
     <span class="menu-chevron"><Icon name="chevron-down" size="sm" /></span>
   </summary>
   <div class="menu-panel" role="menu" aria-label={label}>
     {
-      items.map((item) => (
-        <button
-          type="button"
-          class="menu-item"
-          role="menuitemradio"
-          aria-checked={item.value === current ? "true" : "false"}
-          tabindex="-1"
-          data-value={item.value}
-          data-state={item.state && item.state !== "rest" ? item.state : undefined}
-        >
-          {item.icon && <Icon name={item.icon} size="md" />}
-          <span class="menu-label">{item.label}</span>
-          <span class="menu-check"><Icon name="check" size="md" /></span>
-        </button>
-      ))
+      items.map((item) =>
+        item.href ? (
+          <a
+            class="menu-item"
+            role="menuitem"
+            href={item.href}
+            tabindex="-1"
+            target={item.newTab ? "_blank" : undefined}
+            rel={item.newTab ? "noopener" : undefined}
+            data-state={item.state && item.state !== "rest" ? item.state : undefined}
+          >
+            {item.icon && <Icon name={item.icon} size="md" />}
+            <span class="menu-label">{item.label}</span>
+          </a>
+        ) : (
+          <button
+            type="button"
+            class="menu-item"
+            role="menuitemradio"
+            aria-checked={item.value === current ? "true" : "false"}
+            tabindex="-1"
+            data-value={item.value}
+            data-state={item.state && item.state !== "rest" ? item.state : undefined}
+          >
+            {item.icon && <Icon name={item.icon} size="md" />}
+            <span class="menu-label">{item.label}</span>
+            <span class="menu-check"><Icon name="check" size="md" /></span>
+          </button>
+        ),
+      )
     }
   </div>
 </details>
 
 <script>
-  const items = (menu: HTMLDetailsElement) => [...menu.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]')];
+  type Item = HTMLButtonElement | HTMLAnchorElement;
+  const items = (menu: HTMLDetailsElement) => [...menu.querySelectorAll<Item>('[role="menuitemradio"], [role="menuitem"]')];
 
   function close(menu: HTMLDetailsElement, refocus: boolean) {
     menu.open = false;
     if (refocus) menu.querySelector("summary")?.focus();
   }
 
+  /** Marks an item current and shows it in the trigger, without announcing a change. */
+  function select(menu: HTMLDetailsElement, value: string) {
+    const chosen = items(menu).find((i) => i.dataset.value === value);
+    if (!chosen) return;
+    for (const i of items(menu)) i.setAttribute("aria-checked", String(i === chosen));
+    for (const shown of menu.querySelectorAll<HTMLElement>(".menu-shown[data-value]")) shown.hidden = shown.dataset.value !== value;
+    const summary = menu.querySelector("summary");
+    if (summary?.hasAttribute("aria-label")) summary.setAttribute("aria-label", `${menu.dataset.label}. ${chosen.textContent?.trim()}`);
+  }
+
   for (const menu of document.querySelectorAll<HTMLDetailsElement>("details[data-menu]")) {
     const summary = menu.querySelector("summary");
+    if (menu.dataset.current) select(menu, menu.dataset.current);
+    menu.addEventListener("menu-select", (event) => {
+      if (event instanceof CustomEvent && typeof event.detail === "string") select(menu, event.detail);
+    });
     menu.addEventListener("toggle", () => {
       if (!menu.open) return;
       const list = items(menu);
@@ -80,7 +147,7 @@ const shown = trigger ?? items.find((i) => i.value === current)?.label ?? label;
         return;
       }
       const list = items(menu);
-      const index = list.indexOf(document.activeElement as HTMLButtonElement);
+      const index = list.findIndex((i) => i === document.activeElement);
       if (event.key === "ArrowDown" && document.activeElement === summary && !menu.open) {
         event.preventDefault();
         menu.open = true;
@@ -99,9 +166,14 @@ const shown = trigger ?? items.find((i) => i.value === current)?.label ?? label;
       list[next].focus();
     });
     menu.addEventListener("click", (event) => {
+      const link = (event.target as Element).closest('[role="menuitem"]');
+      if (link) {
+        close(menu, false);
+        return;
+      }
       const item = (event.target as Element).closest<HTMLButtonElement>('[role="menuitemradio"]');
-      if (!item) return;
-      for (const i of items(menu)) i.setAttribute("aria-checked", String(i === item));
+      if (!item?.dataset.value) return;
+      select(menu, item.dataset.value);
       close(menu, true);
       menu.dispatchEvent(new CustomEvent("menu-change", { bubbles: true, detail: item.dataset.value }));
     });
@@ -138,6 +210,16 @@ const shown = trigger ?? items.find((i) => i.value === current)?.label ?? label;
   }
 
   .menu-trigger::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu-shown {
+    align-items: center;
+    display: inline-flex;
+    gap: var(--space-2);
+  }
+
+  .menu-shown[hidden] {
     display: none;
   }
 
@@ -189,6 +271,12 @@ const shown = trigger ?? items.find((i) => i.value === current)?.label ?? label;
     z-index: var(--z-overlay);
   }
 
+  .menu[data-align="end"] .menu-panel {
+    inset-inline-end: 0;
+    inset-inline-start: auto;
+    transform-origin: top right;
+  }
+
   .menu[data-size="sm"] .menu-panel {
     min-inline-size: min(var(--container-sm), calc(100vw - var(--space-12)));
   }
@@ -210,6 +298,7 @@ const shown = trigger ?? items.find((i) => i.value === current)?.label ?? label;
     gap: var(--space-2);
     padding-inline: var(--space-2);
     text-align: start;
+    text-decoration: none;
     transition-duration: var(--duration-hover);
     transition-property: background-color;
     transition-timing-function: var(--ease-hover);

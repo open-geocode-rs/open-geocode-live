@@ -1,0 +1,137 @@
+---
+import Icon from "../ui/Icon.astro";
+
+const { dir, pagination } = Astro.locals.starlightRoute;
+const { prev, next } = pagination;
+const links = [
+  { link: prev, rel: "prev", label: Astro.locals.t("page.previousLink") },
+  { link: next, rel: "next", label: Astro.locals.t("page.nextLink") },
+] as const;
+---
+
+{
+  (prev || next) && (
+    <nav class="pager print:hidden" dir={dir} aria-label="Pages">
+      {links.map(({ link, rel, label }) =>
+        link ? (
+          <a href={link.href} rel={rel} class="pager-link" data-rel={rel}>
+            <span class="pager-button">
+              <span class="pager-arrow">
+                <Icon name="chevron-down" size="md" />
+              </span>
+              <span>{label}</span>
+            </span>
+            <span class="pager-divider" />
+            <span class="pager-title">{link.label}</span>
+          </a>
+        ) : (
+          <span class="pager-spacer" />
+        ),
+      )}
+    </nav>
+  )
+}
+
+<style>
+  /* An outer card holding two links, each a button, a divider and the page title. */
+  .pager {
+    background-color: var(--color-control);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-inline: calc(var(--space-1) * -1);
+    padding: var(--space-2);
+  }
+
+  .pager-link {
+    align-items: center;
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-foreground);
+    display: flex;
+    flex: 1 1 50%;
+    font: var(--type-ui-strong);
+    gap: var(--space-3);
+    min-block-size: var(--control-lg);
+    min-inline-size: 0;
+    padding: var(--space-2) var(--space-3);
+    text-decoration: none;
+    transition-duration: var(--duration-hover);
+    transition-property: border-color;
+    transition-timing-function: var(--ease-hover);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .pager-link:hover {
+      border-color: var(--color-border-strong);
+    }
+  }
+
+  .pager-link:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .pager-link[data-rel="next"] {
+    flex-direction: row-reverse;
+  }
+
+  .pager-button {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    gap: var(--space-1-5);
+    padding-block: var(--space-2);
+    padding-inline: var(--space-2) var(--space-3);
+  }
+
+  .pager-link[data-rel="next"] .pager-button {
+    flex-direction: row-reverse;
+    padding-inline: var(--space-3) var(--space-2);
+  }
+
+  .pager-arrow {
+    display: inline-flex;
+    rotate: 90deg;
+  }
+
+  .pager-link[data-rel="next"] .pager-arrow {
+    rotate: -90deg;
+  }
+
+  .pager-divider {
+    align-self: center;
+    block-size: var(--control-md);
+    border-inline-start: var(--border) solid var(--color-border);
+  }
+
+  .pager-title {
+    flex: 1 1 50%;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    padding: var(--space-1) var(--space-0-5) var(--space-1) var(--space-2);
+  }
+
+  .pager-link[data-rel="next"] .pager-title {
+    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-0-5);
+    text-align: end;
+  }
+
+  .pager-spacer {
+    display: none;
+  }
+
+  @media (min-width: 40rem) {
+    .pager {
+      flex-direction: row;
+    }
+
+    .pager-spacer {
+      display: block;
+      flex: 1 1 50%;
+    }
+  }
+</style>

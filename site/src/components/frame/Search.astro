@@ -1,0 +1,392 @@
+---
+import Button from "../ui/Button.astro";
+import Input from "../ui/Input.astro";
+import Kbd from "../ui/Kbd.astro";
+
+const t = Astro.locals.t;
+const label = t("search.label");
+// The search index's own words, as the frame translates them, in English where it has none.
+const all = t.all();
+const index = (key: string, english: string) => {
+  const word = all[`pagefind.${key}`];
+  return typeof word === "string" ? word : english;
+};
+const strings = {
+  zero: index("zero_results", "No results for [SEARCH_TERM]"),
+  one: index("one_result", "[COUNT] result for [SEARCH_TERM]"),
+  many: index("many_results", "[COUNT] results for [SEARCH_TERM]"),
+  searching: index("searching", "Searching for [SEARCH_TERM]..."),
+  unavailable: t("search.devWarning"),
+};
+---
+
+<og-search class="search" data-strings={JSON.stringify(strings)}>
+  <span class="search-wide">
+    <Button variant="outline" icon="search" data-open-search aria-keyshortcuts="Control+K">
+      <span class="search-label">{label}</span>
+      <span class="search-shortcut" data-search-shortcut hidden><Kbd>{`${t("search.ctrlKey")} K`}</Kbd></span>
+    </Button>
+  </span>
+  <span class="search-narrow">
+    <Button variant="outline" iconOnly icon="search" label={label} data-open-search />
+  </span>
+
+  <dialog class="search-dialog" aria-label={label}>
+    <div class="search-frame" data-search-frame>
+      <div class="search-form">
+        <Input type="search" size="lg" placeholder={label} aria-label={label} autocomplete="off" spellcheck="false" data-search-input />
+        <span class="search-cancel">
+          <Button variant="ghost" size="lg" data-close-search>{t("search.cancelLabel")}</Button>
+        </span>
+      </div>
+      <p class="search-message" data-search-message aria-live="polite"></p>
+      <ol class="search-results" data-search-results></ol>
+      <span class="search-more" data-search-more hidden>
+        <Button variant="outline">{index("load_more", "Load more results")}</Button>
+      </span>
+    </div>
+
+    <template data-search-page>
+      <li class="search-result">
+        <a class="search-hit">
+          <span class="search-title"></span>
+          <span class="search-excerpt"></span>
+        </a>
+      </li>
+    </template>
+    <template data-search-section>
+      <a class="search-hit search-section">
+        <span class="search-title"></span>
+        <span class="search-excerpt"></span>
+      </a>
+    </template>
+  </dialog>
+</og-search>
+
+{/* Inline, so the shortcut shows with the right key from the first paint. */}
+<script is:inline>
+  (() => {
+    const mac = /(Mac|iPhone|iPod|iPad)/i.test(navigator.userAgent);
+    for (const shortcut of document.querySelectorAll("[data-search-shortcut]")) {
+      if (mac) {
+        const key = shortcut.querySelector("kbd");
+        if (key) key.textContent = "⌘ K";
+        shortcut.closest("button")?.setAttribute("aria-keyshortcuts", "Meta+K");
+      }
+      shortcut.hidden = false;
+    }
+  })();
+</script>
+
+<script>
+  /** The part of the search index's script this component uses. */
+  interface Section {
+    url: string;
+    title: string;
+    excerpt: string;
+    locations?: number[];
+  }
+  interface Page extends Section {
+    meta: { title?: string };
+    sub_results: Section[];
+  }
+  interface Pagefind {
+    options(options: { baseUrl: string; excerptLength: number }): Promise<void>;
+    debouncedSearch(term: string): Promise<{ results: { data(): Promise<Page> }[] } | null>;
+  }
+
+  const PAGE_SIZE = 5;
+  const SECTIONS = 3;
+  // Words around each match. Short, since a page shows its sections under it.
+  const EXCERPT_WORDS = 12;
+  const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+
+  let index: Promise<Pagefind> | undefined;
+  function load(): Promise<Pagefind> {
+    index ??= import(/* @vite-ignore */ `${base}pagefind/pagefind.js`).then(async (module: Pagefind) => {
+      await module.options({ baseUrl: base, excerptLength: EXCERPT_WORDS });
+      return module;
+    });
+    return index;
+  }
+
+  class SiteSearch extends HTMLElement {
+    connectedCallback() {
+      const dialog = this.querySelector("dialog")!;
+      const frame = this.querySelector<HTMLElement>("[data-search-frame]")!;
+      const input = this.querySelector<HTMLInputElement>("[data-search-input]")!;
+      const message = this.querySelector<HTMLElement>("[data-search-message]")!;
+      const list = this.querySelector<HTMLOListElement>("[data-search-results]")!;
+      const more = this.querySelector<HTMLElement>("[data-search-more]")!;
+      const pageTemplate = this.querySelector<HTMLTemplateElement>("template[data-search-page]")!;
+      const sectionTemplate = this.querySelector<HTMLTemplateElement>("template[data-search-section]")!;
+      const strings: Record<string, string> = JSON.parse(this.dataset.strings ?? "{}");
+
+      const open = () => {
+        if (dialog.open) return;
+        dialog.showModal();
+        input.focus();
+        input.select();
+        void load().catch(() => undefined);
+      };
+      const close = () => dialog.close();
+
+      for (const button of this.querySelectorAll("[data-open-search]")) button.addEventListener("click", open);
+      this.querySelector("[data-close-search]")?.addEventListener("click", close);
+      // A press on the backdrop lands on the dialog itself, outside the frame.
+      dialog.addEventListener("click", (event) => {
+        if (event.target === dialog || (event.target as Element).closest("a")) close();
+      });
+      window.addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+          event.preventDefault();
+          if (dialog.open) close();
+          else open();
+        }
+      });
+
+      const fill = (node: Element, section: Section) => {
+        node.setAttribute("href", section.url);
+        node.querySelector(".search-title")!.textContent = section.title;
+        // The index escapes page text and marks each match, so its excerpt is safe to place as markup.
+        node.querySelector(".search-excerpt")!.innerHTML = section.excerpt;
+      };
+
+      // The sections under a page, without the page itself, and at most the few with the most matches, in page order.
+      const sections = (page: Page) => {
+        const own = page.sub_results.filter((s) => s.url !== page.url && !s.url.endsWith("#_top"));
+        if (own.length <= SECTIONS) return own;
+        const top = [...own].sort((a, b) => (b.locations?.length ?? 0) - (a.locations?.length ?? 0)).slice(0, SECTIONS);
+        return own.filter((s) => top.includes(s));
+      };
+
+      const render = (page: Page) => {
+        const item = pageTemplate.content.firstElementChild!.cloneNode(true) as HTMLLIElement;
+        fill(item.querySelector("a")!, { url: page.url, title: page.meta.title ?? page.url, excerpt: page.excerpt });
+        for (const section of sections(page)) {
+          const link = sectionTemplate.content.firstElementChild!.cloneNode(true) as HTMLAnchorElement;
+          fill(link, section);
+          item.append(link);
+        }
+        return item;
+      };
+
+      const say = (key: string, term: string, count = 0) => {
+        message.textContent = (strings[key] ?? "").replace("[SEARCH_TERM]", term).replace("[COUNT]", String(count));
+      };
+
+      let shown = 0;
+      let hits: { data(): Promise<Page> }[] = [];
+      const showMore = async () => {
+        const next = hits.slice(shown, shown + PAGE_SIZE);
+        shown += next.length;
+        list.append(...(await Promise.all(next.map(async (hit) => render(await hit.data())))));
+        more.hidden = shown >= hits.length;
+      };
+      more.querySelector("button")?.addEventListener("click", () => void showMore());
+
+      input.addEventListener("input", async () => {
+        const term = input.value.trim();
+        if (!term) {
+          list.replaceChildren();
+          message.textContent = "";
+          more.hidden = true;
+          return;
+        }
+        say("searching", term);
+        let pagefind: Pagefind;
+        try {
+          pagefind = await load();
+        } catch {
+          message.textContent = strings.unavailable ?? "";
+          return;
+        }
+        const search = await pagefind.debouncedSearch(term);
+        // A newer keystroke replaced this search.
+        if (!search) return;
+        hits = search.results;
+        shown = 0;
+        list.replaceChildren();
+        say(hits.length === 0 ? "zero" : hits.length === 1 ? "one" : "many", term, hits.length);
+        await showMore();
+      });
+
+      frame.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && event.target === input) list.querySelector<HTMLAnchorElement>("a")?.click();
+      });
+    }
+  }
+  customElements.define("og-search", SiteSearch);
+</script>
+
+<style>
+  .search {
+    display: contents;
+  }
+
+  .search-wide {
+    display: none;
+  }
+
+  .search-narrow {
+    display: flex;
+  }
+
+  .search-label {
+    flex: 1;
+    text-align: start;
+  }
+
+  .search-shortcut {
+    display: flex;
+  }
+
+  .search-shortcut[hidden] {
+    display: none;
+  }
+
+  .search-dialog {
+    background-color: var(--color-background);
+    block-size: 100%;
+    border: var(--border) solid var(--color-border);
+    box-shadow: var(--shadow-dialog);
+    color: var(--color-foreground);
+    inline-size: 100%;
+    margin: 0;
+    max-block-size: 100%;
+    max-inline-size: 100%;
+    padding: 0;
+  }
+
+  .search-dialog[open] {
+    display: flex;
+  }
+
+  .search-dialog::backdrop {
+    background-color: var(--color-backdrop);
+  }
+
+  .search-frame {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-3);
+    overflow-y: auto;
+    padding: var(--space-4);
+  }
+
+  .search-form {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .search-cancel {
+    display: flex;
+  }
+
+  .search-message {
+    color: var(--color-foreground-muted);
+    font: var(--type-caption);
+    margin: 0;
+  }
+
+  .search-message:empty {
+    display: none;
+  }
+
+  .search-results {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .search-result {
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .search-hit {
+    background-color: var(--color-control);
+    color: var(--color-foreground);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-0-5);
+    padding: var(--space-3) var(--space-4);
+    text-decoration: none;
+    transition-duration: var(--duration-hover);
+    transition-property: background-color;
+    transition-timing-function: var(--ease-hover);
+  }
+
+  .search-section {
+    border-block-start: var(--border) solid var(--color-border);
+    padding-inline-start: var(--space-8);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .search-hit:hover {
+      background-color: var(--color-control-hover);
+    }
+  }
+
+  .search-hit:focus-visible {
+    background-color: var(--color-control-hover);
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: calc(var(--space-0-5) * -1);
+  }
+
+  .search-title {
+    font: var(--type-ui-strong);
+  }
+
+  .search-excerpt {
+    color: var(--color-foreground-muted);
+    font: var(--type-caption);
+  }
+
+  .search-excerpt :global(mark) {
+    background-color: var(--color-accent-subtle);
+    color: var(--color-foreground);
+  }
+
+  .search-more {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .search-more[hidden] {
+    display: none;
+  }
+
+  @media (min-width: 50rem) {
+    /* A grid cell stretches the button to the column's width. */
+    .search-wide {
+      display: grid;
+      inline-size: var(--container-sm);
+    }
+
+    .search-narrow,
+    .search-cancel {
+      display: none;
+    }
+
+    .search-dialog {
+      block-size: auto;
+      border-radius: var(--radius-xl);
+      margin: var(--space-20) auto auto;
+      max-block-size: calc(100% - var(--space-20) - var(--space-20));
+      max-inline-size: var(--container-lg);
+    }
+
+    .search-frame {
+      padding: var(--space-3);
+    }
+  }
+</style>

@@ -1,0 +1,74 @@
+---
+import type { StarlightRouteData } from "@astrojs/starlight/route-data";
+
+type Item = NonNullable<StarlightRouteData["toc"]>["items"][number];
+
+interface Props {
+  items: Item[];
+  nested?: boolean;
+}
+
+const { items, nested = false } = Astro.props;
+---
+
+<ul class="toc-list" data-nested={nested ? "" : undefined}>
+  {
+    items.map((heading) => (
+      <li>
+        <a class="toc-link" href={`#${heading.slug}`}>
+          {heading.text}
+        </a>
+        {heading.children.length > 0 && <Astro.self items={heading.children} nested />}
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .toc-list {
+    border-inline-start: var(--border) solid var(--color-border);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .toc-list[data-nested] {
+    border-inline-start: 0;
+    padding-inline-start: var(--space-4);
+  }
+
+  /* Every link carries the current marker's border, clear until it is current, so the text never moves. */
+  .toc-link {
+    border-inline-start: var(--border-strong) solid transparent;
+    color: var(--color-foreground);
+    display: block;
+    font: var(--type-ui);
+    overflow-wrap: anywhere;
+    padding: var(--space-1-5) var(--space-4);
+    text-decoration: none;
+    transition-duration: var(--duration-hover);
+    transition-property: background-color, color;
+    transition-timing-function: var(--ease-hover);
+  }
+
+  /* The top list's links cover its hairline, so the current marker replaces it. */
+  .toc-list:not([data-nested]) > li > .toc-link {
+    margin-inline-start: calc(var(--space-0-5) * -1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .toc-link:hover {
+      background-color: var(--color-control);
+    }
+  }
+
+  .toc-link[aria-current="true"] {
+    border-inline-start-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .toc-link:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: calc(var(--space-0-5) * -1);
+  }
+</style>

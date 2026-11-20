@@ -1,0 +1,118 @@
+---
+import { breadcrumbs, markdownPath, operationFor } from "../../lib/api";
+import MethodBadge from "../MethodBadge.astro";
+import Icon from "../ui/Icon.astro";
+import PageActions from "./PageActions.astro";
+
+const route = Astro.locals.starlightRoute;
+const crumbs = breadcrumbs(route.sidebar) ?? [];
+const markdown = await markdownPath(route.id);
+const operation = operationFor(route.id);
+---
+
+{/* The breadcrumbs and actions repeat on every page, so search leaves them out. */}
+<div class="title-bar" data-has-toc={route.toc ? "" : undefined} data-pagefind-ignore>
+  <nav aria-label="Breadcrumbs" class="crumbs">
+    <ol class="crumbs-list">
+      {
+        crumbs.map((c, i) => (
+          <li class="crumb">
+            {i > 0 && (
+              <span class="crumb-separator">
+                <Icon name="chevron-down" size="md" />
+              </span>
+            )}
+            <a class="crumb-link" href={c.href}>
+              {c.label}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </nav>
+  {markdown && <PageActions {markdown} />}
+</div>
+{/* The frame's contents column and its scripts find the page title by this id. */}
+<h1 class="title" id="_top" data-has-toc={route.toc ? "" : undefined}>{route.entry.data.title}</h1>
+{
+  operation && (
+    <p class="og-endpoint">
+      <MethodBadge method={operation.method} />
+      <code>{operation.path}</code>
+      {operation.alias && (
+        <span class="og-endpoint-alias">
+          or <MethodBadge method={operation.alias} />
+        </span>
+      )}
+    </p>
+  )
+}
+
+<style>
+  .title-bar {
+    align-items: center;
+    display: flex;
+    gap: var(--space-4);
+    justify-content: space-between;
+    margin-block-start: var(--space-4);
+    min-block-size: var(--control-md);
+  }
+
+  .crumbs-list {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .crumb {
+    align-items: center;
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .crumb-separator {
+    color: var(--color-foreground-muted);
+    display: inline-flex;
+    rotate: -90deg;
+  }
+
+  .crumb-link {
+    border-radius: var(--radius-sm);
+    color: var(--color-foreground);
+    font: var(--type-ui);
+    text-decoration: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .crumb-link:hover {
+      text-decoration-line: underline;
+    }
+  }
+
+  .crumb-link:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .title {
+    color: var(--color-foreground);
+    font: var(--type-h1);
+    letter-spacing: var(--tracking-tight);
+    margin-block-start: var(--space-10);
+  }
+
+  /* Pages with a contents column sit higher, the breadcrumbs right under the header. */
+  @media (min-width: 72rem) {
+    .title-bar[data-has-toc] {
+      margin-block-start: 0;
+    }
+
+    .title[data-has-toc] {
+      margin-block-start: var(--space-6);
+    }
+  }
+</style>

@@ -2,14 +2,13 @@
   --og-method-fg: #49a782;
   --og-method-bg: rgb(73 167 130 / 0.16);
   --og-method-border: rgb(73 167 130 / 0.24);
-  --og-method-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 7 7 17M17 17H7V7'/%3E%3C/svg%3E");
 }
 
 :root[data-theme="light"] {
   --og-method-fg: #2f7d5f;
 }
 
-/* GET's colours and arrow are the default; a badge of another method takes its own. */
+/* GET's colours are the default; a badge of another method takes its own. */
 .og-method--post,
 .og-example-badge--post,
 .sl-openapi-method-post,
@@ -17,7 +16,6 @@
   --og-method-fg: #6f9ff0;
   --og-method-bg: rgb(111 159 240 / 0.16);
   --og-method-border: rgb(111 159 240 / 0.24);
-  --og-method-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7M7 7h10v10'/%3E%3C/svg%3E");
 }
 
 :root[data-theme="light"] :is(.og-method--post, .og-example-badge--post, .sl-openapi-method-post, .sl-openapi-operation-method-badge.post) {
@@ -31,7 +29,6 @@
   --og-method-fg: #b38cf0;
   --og-method-bg: rgb(179 140 240 / 0.16);
   --og-method-border: rgb(179 140 240 / 0.24);
-  --og-method-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5'/%3E%3C/svg%3E");
 }
 
 :root[data-theme="light"] :is(.og-method--query, .og-example-badge--query, .sl-openapi-method-query, .sl-openapi-operation-method-badge.query) {
@@ -45,150 +42,18 @@
   --og-method-fg: #e8736b;
   --og-method-bg: rgb(232 115 107 / 0.16);
   --og-method-border: rgb(232 115 107 / 0.24);
-  --og-method-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E");
 }
 
 :root[data-theme="light"] :is(.og-method--delete, .og-example-badge--delete, .sl-openapi-method-delete, .sl-openapi-operation-method-badge.delete) {
   --og-method-fg: #b8423a;
 }
 
-/* Title bar: breadcrumbs left, page actions right; 16px below the content top. */
-.og-title-bar {
-  align-items: center;
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
-  margin-top: 1rem;
-  min-height: 2rem;
-}
-
-.og-crumbs ol {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  font-size: 0.875rem;
-  gap: 8px;
-  line-height: 24px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.og-crumbs li {
-  align-items: center;
-  display: flex;
-  gap: 8px;
-}
-
-.og-crumbs li + li::before {
-  background: currentColor;
-  color: var(--sl-color-gray-3);
-  content: "";
-  height: 16px;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m9 18 6-6-6-6'/%3E%3C/svg%3E") center / contain no-repeat;
-  width: 16px;
-}
-
-.og-crumbs a {
-  color: var(--sl-color-white);
-  line-height: 21px;
-  text-decoration: none;
-}
-
-.og-crumbs a:hover {
-  text-decoration: underline;
-}
-
-/* Copy Markdown: two bordered 32px buttons side by side, not one outlined group. */
-.og-actions {
-  display: flex;
-  flex-shrink: 0;
-  position: relative;
-}
-
-.og-actions svg,
 .og-method svg {
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
-}
-
-.og-actions-copy,
-.og-actions-more summary {
-  align-items: center;
-  background: var(--og-control-bg);
-  border: 1px solid var(--og-control-border);
-  color: var(--sl-color-white);
-  cursor: pointer;
-  display: flex;
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 500;
-  gap: 8px;
-  height: 2rem;
-  line-height: 14px;
-  padding: 1px 11px;
-}
-
-.og-actions-copy svg,
-.og-actions-more summary svg {
-  height: 16px;
-  width: 16px;
-}
-
-/* Hover only doubles the tint. The divider stays the arrow button's left border in
-   every state: moving it to the hovered half draws the translucent line over the
-   lighter fill and it fades. */
-.og-actions-copy:hover,
-.og-actions-more summary:hover,
-.og-actions-more[open] summary {
-  background: var(--og-control-hover);
-}
-
-.og-actions-copy {
-  border-inline-end: 0;
-  border-radius: 8px 0 0 8px;
-}
-
-.og-actions-more summary {
-  border-radius: 0 8px 8px 0;
-  justify-content: center;
-  list-style: none;
-  width: 40px;
-}
-
-.og-actions-more summary::-webkit-details-marker {
-  display: none;
-}
-
-.og-actions-menu {
-  background: var(--sl-color-bg);
-  border: 1px solid var(--og-control-border);
-  border-radius: 8px;
-  box-shadow: var(--sl-shadow-md);
-  display: flex;
-  flex-direction: column;
-  inset-inline-end: 0;
-  min-width: 12rem;
-  padding: 4px;
-  position: absolute;
-  top: calc(100% + 4px);
-  z-index: 10;
-}
-
-.og-actions-menu a {
-  border-radius: 4px;
-  color: var(--sl-color-white);
-  font-size: 0.875rem;
-  padding: 6px 10px;
-  text-decoration: none;
-}
-
-.og-actions-menu a:hover {
-  background: var(--og-hover);
 }
 
 /* Method badge: 20px, 4px radius, 12px mono at weight 500. */
@@ -212,11 +77,6 @@
 .og-method svg {
   height: 14px;
   width: 14px;
-}
-
-/* 40px under the breadcrumbs, then the route 12px under the title. */
-h1#_top {
-  margin-top: 2.5rem;
 }
 
 /* The extra 8px below lands the body 56px under the route. */
@@ -243,43 +103,6 @@ h1#_top {
   font-size: 0.875rem;
   gap: 4px;
   margin-left: 4px;
-}
-
-/* Sidebar method badges become a leading 20px icon tile; the text stays for screen readers. */
-.sidebar-content a:has(> [class*="sl-openapi-method-"]) {
-  align-items: flex-start;
-  display: flex;
-  flex-direction: row-reverse;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.sidebar-content .sl-badge[class*="sl-openapi-method-"] {
-  background: var(--og-method-bg);
-  border: 1px solid var(--og-method-border);
-  border-radius: 4px;
-  color: transparent;
-  flex-shrink: 0;
-  font-size: 0;
-  height: 20px;
-  margin: 0.5px 0 0;
-  padding: 0;
-  position: relative;
-  width: 20px;
-}
-
-.sidebar-content .sl-badge[class*="sl-openapi-method-"]::before {
-  background: var(--og-method-fg);
-  content: "";
-  inset: 2px;
-  -webkit-mask: var(--og-method-icon) center / 14px no-repeat;
-  mask: var(--og-method-icon) center / 14px no-repeat;
-  position: absolute;
-}
-
-/* No rule between the title and the body, on every page. */
-.content-panel + .content-panel {
-  border-top: 0;
 }
 
 /* Example panel: 16px outer card, 12px inner card, 8px controls, 4px method tile,
@@ -493,10 +316,6 @@ h1#_top {
 
 /* Operation pages: widen the column, then split it into prose left and the sticky
    panel right. Only operation pages carry .og-example. */
-:root:has(.og-example) {
-  --sl-content-width: 69.5rem;
-}
-
 .sl-markdown-content:has(> .og-example) > .sl-openapi-operation-description {
   display: none;
 }
@@ -836,10 +655,4 @@ h1#_top {
   font-weight: 400;
   padding: 0 6px;
   vertical-align: middle;
-}
-
-/* Hovering the left half lightens the fill beside the divider; lift the line by the
-   same step so its contrast holds. */
-.og-actions:has(.og-actions-copy:hover) .og-actions-more summary {
-  border-inline-start-color: var(--og-control-border-strong);
 }

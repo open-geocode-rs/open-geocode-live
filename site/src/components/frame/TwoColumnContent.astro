@@ -1,0 +1,41 @@
+---
+const { toc } = Astro.locals.starlightRoute;
+---
+
+<div class="columns">
+  <div class="columns-main" data-has-toc={toc ? "" : undefined}>
+    <slot />
+  </div>
+  {
+    toc && (
+      <aside class="columns-contents print:hidden">
+        <slot name="right-sidebar" />
+      </aside>
+    )
+  }
+</div>
+
+<style>
+  .columns-main {
+    isolation: isolate;
+  }
+
+  @media (min-width: 72rem) {
+    .columns {
+      display: flex;
+    }
+
+    .columns-contents {
+      flex-shrink: 0;
+      inline-size: var(--layout-toc-width);
+    }
+
+    .columns-main {
+      inline-size: 100%;
+    }
+
+    .columns-main[data-has-toc] {
+      inline-size: calc(100% - var(--layout-toc-width));
+    }
+  }
+</style>

@@ -15,6 +15,7 @@ export const include = [
   "src/pages/index.astro",
   "src/layouts/Landing.astro",
   "src/components/landing/**",
+  "src/components/frame/**",
 ];
 
 export const tokenDir = "src/styles/tokens/";

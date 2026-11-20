@@ -1,7 +1,7 @@
 ---
 import { Font } from "astro:assets";
 import Default from "@astrojs/starlight/components/Head.astro";
-import { markdownPath } from "../lib/api";
+import { markdownPath } from "../../lib/api";
 
 const markdown = await markdownPath(Astro.locals.starlightRoute.id);
 ---

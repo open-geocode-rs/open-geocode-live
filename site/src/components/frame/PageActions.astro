@@ -1,0 +1,53 @@
+---
+import Button from "../ui/Button.astro";
+import Menu from "../ui/Menu.astro";
+
+interface Props {
+  markdown: string;
+}
+
+const { markdown } = Astro.props;
+const url = new URL(markdown, Astro.site ?? Astro.url).href;
+const prompt = encodeURIComponent(`Read ${url} so I can ask questions about it.`);
+const items = [
+  { value: "markdown", label: "View as Markdown", href: markdown },
+  { value: "claude", label: "Open in Claude", href: `https://claude.ai/new?q=${prompt}`, newTab: true },
+  { value: "chatgpt", label: "Open in ChatGPT", href: `https://chatgpt.com/?q=${prompt}`, newTab: true },
+];
+---
+
+<div class="actions">
+  <Button variant="ghost" icon="copy" data-copy-markdown={markdown}>
+    <span data-copy-label>Copy Markdown</span>
+  </Button>
+  <Menu label="More page actions" items={items} iconOnly size="sm" align="end" />
+</div>
+
+<script>
+  import { after } from "../../lib/motion";
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>("button[data-copy-markdown]")) {
+    const label = button.querySelector<HTMLElement>("[data-copy-label]")!;
+    const rest = label.textContent;
+    let cancel = () => {};
+    button.addEventListener("click", async () => {
+      const text = await (await fetch(button.dataset.copyMarkdown!)).text();
+      await navigator.clipboard.writeText(text);
+      label.textContent = "Copied";
+      cancel();
+      // The message stays for the feedback duration, then clears.
+      cancel = after("feedback", () => {
+        label.textContent = rest;
+      });
+    });
+  }
+</script>
+
+<style>
+  .actions {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    gap: var(--space-1);
+  }
+</style>
