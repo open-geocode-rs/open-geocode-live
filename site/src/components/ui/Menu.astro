@@ -190,13 +190,16 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
 </script>
 
 <style>
+  /* Each menu scopes its own anchor name, so a panel finds its own trigger. */
   .menu {
+    anchor-scope: --menu-trigger;
     display: inline-block;
     position: relative;
   }
 
   .menu-trigger {
     align-items: center;
+    anchor-name: --menu-trigger;
     block-size: var(--control-md);
     border-radius: var(--radius-md);
     color: var(--color-foreground);
@@ -270,17 +273,21 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
     display: flex;
     flex-direction: column;
     gap: var(--space-0-5);
-    inset-block-start: calc(100% + var(--space-1));
-    inset-inline-start: 0;
+    inset-block-start: anchor(bottom);
+    inset-inline-start: anchor(left);
+    margin-block-start: var(--space-1);
     max-inline-size: 100%;
     padding: var(--space-1);
-    position: absolute;
+    position: fixed;
+    position-anchor: --menu-trigger;
+    position-try-fallbacks: flip-block;
     transform-origin: top left;
     z-index: var(--z-overlay);
   }
 
+  /* The panel is fixed to its trigger, not placed inside its parent, so no box that clips its content can cut it. */
   .menu[data-align="end"] .menu-panel {
-    inset-inline-end: 0;
+    inset-inline-end: anchor(right);
     inset-inline-start: auto;
     transform-origin: top right;
   }
