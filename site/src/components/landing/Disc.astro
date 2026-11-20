@@ -25,9 +25,10 @@ const { icon, size = "sm", edge } = Astro.props;
     justify-content: center;
   }
 
+  /* Half a step larger than the small control, so it sits in a key with an even ring of the cap around it. */
   .disc[data-size="sm"] {
-    block-size: var(--control-sm);
-    inline-size: var(--control-sm);
+    block-size: calc(var(--control-sm) + var(--space-1));
+    inline-size: calc(var(--control-sm) + var(--space-1));
   }
 
   .disc[data-size="md"] {
@@ -35,11 +36,12 @@ const { icon, size = "sm", edge } = Astro.props;
     inline-size: var(--control-md);
   }
 
+  /* A raised button pads its label by the 16px step. The disc reaches into that padding, to 4px from the cap's edge. */
   .disc[data-edge="start"] {
-    margin-inline-start: calc(var(--space-4) * -1);
+    margin-inline-start: calc((var(--space-4) - var(--space-1)) * -1);
   }
 
   .disc[data-edge="end"] {
-    margin-inline-end: calc(var(--space-4) * -1);
+    margin-inline-end: calc((var(--space-4) - var(--space-1)) * -1);
   }
 </style>

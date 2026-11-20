@@ -17,10 +17,10 @@ const items = [
 ---
 
 <div class="actions">
-  <Button variant="outline" icon="copy" data-copy-markdown={markdown}>
+  <Button variant="outline" icon="copy" join="start" data-copy-markdown={markdown}>
     <span data-copy-label>Copy Markdown</span>
   </Button>
-  <Menu label="More page actions" variant="outline" items={items} iconOnly size="xs" align="end" />
+  <Menu label="More page actions" variant="outline" items={items} iconOnly size="xs" align="end" join="end" />
 </div>
 
 <script>
@@ -54,10 +54,10 @@ const items = [
 </script>
 
 <style>
+  /* One split button, the copy action and the menu of the others. */
   .actions {
     align-items: center;
     display: flex;
     flex-shrink: 0;
-    gap: var(--space-1);
   }
 </style>

@@ -69,7 +69,7 @@ const description =
         <p class="og-result" dir="auto" aria-live="polite" hidden></p>
         <p class="og-sub">Fast, lightweight, self-hosted geocoding engine in pure Rust.</p>
         <span class="og-cta">
-          <Button variant="raised-solid" size="lg" href="/docs/quickstart/">Get started</Button>
+          <Button variant="raised-solid" size="xl" href="/docs/quickstart/">Get started</Button>
         </span>
       </div>
       <div class="og-horizon">
@@ -215,9 +215,10 @@ const description =
     visibility: hidden;
   }
 
-  /* One line between the headline and the subtitle. A longer match is cut short, and the full text is its title. */
+  /* One line between the headline and the subtitle, as tall as a body line. A longer match is cut short, and the full
+     text is its title. */
   .og-result {
-    block-size: 1lh;
+    block-size: var(--space-6);
     color: var(--color-foreground-secondary);
     font: var(--type-ui);
     margin: var(--space-2) 0 0;
@@ -240,14 +241,15 @@ const description =
   }
 
   .og-sub {
-    color: var(--color-foreground-secondary);
+    color: var(--color-foreground-muted);
     font: var(--type-lead);
+    letter-spacing: var(--tracking-snug);
     margin: var(--space-4) 0 0;
     text-align: center;
   }
 
   .og-cta {
-    margin-block-start: var(--space-12);
+    margin-block-start: var(--space-14);
   }
 
   /* The horizon is a fixed slice at the bottom of the card. The globe inside is wider than most screens and runs past
@@ -328,7 +330,7 @@ const description =
     margin: 0;
   }
 
-  @media (min-width: 50rem) {
+  @media (min-width: 52rem) {
     .og-features {
       margin-block-end: var(--space-24);
       padding-block-start: var(--space-24);

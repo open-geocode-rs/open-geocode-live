@@ -21,7 +21,7 @@ const textRoles = new Set([
   "--color-danger",
 ]);
 // Marks that must stand out from the page, at 3 to 1.
-const markRoles = new Set(["--color-focus", "--color-border-strong"]);
+const markRoles = new Set(["--color-focus"]);
 const ratio = (n: number | undefined) => (n === undefined ? "" : `${n.toFixed(2)} : 1`);
 
 const rawGroups = ["p-colour", "p-alpha", "p-font-size", "p-leading", "p-weight", "p-tracking", "p-family"];

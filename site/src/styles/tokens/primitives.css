@@ -9,12 +9,14 @@
   --space-1-5: 0.375rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
+  --space-3-5: 0.875rem;
   --space-4: 1rem;
   --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
   --space-10: 2.5rem;
   --space-12: 3rem;
+  --space-14: 3.5rem;
   --space-16: 4rem;
   --space-20: 5rem;
   --space-24: 6rem;
@@ -34,6 +36,8 @@
   --control-sm: 1.5rem;
   --control-md: 2rem;
   --control-lg: 2.5rem;
+  /* The landing page's call to action. */
+  --control-xl: 3rem;
 
   /* Icon size. */
   --icon-sm: 0.75rem;
@@ -52,6 +56,8 @@
 
   /* Layout. */
   --layout-nav-height: 3.5rem;
+  /* The landing page's header is taller than the docs header, to hold its larger controls. */
+  --layout-landing-nav-height: 4.5rem;
   --layout-sidebar-width: 18rem;
   --layout-toc-width: 15rem;
   --layout-content: 45rem;
@@ -102,6 +108,8 @@
   --p-font-size-15: 0.9375rem;
   --p-font-size-16: 1rem;
   --p-font-size-18: 1.125rem;
+  /* The landing hero's subtitle, 19.2px. */
+  --p-font-size-lead: 1.2rem;
   --p-font-size-20: 1.25rem;
   --p-font-size-24: 1.5rem;
   --p-font-size-32: 2rem;
@@ -113,6 +121,7 @@
   /* Raw line height. */
   --p-leading-1: 1;
   --p-leading-display: 1.1;
+  --p-leading-lead: 1.2;
   --p-leading-heading: 1.25;
   --p-leading-ui: 1.5;
   --p-leading-prose: 1.7;
@@ -120,10 +129,14 @@
   /* Raw weight. */
   --p-weight-regular: 400;
   --p-weight-medium: 500;
+  --p-weight-semibold: 600;
   --p-weight-display: 550;
 
   /* Raw tracking. */
+  --p-tracking-display: -0.025em;
   --p-tracking-tight: -0.02em;
+  --p-tracking-snug: -0.01em;
+  --p-tracking-wide: 0.01em;
   --p-tracking-caps: 0.06em;
 
   /* Raw family. */
@@ -166,11 +179,12 @@
   --p-alpha-4: 4%;
   --p-alpha-8: 8%;
   --p-alpha-16: 16%;
+  --p-alpha-24: 24%;
   --p-alpha-64: 64%;
 }
 
-/* From the width where the docs frame shows its sidebar, the hero card and its horizon grow. */
-@media (min-width: 50rem) {
+/* From a tablet's width, the hero card and its horizon grow. */
+@media (min-width: 48rem) {
   :root {
     --layout-hero: 45rem;
     --layout-horizon: 18rem;

@@ -1,2 +1,2 @@
-probe {"rule": "og/raw-literal", "file": "src/styles/tokens/roles.css", "replace": "  --color-border-strong: var(--p-neutral-400);\n"}
-  --color-border-strong: calc(var(--p-neutral-400) * -2);
+probe {"rule": "og/raw-literal", "file": "src/styles/tokens/roles.css", "replace": "  --color-foreground-muted: var(--p-neutral-400);\n"}
+  --color-foreground-muted: calc(var(--p-neutral-400) * -2);

@@ -2,8 +2,8 @@
 import type { HTMLAttributes } from "astro/types";
 import Icon, { type IconName } from "./Icon.astro";
 
-export const buttonVariants = ["solid", "outline", "ghost", "raised", "raised-solid"] as const;
-export const buttonSizes = ["sm", "md", "lg"] as const;
+export const buttonVariants = ["solid", "outline", "ghost", "pill", "raised", "raised-solid"] as const;
+export const buttonSizes = ["sm", "md", "lg", "xl"] as const;
 export const buttonStates = ["rest", "hover", "focus", "pressed", "disabled"] as const;
 
 type Base = Omit<HTMLAttributes<"button">, "class" | "class:list" | "style" | "aria-label"> & {
@@ -12,6 +12,8 @@ type Base = Omit<HTMLAttributes<"button">, "class" | "class:list" | "style" | "a
   /** Holds a state without a pointer, for the system page. */
   state?: (typeof buttonStates)[number];
   icon?: IconName;
+  /** Joins the button to the control after it, as the first half of a split button. */
+  join?: "start";
 };
 
 /** A button, or a link that looks like the button, for an action that goes to another page. A link cannot be
@@ -34,6 +36,7 @@ const {
   type = "button",
   disabled,
   href,
+  join,
   ...attrs
 } = Astro.props;
 
@@ -51,6 +54,7 @@ const Tag = href ? "a" : "button";
   type={href ? undefined : type}
   data-variant={variant}
   data-size={size}
+  data-join={join}
   data-icon-only={iconOnly ? "" : undefined}
   data-state={state === "rest" ? undefined : state}
   disabled={href ? undefined : disabled || state === "disabled"}
@@ -105,6 +109,13 @@ const Tag = href ? "a" : "button";
     padding-inline: var(--space-5);
   }
 
+  .button[data-size="xl"] {
+    block-size: var(--control-xl);
+    font: var(--type-ui-lg-strong);
+    letter-spacing: var(--tracking-wide);
+    padding-inline: calc(var(--space-6) + var(--space-0-5));
+  }
+
   .button[data-icon-only][data-size="sm"] {
     inline-size: var(--control-sm);
     padding-inline: 0;
@@ -120,6 +131,13 @@ const Tag = href ? "a" : "button";
     padding-inline: 0;
   }
 
+  /* The first half of a split button. Its end edge is the next control's start border. */
+  .button[data-join="start"] {
+    border-end-end-radius: 0;
+    border-inline-end-width: 0;
+    border-start-end-radius: 0;
+  }
+
   .button[data-variant="solid"] {
     background-color: var(--color-solid);
     color: var(--color-on-solid);
@@ -127,7 +145,32 @@ const Tag = href ? "a" : "button";
 
   .button[data-variant="outline"] {
     background-color: var(--color-control);
-    border-color: var(--color-border-strong);
+    border-color: var(--color-border-control);
+  }
+
+  /* A round outline at body size, half a step shorter than the large control, for the landing page's header. */
+  .button[data-variant="pill"] {
+    border-color: var(--color-border);
+    border-radius: var(--radius-full);
+    font: var(--type-ui-lg);
+  }
+
+  .button[data-variant="pill"][data-size="lg"] {
+    block-size: calc(var(--control-lg) - var(--space-0-5));
+    padding-inline: var(--space-3-5);
+  }
+
+  /* A raised button is a key at body size, half a step taller than the large control, with room for a disc. */
+  .button[data-variant="raised"],
+  .button[data-variant="raised-solid"] {
+    font: var(--type-ui-lg);
+    gap: var(--space-3);
+  }
+
+  .button[data-variant="raised"][data-size="lg"],
+  .button[data-variant="raised-solid"][data-size="lg"] {
+    block-size: calc(var(--control-lg) + var(--space-0-5));
+    padding-inline: var(--space-4);
   }
 
   .button[data-variant="raised"] {
@@ -143,6 +186,11 @@ const Tag = href ? "a" : "button";
     border-radius: var(--radius-full);
     box-shadow: var(--button-raised-solid-shadow);
     color: var(--color-on-solid);
+    text-shadow: var(--button-raised-solid-text-shadow);
+  }
+
+  .button[data-variant="raised-solid"][data-size="xl"] {
+    font: var(--type-ui-lg-strong);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -153,6 +201,10 @@ const Tag = href ? "a" : "button";
     .button[data-variant="outline"]:hover,
     .button[data-variant="ghost"]:hover {
       background-color: var(--color-control-hover);
+    }
+
+    .button[data-variant="pill"]:hover {
+      background-color: var(--color-control);
     }
 
     .button[data-variant="raised"]:hover {
@@ -171,6 +223,10 @@ const Tag = href ? "a" : "button";
   .button[data-variant="outline"][data-state="hover"],
   .button[data-variant="ghost"][data-state="hover"] {
     background-color: var(--color-control-hover);
+  }
+
+  .button[data-variant="pill"][data-state="hover"] {
+    background-color: var(--color-control);
   }
 
   .button[data-variant="raised"][data-state="hover"] {

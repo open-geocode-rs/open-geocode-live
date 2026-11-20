@@ -143,7 +143,7 @@ const table = [
   [/^(border(-[a-z]+)*-width|outline-width|text-decoration-thickness)$/, widths],
   // An icon's line is a border width, or the finer line of the largest icon.
   [/^stroke-width$/, [...widths, "icon"]],
-  [/^box-shadow$/, ["shadow", "own"]],
+  [/^(box-shadow|text-shadow)$/, ["shadow", "own"]],
   [/^(color|background|background-color|border(-[a-z]+)*-color|outline-color|fill|stroke|text-decoration-color|caret-color|accent-color|scrollbar-color)$/, colour],
   [/^(transition|animation)$/, ["duration", "ease"]],
   [/^(transition|animation)-(duration|delay)$/, ["duration"]],

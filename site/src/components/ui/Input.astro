@@ -59,7 +59,7 @@ function textAttrs({ variant, size, state, invalid, disabled, icon, ...rest }: T
 <style>
   .input {
     background-color: var(--color-background);
-    border: var(--border) solid var(--color-border-strong);
+    border: var(--border) solid var(--color-border-control);
     border-radius: var(--radius-md);
     box-sizing: border-box;
     color: var(--color-foreground);
@@ -113,12 +113,12 @@ function textAttrs({ variant, size, state, invalid, disabled, icon, ...rest }: T
 
   @media (hover: hover) and (pointer: fine) {
     .input:hover {
-      border-color: var(--color-foreground-muted);
+      border-color: var(--color-border-strong);
     }
   }
 
   .input[data-state="hover"] {
-    border-color: var(--color-foreground-muted);
+    border-color: var(--color-border-strong);
   }
 
   .input:focus-visible,

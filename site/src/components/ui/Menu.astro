@@ -35,9 +35,11 @@ export interface Props {
   state?: "closed" | "open";
   /** The trigger's look. An outline trigger has the filled, bordered box of an outline button, for a header control. */
   variant?: (typeof menuVariants)[number];
+  /** Joins the trigger to the control before it, as the second half of a split button. */
+  join?: "end";
 }
 
-const { label, trigger, triggerIcon, iconOnly = false, items, current, size = "sm", align = "start", state = "closed", variant = "default" } = Astro.props;
+const { label, trigger, triggerIcon, iconOnly = false, items, current, size = "sm", align = "start", state = "closed", variant = "default", join } = Astro.props;
 // A trigger with no text of its own follows the current item, so it shows what is chosen.
 const follows = trigger === undefined && items.some((i) => i.value === current);
 const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
@@ -49,6 +51,8 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
   data-label={label}
   data-size={size}
   data-variant={variant}
+  data-join={join}
+  data-icon-only={iconOnly ? "" : undefined}
   data-align={align}
   data-state={state === "open" ? "open" : undefined}
   open={state === "open"}
@@ -75,7 +79,7 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
         )
       )
     }
-    <span class="menu-chevron"><Icon name="chevron-down" size="sm" /></span>
+    <span class="menu-chevron"><Icon name="chevrons-up-down" size="md" /></span>
   </summary>
   <div class="menu-panel" role="menu" aria-label={label}>
     {
@@ -224,7 +228,25 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
 
   .menu[data-variant="outline"] .menu-trigger {
     background-color: var(--color-control);
-    border: var(--border) solid var(--color-border-strong);
+    border: var(--border) solid var(--color-border-control);
+  }
+
+  /* An icon-only trigger shows its icon and the chevron close together, in a box as wide as two medium controls'
+     worth of icons. */
+  .menu[data-icon-only] .menu-trigger {
+    gap: var(--space-1);
+    inline-size: calc(var(--control-md) + var(--space-6));
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  /* The second half of a split button, as wide as a large control, with the chevron at its centre. */
+  .menu[data-join="end"] .menu-trigger {
+    border-end-start-radius: 0;
+    border-start-start-radius: 0;
+    inline-size: var(--control-lg);
+    justify-content: center;
+    padding-inline: 0;
   }
 
   .menu-trigger::-webkit-details-marker {
@@ -242,7 +264,6 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
   }
 
   .menu-chevron {
-    color: var(--color-foreground-muted);
     display: inline-flex;
   }
 
@@ -264,11 +285,6 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
   .menu[open] .menu-trigger,
   .menu[data-state="open"] .menu-trigger {
     background-color: var(--color-control-hover);
-  }
-
-  .menu[open] .menu-chevron,
-  .menu[data-state="open"] .menu-chevron {
-    rotate: 180deg;
   }
 
   .menu-panel {
@@ -364,10 +380,6 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
       transition:
         opacity var(--duration-enter) var(--ease-out),
         transform var(--duration-enter) var(--ease-out);
-    }
-
-    .menu-chevron {
-      transition: rotate var(--duration-enter) var(--ease-in-out);
     }
   }
 

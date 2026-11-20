@@ -244,10 +244,16 @@ const strings = {
   }
 
   /* The shortcut is a quiet hint at the button's end, not a key cap. */
+  /* The shortcut is a small filled key cap at the field's end. */
   .search-shortcut {
-    color: var(--color-foreground-muted);
+    align-items: center;
+    background-color: var(--color-surface);
+    block-size: var(--icon-lg);
+    border-radius: var(--radius-sm);
+    color: var(--color-foreground);
     display: flex;
-    font: var(--type-caption);
+    font: var(--type-label);
+    padding-inline: var(--space-1-5);
   }
 
   .search-shortcut[hidden] {

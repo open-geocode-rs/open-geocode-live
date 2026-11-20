@@ -57,7 +57,7 @@ const links = [{ label: "Docs", href: "/docs/", current: !claimed }].concat(
     border-radius: var(--radius-sm);
     color: var(--color-foreground-secondary);
     font: var(--type-ui-strong);
-    padding: var(--space-1-5) var(--space-2);
+    padding: var(--space-1-5) calc(var(--space-2) + var(--space-0-5));
     text-decoration: none;
   }
 
@@ -84,10 +84,12 @@ const links = [{ label: "Docs", href: "/docs/", current: !claimed }].concat(
     min-inline-size: 0;
   }
 
+  /* The actions sit closer to search than the header's other parts do, so search and the actions read as one group. */
   .header-actions {
     align-items: center;
     display: none;
     gap: var(--space-2);
+    margin-inline-start: calc(var(--space-2) * -1);
   }
 
   @media (min-width: 50rem) {

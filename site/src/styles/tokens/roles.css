@@ -10,7 +10,8 @@
   --color-foreground-secondary: var(--p-neutral-300);
   --color-foreground-muted: var(--p-neutral-400);
   --color-border: var(--p-neutral-700);
-  --color-border-strong: var(--p-neutral-400);
+  --color-border-control: color-mix(in srgb, var(--color-foreground) var(--p-alpha-16), transparent);
+  --color-border-strong: color-mix(in srgb, var(--color-foreground) var(--p-alpha-24), transparent);
   --color-accent: var(--p-green);
   --color-accent-subtle: var(--p-green-shade-64);
   --color-accent-strong: var(--p-green-tint-64);
@@ -41,7 +42,8 @@
   --color-foreground-secondary: var(--p-neutral-600);
   --color-foreground-muted: var(--p-neutral-500);
   --color-border: var(--p-neutral-100);
-  --color-border-strong: var(--p-neutral-400);
+  --color-border-control: color-mix(in srgb, var(--color-foreground) var(--p-alpha-16), transparent);
+  --color-border-strong: color-mix(in srgb, var(--color-foreground) var(--p-alpha-24), transparent);
   --color-accent: var(--p-navy);
   --color-accent-subtle: color-mix(in srgb, var(--p-green) var(--p-alpha-16), transparent);
   --color-accent-strong: var(--p-navy-shade-32);
@@ -72,20 +74,29 @@
   --type-h2: var(--p-weight-display) var(--p-font-size-24) / var(--p-leading-heading) var(--p-font-display);
   --type-h3: var(--p-weight-display) var(--p-font-size-20) / var(--p-leading-heading) var(--p-font-display);
   --type-h4: var(--p-weight-display) var(--p-font-size-18) / var(--p-leading-heading) var(--p-font-display);
-  --type-lead: var(--p-weight-regular) var(--p-font-size-18) / var(--p-leading-ui) var(--p-font-sans);
+  --type-lead: var(--p-weight-regular) var(--p-font-size-lead) / var(--p-leading-lead) var(--p-font-sans);
   --type-body: var(--p-weight-regular) var(--p-font-size-16) / var(--p-leading-prose) var(--p-font-sans);
   /* A short title set at body size, such as a feature card's, and the short text under it. */
   --type-body-strong: var(--p-weight-medium) var(--p-font-size-16) / var(--p-leading-heading) var(--p-font-sans);
   --type-body-sm: var(--p-weight-regular) var(--p-font-size-15) / var(--p-leading-heading) var(--p-font-sans);
   --type-ui: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
   --type-ui-strong: var(--p-weight-medium) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-sans);
+  /* The landing page's controls, set at body size, and its call to action, set heavier. */
+  --type-ui-lg: var(--p-weight-medium) var(--p-font-size-16) / var(--p-leading-ui) var(--p-font-sans);
+  --type-ui-lg-strong: var(--p-weight-semibold) var(--p-font-size-16) / var(--p-leading-ui) var(--p-font-sans);
   --type-caption: var(--p-weight-regular) var(--p-font-size-12) / var(--p-leading-ui) var(--p-font-sans);
   --type-label: var(--p-weight-medium) var(--p-font-size-12) / var(--p-leading-1) var(--p-font-sans);
   --type-code: var(--p-weight-regular) var(--p-font-size-14) / var(--p-leading-ui) var(--p-font-mono);
+  /* A one-line command, set small so a long one fits a narrow column. */
+  --type-code-sm: var(--p-weight-regular) var(--p-font-size-12) / var(--p-leading-ui) var(--p-font-mono);
   --type-code-inline: var(--p-weight-regular) var(--p-font-size-inline) / var(--p-leading-1) var(--p-font-mono);
 
-  /* Tracking. Tight for display and h1, caps for small capitals. Everything else uses the keyword normal. */
+  /* Tracking. Tighter still for the display line, tight for h1, snug for the lead, wide for the call to action, caps for small capitals.
+     Everything else uses the keyword normal. */
+  --tracking-display: var(--p-tracking-display);
   --tracking-tight: var(--p-tracking-tight);
+  --tracking-snug: var(--p-tracking-snug);
+  --tracking-wide: var(--p-tracking-wide);
   --tracking-caps: var(--p-tracking-caps);
 }
 

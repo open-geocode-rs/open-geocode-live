@@ -37,9 +37,9 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     {
       menus.map((menu) => (
         <div class="og-menu">
-          <Button variant="ghost" size="lg" aria-haspopup="true">
+          <Button variant="pill" size="lg" aria-haspopup="true">
             {menu.label}
-            <Icon name="chevron-down" size="sm" />
+            <span class="og-chevron"><Icon name="chevrons-up-down" size="md" /></span>
           </Button>
           <div class="og-menu-panel">
             <div>
@@ -57,9 +57,9 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
       ))
     }
     <div class="og-menu">
-      <Button variant="ghost" size="lg" aria-haspopup="true">
+      <Button variant="pill" size="lg" aria-haspopup="true">
         Pricing
-        <Icon name="chevron-down" size="sm" />
+        <span class="og-chevron"><Icon name="chevrons-up-down" size="md" /></span>
       </Button>
       <div class="og-menu-panel">
         <div>
@@ -73,7 +73,7 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     </div>
   </nav>
   <div class="og-actions">
-    <Button variant="ghost" size="lg" icon="github" href={REPO}>GitHub</Button>
+    <Button variant="pill" size="lg" icon="github" href={REPO}>GitHub</Button>
   </div>
 </header>
 
@@ -96,7 +96,7 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
   .og-header {
     align-items: center;
     background-color: var(--color-background);
-    block-size: var(--layout-nav-height);
+    block-size: var(--layout-landing-nav-height);
     border-block-end: var(--border) dashed var(--color-border);
     display: flex;
     gap: var(--space-8);
@@ -121,7 +121,7 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     gap: var(--space-2);
   }
 
-  @media (min-width: 50rem) {
+  @media (min-width: 52rem) {
     .og-nav {
       display: flex;
     }
@@ -143,7 +143,7 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     border-block-end: var(--border) dashed var(--color-border);
     box-shadow: var(--shadow-raised);
     clip-path: inset(0 0 100% 0);
-    inset-block-start: var(--layout-nav-height);
+    inset-block-start: var(--layout-landing-nav-height);
     inset-inline: 0;
     opacity: 0;
     position: absolute;
@@ -170,6 +170,13 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     flex-wrap: wrap;
     gap: var(--space-3) var(--space-4);
     padding: var(--space-4) var(--layout-gutter) var(--space-5);
+  }
+
+  /* The chevron sits close to the pill's end, a step into its padding. */
+  .og-chevron {
+    color: var(--color-foreground-muted);
+    display: inline-flex;
+    margin-inline-end: calc(var(--space-1) * -1);
   }
 
   .og-pricing {

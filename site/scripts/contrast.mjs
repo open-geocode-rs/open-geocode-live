@@ -114,7 +114,9 @@ const text = [
   "--method-query-ink",
   "--method-delete-ink",
 ];
-const marks = ["--color-focus", "--color-border-strong"];
+// Marks that must stand out from the page at 3 to 1. Control borders are not among them. They stay faint, as in the
+// original, since a control is also marked by its filled box.
+const marks = ["--color-focus"];
 // Each badge's text and the fill behind it, as Badge.astro pairs them.
 const badges = [
   ["neutral", "--color-foreground-secondary", "--color-control-hover"],
