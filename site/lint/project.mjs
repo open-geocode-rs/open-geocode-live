@@ -28,7 +28,7 @@ export function includedFiles() {
   const out = new Set();
   for (const pattern of include) {
     for (const f of globSync(pattern, { cwd: root })) {
-      if (/\.(css|astro|ts|mjs|js)$/.test(f)) out.add(f.split("\\").join("/"));
+      if (/\.(css|astro|ts|mjs|js|md|mdx)$/.test(f)) out.add(f.split("\\").join("/"));
     }
   }
   return [...out].sort();

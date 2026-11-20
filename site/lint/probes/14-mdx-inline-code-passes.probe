@@ -1,0 +1,2 @@
+probe {"rule": "og/content", "file": "src/content/docs/benchmarks.mdx", "after": "## Accuracy\n", "pass": true}
+Write `<button>` for the example.

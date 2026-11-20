@@ -1,0 +1,2 @@
+probe {"rule": "og/scripts", "pass": true, "file": "src/components/ui/Tabs.astro", "after": "<script>\n"}
+  document.body.dataset.probe = document.body.style.getPropertyValue("--value");

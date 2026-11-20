@@ -1,0 +1,7 @@
+probe {"rule": "og/markup", "pass": true, "file": "src/content/docs/quickstart.md", "after": "Any other region in the catalog works the same way.\n"}
+
+```html
+<button type="button" style="margin-top: 4px">Probe</button>
+```
+
+`<input>` in a line of text.

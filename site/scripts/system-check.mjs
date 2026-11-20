@@ -10,7 +10,8 @@ import { serve } from "./serve.mjs";
 const site = fileURLToPath(new URL("..", import.meta.url));
 const at = (path) => fileURLToPath(new URL(`../${path}`, import.meta.url));
 
-execFileSync(at("node_modules/.bin/astro"), ["build"], { cwd: site, stdio: ["ignore", "ignore", "inherit"] });
+// Astro builds on the runtime that runs this check.
+execFileSync(process.execPath, [at("node_modules/astro/bin/astro.mjs"), "build"], { cwd: site, stdio: ["ignore", "ignore", "inherit"] });
 
 const files = ["primitives", "roles", "components", "host"].map((f) => `src/styles/tokens/${f}.css`);
 const defined = new Set(

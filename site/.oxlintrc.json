@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [],
+  "categories": { "correctness": "off" },
+  "options": { "respectEslintDisableDirectives": false },
+  "jsPlugins": ["./lint/oxlint-plugin.mjs"],
+  "rules": { "og/scripts": "error" }
+}

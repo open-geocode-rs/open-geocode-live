@@ -1,0 +1,3 @@
+probe {"rule": "og/markup", "file": "src/content/docs/benchmarks.mdx", "after": "## Accuracy\n"}
+
+<p style={`margin-top: ${4}px`}>Probe</p>

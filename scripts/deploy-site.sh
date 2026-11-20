@@ -11,7 +11,7 @@ HOST="${1:?usage: deploy-site.sh <ssh-host> <site-url>}"
 URL="${2:?usage: deploy-site.sh <ssh-host> <site-url>}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/site"
-SITE_URL="$URL" npm run build
+SITE_URL="$URL" bun run build
 # --delete, so pages removed from the site stop being served.
 if [ "$HOST" = local ]; then
   rsync -a --delete dist/ /var/www/open-geocode-site/

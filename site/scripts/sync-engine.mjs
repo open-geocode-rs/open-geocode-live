@@ -2,7 +2,7 @@
 // The copies are committed so the site builds without an engine checkout; rerun
 // after the contract changes.
 //
-//   ENGINE_DIR=../../open-geocode node scripts/sync-engine.mjs
+//   ENGINE_DIR=../../open-geocode bun scripts/sync-engine.mjs
 
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";

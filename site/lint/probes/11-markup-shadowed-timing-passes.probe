@@ -1,0 +1,18 @@
+probe {"rule":"og/scripts","pass":true,"file":"src/components/landing/TimingProbe.astro","create":true}
+---
+const delay = 900;
+const { delays } = Astro.props;
+---
+{delays.map(delay => {
+  setTimeout(() => {}, delay);
+  return null;
+})}
+{delays.map(({ delay }) => {
+  setTimeout(() => {}, delay);
+  return null;
+})}
+{delays.map(value => {
+  const delay = value;
+  setTimeout(() => {}, delay);
+  return null;
+})}

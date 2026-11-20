@@ -1,0 +1,3 @@
+# Package scripts run their tools on bun, even a tool whose launcher asks for node.
+[run]
+bun = true

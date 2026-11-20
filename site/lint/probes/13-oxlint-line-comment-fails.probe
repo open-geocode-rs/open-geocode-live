@@ -1,0 +1,3 @@
+probe {"rule": "og/directive", "file": "src/components/ui/Tabs.astro", "after": "<script>\n"}
+  // oxlint-disable-next-line
+  setTimeout(() => document.body.focus(), 1500);

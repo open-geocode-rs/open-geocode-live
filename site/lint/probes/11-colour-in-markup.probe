@@ -1,0 +1,2 @@
+probe {"rule": "og/scripts", "file": "src/components/system/Section.astro", "after": "<section class=\"section\">\n"}
+  <p data-tint={"#ff5f57"}>Probe</p>
