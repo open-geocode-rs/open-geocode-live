@@ -6,6 +6,12 @@ body {
   font: var(--type-body);
 }
 
+/* Selected text is the brand green on every page, in both themes. */
+::selection {
+  background-color: var(--color-selection);
+  color: var(--color-on-selection);
+}
+
 /* Blocks in the prose sit one step apart, and a heading after other blocks sits further clear of them. */
 .prose-flow > * + *,
 .prose li > * + * {

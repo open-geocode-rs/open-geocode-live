@@ -28,6 +28,8 @@
   --color-danger: var(--p-red-400);
   --color-danger-subtle: color-mix(in srgb, var(--p-red-400) var(--p-alpha-8), transparent);
   --color-backdrop: color-mix(in srgb, var(--p-black) var(--p-alpha-64), transparent);
+  --color-selection: var(--p-green-shade-32);
+  --color-on-selection: var(--p-white);
 
   color-scheme: dark;
 }
@@ -57,6 +59,8 @@
   --color-danger: var(--p-red-700);
   --color-danger-subtle: color-mix(in srgb, var(--p-red-400) var(--p-alpha-8), transparent);
   --color-backdrop: color-mix(in srgb, var(--p-neutral-500) var(--p-alpha-64), transparent);
+  --color-selection: var(--p-green-shade-32);
+  --color-on-selection: var(--p-white);
 
   color-scheme: light;
 }

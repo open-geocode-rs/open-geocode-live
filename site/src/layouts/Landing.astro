@@ -3,6 +3,7 @@ import { Font } from "astro:assets";
 import "../styles/tokens/primitives.css";
 import "../styles/tokens/roles.css";
 import "../styles/tokens/components.css";
+import "../styles/global.css";
 import Footer from "../components/landing/Footer.astro";
 import SiteHeader from "../components/landing/SiteHeader.astro";
 
@@ -116,11 +117,6 @@ const jsonLd = {
     font: var(--type-body);
     min-block-size: 100vh;
     position: relative;
-  }
-
-  .landing ::selection {
-    background-color: var(--color-accent-subtle);
-    color: var(--color-foreground);
   }
 
   .landing-dots {
