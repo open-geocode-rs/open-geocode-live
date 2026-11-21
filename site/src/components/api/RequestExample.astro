@@ -5,6 +5,7 @@ import Badge from "../ui/Badge.astro";
 import Button from "../ui/Button.astro";
 import CodeBlock from "../ui/CodeBlock.astro";
 import Input from "../ui/Input.astro";
+import TryMap from "./TryMap.astro";
 
 interface Props {
   operation: ApiOperation;
@@ -14,6 +15,7 @@ const { operation } = Astro.props;
 const example = exampleFor(operation);
 const snippets = snippetsFor(example);
 const { response } = example;
+const hasMap = operation.method === "get" && ["/geocode", "/places", "/reverse"].includes(operation.path);
 const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
 ---
 
@@ -40,7 +42,7 @@ const languages = snippets.map((s) => ({ value: s.id, label: s.label }));
     }
   </div>
   {
-    response && (
+    hasMap ? <TryMap {operation} {example} /> : response && (
       <div class="request-response">
         <p class="request-response-title">200 example</p>
         <div class="request-response-body">

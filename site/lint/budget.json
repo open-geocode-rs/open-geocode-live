@@ -27,6 +27,7 @@
     "tracking": { "kind": "role", "file": "roles.css", "pattern": "^--tracking-[a-z]+$", "count": 5 },
     "codeblock": { "kind": "component", "file": "components.css", "pattern": "^--codeblock-[a-z-]+$", "count": 5, "reader": "src/components/ui/CodeBlock.astro" },
     "map": { "kind": "component", "file": "components.css", "pattern": "^--map-[a-z-]+$", "count": 8, "reader": "src/components/landing/StreetMap.astro" },
+    "result-map": { "kind": "component", "file": "components.css", "pattern": "^--og-map-[a-z-]+$", "count": 21, "reader": "src/components/api/ResultMap.astro" },
     "globe": { "kind": "component", "file": "components.css", "pattern": "^--globe-[a-z-]+$", "count": 7, "reader": "src/components/landing/DitherGlobe.astro" },
     "terminal": { "kind": "component", "file": "components.css", "pattern": "^--terminal-[a-z-]+$", "count": 10, "reader": "src/components/landing/Walkthrough.astro" },
     "syntax": { "kind": "component", "file": "components.css", "pattern": "^--syntax-[a-z-]+$", "count": 10, "reader": "src/components/ui/CodeBlock.astro" },

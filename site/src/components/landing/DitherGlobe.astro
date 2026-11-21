@@ -1,12 +1,14 @@
+---
+import poster from "../../assets/globe-poster.png";
+---
+
 <og-dither-globe class="og-globe">
+  <img class="og-globe-poster" src={poster.src} width={poster.width} height={poster.height} alt="" fetchpriority="high" />
   <canvas width="1" height="1" aria-hidden="true"></canvas>
 </og-dither-globe>
 
 <script>
-  import { geoEquirectangular, geoPath } from "d3-geo";
-  import { feature } from "topojson-client";
-  import type { GeometryCollection, Topology } from "topojson-specification";
-  import land110 from "world-atlas/land-110m.json";
+  import maskUrl from "../../assets/globe-mask.png?url";
 
   // 8x8 Bayer matrix: ordered dithering keeps the pattern stable from frame to frame,
   // so rotation reads as motion instead of noise.
@@ -36,22 +38,19 @@
   const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
   const wrap = (a: number) => a - Math.round(a / TAU) * TAU;
 
-  // Land as an equirectangular bitmap, rasterised once: per-frame lookups are then a
-  // single array read instead of a point-in-polygon test.
-  function landMask(): Uint8Array {
-    const canvas = new OffscreenCanvas(MASK_W, MASK_H);
+  // The outline is prepared when the asset is generated. Animation only needs the resulting black and white pixels.
+  async function landMask(): Promise<Uint8Array> {
+    const image = new Image();
+    image.src = maskUrl;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = MASK_W;
+    canvas.height = MASK_H;
     const ctx = canvas.getContext("2d")!;
-    const topo = land110 as unknown as Topology<{ land: GeometryCollection }>;
-    const projection = geoEquirectangular()
-      .scale(MASK_W / (2 * Math.PI))
-      .translate([MASK_W / 2, MASK_H / 2]);
-    // The default fill is opaque, and only its alpha is read back.
-    ctx.beginPath();
-    geoPath(projection, ctx)(feature(topo, topo.objects.land));
-    ctx.fill();
+    ctx.drawImage(image, 0, 0);
     const rgba = ctx.getImageData(0, 0, MASK_W, MASK_H).data;
     const mask = new Uint8Array(MASK_W * MASK_H);
-    for (let i = 0; i < mask.length; i++) mask[i] = rgba[i * 4 + 3] > 127 ? 1 : 0;
+    for (let i = 0; i < mask.length; i++) mask[i] = rgba[i * 4] > 127 ? 1 : 0;
     return mask;
   }
 
@@ -70,55 +69,68 @@
     #visible = true;
     #turn?: (lat: number, lon: number) => void;
     #release?: () => void;
+    #pendingPlace?: [number, number];
 
     turnTo(lat: number, lon: number) {
-      this.#turn?.(lat, lon);
+      if (this.#turn) this.#turn(lat, lon);
+      else this.#pendingPlace = [lat, lon];
     }
 
     release() {
+      this.#pendingPlace = undefined;
       this.#release?.();
     }
 
-    connectedCallback() {
+    async connectedCallback() {
+      let mask: Uint8Array;
+      try {
+        mask = await landMask();
+      } catch {
+        return;
+      }
+      if (!this.isConnected) return;
       const canvas = this.querySelector("canvas")!;
       // Sized from the rendered width, so each dither dot stays CELL px at any size.
       const n = Math.max(32, Math.round(this.getBoundingClientRect().width / CELL));
       canvas.width = n;
       canvas.height = n;
       const ctx = canvas.getContext("2d")!;
-      const image = ctx.createImageData(n, n);
+      // The hero clips the entire lower half of the globe.
+      const rows = Math.ceil(n / 2);
+      const image = ctx.createImageData(n, rows);
       const pixels = new Uint32Array(image.data.buffer);
-      const mask = landMask();
 
       // Light is fixed to the screen, so shading, glow and dither thresholds are
       // worked out once. Latitude row and base longitude depend on tilt, which only
       // changes while turning to a place.
       const radius = n / 2 - 1;
-      const cells: number[][] = [];
-      for (let j = 0; j < n; j++) {
+      const capacity = n * rows;
+      const idx = new Int32Array(capacity);
+      const xs = new Float32Array(capacity);
+      const ys = new Float32Array(capacity);
+      const zs = new Float32Array(capacity);
+      const shade = new Float32Array(capacity);
+      const glow = new Float32Array(capacity);
+      const threshold = new Float32Array(capacity);
+      let count = 0;
+      for (let j = 0; j < rows; j++) {
         for (let i = 0; i < n; i++) {
           const x = (i + 0.5 - n / 2) / radius;
           const y = (n / 2 - j - 0.5) / radius;
           const d = x * x + y * y;
           if (d > 1) continue;
           const z = Math.sqrt(1 - d);
-          cells.push([
-            j * n + i,
-            x,
-            y,
-            z,
-            Math.max(0, x * LIGHT[0] + y * LIGHT[1] + z * LIGHT[2]),
-            // Screen-space falloff from the upper middle of the disc, the part above
-            // the card's edge: ocean dots shine there and thin out toward the rim.
-            Math.max(0, 1 - Math.hypot(x, y - 0.55) / 1.1),
-            BAYER[(j % 8) * 8 + (i % 8)],
-          ]);
+          idx[count] = j * n + i;
+          xs[count] = x;
+          ys[count] = y;
+          zs[count] = z;
+          shade[count] = Math.max(0, x * LIGHT[0] + y * LIGHT[1] + z * LIGHT[2]);
+          // Screen-space falloff from the upper middle of the disc.
+          glow[count] = Math.max(0, 1 - Math.hypot(x, y - 0.55) / 1.1);
+          threshold[count] = BAYER[(j % 8) * 8 + (i % 8)];
+          count++;
         }
       }
-      const count = cells.length;
-      const column = (c: number) => Float32Array.from(cells, (cell) => cell[c]);
-      const idx = Int32Array.from(cells, (cell) => cell[0]);
-      const [xs, ys, zs, shade, glow, threshold] = [1, 2, 3, 4, 5, 6].map(column);
       const row = new Int32Array(count);
       const lon0 = new Float32Array(count);
 
@@ -161,7 +173,6 @@
       project(tilt);
 
       const render = () => {
-        pixels.fill(0);
         for (let k = 0; k < count; k++) {
           let lon = lon0[k] - spin;
           lon -= Math.floor((lon + Math.PI) / TAU) * TAU;
@@ -211,7 +222,13 @@
         flyTo(spin, TILT);
       };
 
+      if (this.#pendingPlace) {
+        this.#turn(...this.#pendingPlace);
+        this.#pendingPlace = undefined;
+      }
+
       render();
+      this.dataset.ready = "";
       if (still) return;
 
       new IntersectionObserver(([entry]) => (this.#visible = entry.isIntersecting)).observe(this);
@@ -232,9 +249,11 @@
         return true;
       };
       const tick = (now: number) => {
-        const dt = Math.min(0.05, (now - last) / 1000);
-        last = now;
-        if (this.#visible && !document.hidden && step(now, dt)) render();
+        const elapsed = now - last;
+        if (this.#visible && !document.hidden && (fly || elapsed >= 32)) {
+          if (step(now, Math.min(0.05, elapsed / 1000))) render();
+          last = now;
+        }
         this.#frame = requestAnimationFrame(tick);
       };
       this.#frame = requestAnimationFrame(tick);
@@ -254,12 +273,27 @@
     display: block;
     flex-shrink: 0;
     inline-size: var(--layout-globe);
+    position: relative;
   }
 
   /* The canvas holds one pixel per dither dot. Scaling it up unsmoothed is the effect. */
   .og-globe canvas {
+    block-size: auto;
     display: block;
     image-rendering: pixelated;
     inline-size: 100%;
+  }
+
+  .og-globe-poster {
+    block-size: auto;
+    image-rendering: pixelated;
+    inline-size: 100%;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    position: absolute;
+  }
+
+  .og-globe[data-ready] .og-globe-poster {
+    display: none;
   }
 </style>

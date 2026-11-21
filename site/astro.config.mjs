@@ -18,8 +18,12 @@ export default defineConfig({
   site,
   trailingSlash: "ignore",
   vite: {
+    optimizeDeps: { include: ["@mapbox/vector-tile", "pbf"] },
     server: {
-      proxy: api ? { "^/api/(autocomplete|geocode)(?:[?]|$)": { target: api, rewrite: (path) => path.replace(/^\/api/, "") } } : undefined,
+      proxy: api ? {
+        "^/api/(autocomplete|geocode)(?:[?]|$)": { target: api, bypass: (request) => request.method === "GET" ? undefined : false, rewrite: (path) => path.replace(/^\/api/, "") },
+        "^/api/try/(geocode|places|reverse)(?:[?]|$)": { target: api, bypass: (request) => request.method === "GET" ? undefined : false, rewrite: (path) => path.replace(/^\/api\/try/, "") },
+      } : undefined,
     },
   },
   fonts: [

@@ -1,0 +1,232 @@
+---
+import type { Example } from "../../lib/api";
+import { isNode, type ApiOperation } from "../../lib/openapi";
+import Button from "../ui/Button.astro";
+import CodeBlock from "../ui/CodeBlock.astro";
+import Input from "../ui/Input.astro";
+import ResultMap from "./ResultMap.astro";
+
+interface Props {
+  operation: ApiOperation;
+  example: Example;
+}
+
+const { operation, example } = Astro.props;
+const { searchParams } = new URL(example.request, Astro.url);
+const pickable = operation.path === "/reverse";
+const parameters = Array.isArray(operation.node.parameters) ? operation.node.parameters : [];
+const fields = parameters.filter(isNode).flatMap((p) => {
+  if (p.in !== "query" || typeof p.name !== "string") return [];
+  return [{ name: p.name, value: searchParams.get(p.name) ?? "", required: p.required === true }];
+});
+const primary = fields.filter((p) => p.required || searchParams.has(p.name));
+const optional = fields.filter((p) => !primary.includes(p));
+---
+
+<div class="try-map" data-try-map>
+  <form class="try-form" action={`/api/try${operation.path}`} aria-label="Try it">
+    <div class="try-heading">
+      <h3>Try it</h3>
+      <Button type="submit" size="sm">Send</Button>
+    </div>
+    <div class="try-fields">
+      {primary.map((field) => (
+        <label class="try-field">
+          <span>{field.name}</span>
+          <Input name={field.name} value={field.value} required={field.required} />
+        </label>
+      ))}
+      {optional.length > 0 && (
+        <details>
+          <summary>More parameters</summary>
+          <div class="try-fields">
+            {optional.map((field) => (
+              <label class="try-field">
+                <span>{field.name}</span>
+                <Input name={field.name} value={field.value} />
+              </label>
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
+  </form>
+  <p class="try-status" role="status" data-try-status>200 example</p>
+  <ResultMap {pickable} />
+  {pickable && <p class="try-status">Click the map to look up a point.</p>}
+  {example.response && (
+    <div class="try-response" data-try-example>
+      <CodeBlock variant="numbered" code={example.response} lang="json" />
+    </div>
+  )}
+  <pre class="try-response try-live" data-try-response hidden><code></code></pre>
+  <template data-try-seed>{example.response}</template>
+</div>
+
+<script>
+  const LOOKUP_TIMEOUT = 8000;
+
+  type Coordinates = { lat: number; lon: number };
+  type MapPoint =
+    | (Coordinates & { kind: "result" | "query" | "entrance" })
+    | { kind: "box"; bbox: [number, number, number, number] };
+  type ResultMapElement = HTMLElement & { show(points: MapPoint[], keep?: boolean): void };
+
+  type Answer = {
+    geocoding?: { point?: Coordinates };
+    features?: {
+      geometry?: { type?: string; coordinates?: [number, number] };
+      bbox?: MapPointBox;
+      properties?: { bbox?: MapPointBox; access?: Coordinates[] };
+    }[];
+  };
+  type MapPointBox = [number, number, number, number];
+
+  function pointsOf(answer: Answer, query?: Coordinates): MapPoint[] {
+    const points: MapPoint[] = [];
+    const point = answer.geocoding?.point ?? query;
+    if (point) points.push({ ...point, kind: "query" });
+    for (const feature of answer.features ?? []) {
+      const [lon, lat] = feature.geometry?.type === "Point" ? feature.geometry.coordinates ?? [] : [];
+      if (typeof lat !== "number" || typeof lon !== "number") continue;
+      points.push({ lat, lon, kind: "result" });
+      const bbox = feature.bbox ?? feature.properties?.bbox;
+      if (bbox?.length === 4 && bbox.every(Number.isFinite)) points.push({ kind: "box", bbox });
+      for (const door of feature.properties?.access ?? []) {
+        if (Number.isFinite(door.lat) && Number.isFinite(door.lon)) points.push({ ...door, kind: "entrance" });
+      }
+    }
+    return points;
+  }
+
+  await customElements.whenDefined("og-result-map");
+  for (const panel of document.querySelectorAll<HTMLElement>("[data-try-map]")) {
+    const form = panel.querySelector("form")!;
+    const map = panel.querySelector<ResultMapElement>("og-result-map")!;
+    const status = panel.querySelector<HTMLElement>("[data-try-status]")!;
+    const sample = panel.querySelector<HTMLElement>("[data-try-example]");
+    const output = panel.querySelector<HTMLPreElement>("[data-try-response]")!;
+    const seed = panel.querySelector<HTMLTemplateElement>("[data-try-seed]")?.content.textContent;
+    let request: AbortController | undefined;
+
+    function queryPoint(params: URLSearchParams): Coordinates | undefined {
+      if (!map.hasAttribute("data-pickable") || !params.has("lat") || !params.has("lon")) return;
+      const lat = Number(params.get("lat"));
+      const lon = Number(params.get("lon"));
+      if (Number.isFinite(lat) && Math.abs(lat) <= 90 && Number.isFinite(lon) && Math.abs(lon) <= 180) return { lat, lon };
+    }
+
+    function parameters() {
+      const params = new URLSearchParams();
+      for (const [key, value] of new FormData(form)) {
+        if (typeof value === "string" && value.trim()) params.set(key, value.trim());
+      }
+      return params;
+    }
+
+    if (seed) map.show(pointsOf(JSON.parse(seed), queryPoint(parameters())));
+
+    async function run(keep = false) {
+      request?.abort();
+      const current = request = new AbortController();
+      const timeout = AbortSignal.timeout(LOOKUP_TIMEOUT);
+      const signal = AbortSignal.any([current.signal, timeout]);
+      const params = parameters();
+      const url = new URL(form.action);
+      url.search = params.toString();
+      status.textContent = "Sending…";
+      try {
+        const response = await fetch(url, { signal });
+        const answer = await response.json();
+        if (current.signal.aborted) return;
+        if (!response.ok) {
+          status.textContent = `${response.status} lookup failed. The previous result is still shown.`;
+          return;
+        }
+        map.show(pointsOf(answer, queryPoint(params)), keep);
+        output.querySelector("code")!.textContent = JSON.stringify(answer, null, 2);
+        if (sample) sample.hidden = true;
+        output.hidden = false;
+        status.textContent = `${response.status} live response`;
+      } catch {
+        if (current.signal.aborted) return;
+        status.textContent = timeout.aborted
+          ? "The lookup timed out. The previous result is still shown."
+          : "Couldn’t reach the API. The previous result is still shown.";
+      }
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      void run();
+    });
+
+    map.addEventListener("og-pick", (event) => {
+      const point = (event as CustomEvent<Coordinates>).detail;
+      form.querySelector<HTMLInputElement>("[name=lat]")!.value = point.lat.toFixed(5);
+      form.querySelector<HTMLInputElement>("[name=lon]")!.value = point.lon.toFixed(5);
+      void run(true);
+    });
+  }
+</script>
+
+<style>
+  .try-form {
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    margin-block-start: var(--space-1);
+  }
+
+  .try-heading,
+  .try-field {
+    align-items: center;
+    display: grid;
+    gap: var(--space-2);
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .try-heading {
+    border-block-end: var(--border) solid var(--color-border);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+  }
+
+  .try-heading > h3 {
+    font: var(--type-ui-strong);
+    margin: 0;
+  }
+
+  .try-fields {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-2);
+  }
+
+  .try-field {
+    font: var(--type-ui);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    overflow-wrap: anywhere;
+  }
+
+  .try-fields summary {
+    cursor: pointer;
+    font: var(--type-ui);
+  }
+
+  .try-status {
+    font: var(--type-ui-strong);
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .try-response {
+    max-block-size: var(--container-sm);
+    overflow: auto;
+    padding: var(--space-2);
+  }
+
+  .try-live {
+    font: var(--type-code);
+    margin: 0;
+  }
+</style>
