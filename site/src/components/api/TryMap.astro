@@ -64,6 +64,8 @@ const optional = fields.filter((p) => !primary.includes(p));
 </div>
 
 <script>
+  const LOOKUP_TIMEOUT = 8000;
+
   type Coordinates = { lat: number; lon: number };
   type MapPoint =
     | (Coordinates & { kind: "result" | "query" | "entrance" })
@@ -127,22 +129,30 @@ const optional = fields.filter((p) => !primary.includes(p));
     async function run(keep = false) {
       request?.abort();
       const current = request = new AbortController();
+      const timeout = AbortSignal.timeout(LOOKUP_TIMEOUT);
+      const signal = AbortSignal.any([current.signal, timeout]);
       const params = parameters();
       const url = new URL(form.action);
       url.search = params.toString();
       status.textContent = "Sending…";
       try {
-        const response = await fetch(url, { signal: current.signal });
+        const response = await fetch(url, { signal });
         const answer = await response.json();
         if (current.signal.aborted) return;
-        const point = queryPoint(params);
-        map.show(pointsOf(response.ok ? answer : {}, point), keep);
+        if (!response.ok) {
+          status.textContent = `${response.status} lookup failed. The previous result is still shown.`;
+          return;
+        }
+        map.show(pointsOf(answer, queryPoint(params)), keep);
         output.querySelector("code")!.textContent = JSON.stringify(answer, null, 2);
         if (sample) sample.hidden = true;
         output.hidden = false;
         status.textContent = `${response.status} live response`;
       } catch {
-        if (!current.signal.aborted) status.textContent = "Couldn’t reach the API. The previous result is still shown.";
+        if (current.signal.aborted) return;
+        status.textContent = timeout.aborted
+          ? "The lookup timed out. The previous result is still shown."
+          : "Couldn’t reach the API. The previous result is still shown.";
       }
     }
 
@@ -155,7 +165,6 @@ const optional = fields.filter((p) => !primary.includes(p));
       const point = (event as CustomEvent<Coordinates>).detail;
       form.querySelector<HTMLInputElement>("[name=lat]")!.value = point.lat.toFixed(5);
       form.querySelector<HTMLInputElement>("[name=lon]")!.value = point.lon.toFixed(5);
-      map.show([{ ...point, kind: "query" }], true);
       void run(true);
     });
   }

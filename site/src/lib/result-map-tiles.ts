@@ -36,8 +36,17 @@ const TIMEOUT = 8000;
 let template: Promise<string> | undefined;
 const tileTemplate = () =>
   (template ??= fetch(TILEJSON, { signal: AbortSignal.timeout(TIMEOUT) })
-    .then((response) => response.json())
-    .then((json: { tiles: string[] }) => json.tiles[0])
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`TileJSON: ${response.status}`);
+      const { tiles } = await response.json();
+      const url = Array.isArray(tiles) ? tiles[0] : undefined;
+      if (typeof url !== "string" || !["{z}", "{x}", "{y}"].every((part) => url.includes(part))) {
+        throw new Error("TileJSON has no tile URL template");
+      }
+      const parsed = new URL(url);
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") throw new Error("Invalid tile URL protocol");
+      return url;
+    })
     .catch((error) => {
       template = undefined;
       throw error;
@@ -125,26 +134,35 @@ export function project(lat: number, lon: number, z: number): [number, number] {
   return [((lon + 180) / 360) * n, ((1 - Math.asinh(Math.tan((clamped * Math.PI) / 180)) / Math.PI) / 2) * n];
 }
 
-// Built tiles by z/x/y, so a map that pans or zooms back fetches nothing twice.
-const cache = new Map<string, Promise<Omit<Tile, "x" | "y">>>();
+// Keep enough decoded tiles for several buffered views, and share pending fetches.
+const CACHE_LIMIT = 64;
+type TileData = Omit<Tile, "x" | "y">;
+const cache = new Map<string, TileData>();
+const pending = new Map<string, Promise<TileData>>();
 
-function tile(url: string, z: number, x: number, y: number) {
+async function tile(url: string, z: number, x: number, y: number): Promise<TileData> {
   const key = `${z}/${x}/${y}`;
-  let built = cache.get(key);
-  if (!built) {
-    built = fetch(url.replace("{z}", `${z}`).replace("{x}", `${x}`).replace("{y}", `${y}`), { signal: AbortSignal.timeout(TIMEOUT) })
-      .then(async (response) => {
-        if (!response.ok) throw new Error(`tile ${key}: ${response.status}`);
-        const tile = new VectorTile(new PbfReader(new Uint8Array(await response.arrayBuffer())));
-        return { paths: paths(tile), labels: labels(tile, z) };
-      })
-      .catch((error) => {
-        cache.delete(key);
-        throw error;
-      });
-    cache.set(key, built);
+  const cached = cache.get(key);
+  if (cached) {
+    cache.delete(key);
+    cache.set(key, cached);
+    return cached;
   }
-  return built;
+  const inFlight = pending.get(key);
+  if (inFlight) return inFlight;
+
+  const loaded = fetch(url.replace("{z}", `${z}`).replace("{x}", `${x}`).replace("{y}", `${y}`), { signal: AbortSignal.timeout(TIMEOUT) })
+    .then(async (response) => {
+      if (!response.ok) throw new Error(`tile ${key}: ${response.status}`);
+      const tile = new VectorTile(new PbfReader(new Uint8Array(await response.arrayBuffer())));
+      const data = { paths: paths(tile), labels: labels(tile, z) };
+      cache.set(key, data);
+      if (cache.size > CACHE_LIMIT) cache.delete(cache.keys().next().value!);
+      return data;
+    })
+    .finally(() => pending.delete(key));
+  pending.set(key, loaded);
+  return loaded;
 }
 
 // Every tile at zoom z that a view `width` by `height` px shows, with the tile-unit
@@ -164,7 +182,10 @@ export async function loadTiles(
   for (let x = xs[0]; x <= xs[1]; x++) for (let y = ys[0]; y <= ys[1]; y++) coords.push([x, y]);
   const url = await tileTemplate();
   // Wraps across the antimeridian; drawn at its unwrapped x.
-  return Promise.all(coords.map(async ([x, y]) => ({ x, y, ...(await tile(url, z, ((x % n) + n) % n, y)) })));
+  const results = await Promise.allSettled(coords.map(async ([x, y]) => ({ x, y, ...(await tile(url, z, ((x % n) + n) % n, y)) })));
+  const available = results.flatMap((result) => result.status === "fulfilled" ? [result.value] : []);
+  if (!available.length) throw new Error("No map tiles could be loaded");
+  return available;
 }
 
 // Draws tiles `size` px across with the tile-unit point (cx, cy) at (ax, ay).

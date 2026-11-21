@@ -53,14 +53,23 @@ const { pickable } = Astro.props;
     | { lat: number; lon: number; kind: "result" | "query" | "entrance" }
     | { kind: "box"; bbox: [number, number, number, number] };
 
-  // Every corner a point puts on the map, for fitting the view to them.
-  const corners = (p: Point): { lat: number; lon: number }[] =>
-    p.kind === "box"
-      ? [
-          { lon: p.bbox[0], lat: p.bbox[1] },
-          { lon: p.bbox[2], lat: p.bbox[3] },
-        ]
-      : [p];
+  // Move a projected longitude into the world copy nearest the reference.
+  const wrapX = (x: number, reference: number) => x + Math.round(reference - x);
+
+  function bounds(point: Point, reference: number): [number, number, number, number] {
+    if (point.kind !== "box") {
+      const [x, y] = project(point.lat, point.lon, 0);
+      const wrapped = wrapX(x, reference);
+      return [wrapped, y, wrapped, y];
+    }
+    const [west, south, east, north] = point.bbox;
+    const [left, top] = project(north, west, 0);
+    const [right, bottom] = project(south, east, 0);
+    // Shift both edges together so a box keeps its eastward span.
+    const span = right < left ? right + 1 - left : right - left;
+    const start = wrapX(left + span / 2, reference) - span / 2;
+    return [start, top, start + span, bottom];
+  }
 
   // Closest view: past the landing page's scale, for picking one house.
   const MAX_ZOOM = MAX_Z + 3.5;
@@ -89,26 +98,31 @@ const { pickable } = Astro.props;
     #request = 0;
     #size = "";
     #cancelLoad = () => {};
+    #cleanup = () => {};
 
     connectedCallback() {
       this.#canvas = this.querySelector("canvas")!;
-      new ResizeObserver(() => {
+      const listeners = new AbortController();
+      const { signal } = listeners;
+      const resize = new ResizeObserver(() => {
         const { width, height } = this.getBoundingClientRect();
         const size = `${width}x${height}`;
         if (!width || size === this.#size) return;
         this.#size = size;
         if (this.#points.length) this.show(this.#points);
-      }).observe(this);
-      new MutationObserver(() => {
+      });
+      resize.observe(this);
+      const theme = new MutationObserver(() => {
         this.#renderBasemap();
         this.#scheduleDraw();
-      }).observe(document.documentElement, { attributeFilter: ["data-theme"] });
+      });
+      theme.observe(document.documentElement, { attributeFilter: ["data-theme"] });
 
       for (const button of this.querySelectorAll<HTMLButtonElement>("[data-zoom]")) {
         button.addEventListener("click", () => {
           const { width, height } = this.getBoundingClientRect();
           this.#zoomBy(Number(button.dataset.zoom), width / 2, height / 2);
-        });
+        }, { signal });
       }
       this.#canvas.addEventListener(
         "wheel",
@@ -119,41 +133,63 @@ const { pickable } = Astro.props;
           const delta = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
           this.#zoomBy(-delta / 240, e.clientX - box.left, e.clientY - box.top);
         },
-        { passive: false },
+        { passive: false, signal },
       );
       this.#canvas.addEventListener("dblclick", (e) => {
         const box = this.getBoundingClientRect();
         this.#zoomBy(1, e.clientX - box.left, e.clientY - box.top);
-      });
+      }, { signal });
 
       // Dragging pans; a press that stays put is a click, which picks on reverse.
-      this.#canvas.addEventListener("pointerdown", (e) => {
-        if (e.button !== 0 || this.hidden) return;
-        const start = { x: e.clientX, y: e.clientY, centre: this.#centre };
-        let dragged = false;
-        this.#canvas.setPointerCapture(e.pointerId);
-        const move = (m: PointerEvent) => {
-          const dx = m.clientX - start.x;
-          const dy = m.clientY - start.y;
-          if (!dragged && Math.hypot(dx, dy) < SLOP) return;
-          dragged = true;
-          this.dataset.dragging = "";
-          const scale = 512 * 2 ** this.#zoom;
-          this.#centre = [start.centre[0] - dx / scale, clamp(start.centre[1] - dy / scale, 0, 1)];
-          this.#scheduleDraw();
-          this.#refresh();
-        };
-        const up = (u: PointerEvent) => {
-          this.#canvas.removeEventListener("pointermove", move);
-          this.#canvas.removeEventListener("pointerup", up);
-          this.#canvas.removeEventListener("pointercancel", up);
-          delete this.dataset.dragging;
-          if (!dragged && u.type === "pointerup" && "pickable" in this.dataset) this.#pick(u);
-        };
-        this.#canvas.addEventListener("pointermove", move);
-        this.#canvas.addEventListener("pointerup", up);
-        this.#canvas.addEventListener("pointercancel", up);
-      });
+      let pointer: { id: number; x: number; y: number; centre: [number, number]; dragged: boolean } | undefined;
+      this.#canvas.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0 || this.hidden || pointer) return;
+        const { pointerId: id, clientX: x, clientY: y } = event;
+        this.#canvas.setPointerCapture(id);
+        pointer = { id, x, y, centre: this.#centre, dragged: false };
+      }, { signal });
+      this.#canvas.addEventListener("pointermove", (event) => {
+        if (!pointer || pointer.id !== event.pointerId) return;
+        const dx = event.clientX - pointer.x;
+        const dy = event.clientY - pointer.y;
+        if (!pointer.dragged && Math.hypot(dx, dy) < SLOP) return;
+        pointer.dragged = true;
+        this.dataset.dragging = "";
+        const scale = 512 * 2 ** this.#zoom;
+        this.#centre = [pointer.centre[0] - dx / scale, clamp(pointer.centre[1] - dy / scale, 0, 1)];
+        this.#scheduleDraw();
+        this.#refresh();
+      }, { signal });
+      const end = (event: PointerEvent) => {
+        if (!pointer || pointer.id !== event.pointerId) return;
+        const { dragged } = pointer;
+        pointer = undefined;
+        delete this.dataset.dragging;
+        if (event.type === "pointerup" && !dragged && !this.hidden && "pickable" in this.dataset) this.#pick(event);
+      };
+      for (const type of ["pointerup", "pointercancel", "lostpointercapture"] as const) {
+        this.#canvas.addEventListener(type, end, { signal });
+      }
+      this.#cleanup = () => {
+        listeners.abort();
+        resize.disconnect();
+        theme.disconnect();
+      };
+    }
+
+    disconnectedCallback() {
+      this.#cleanup();
+      this.#cleanup = () => {};
+      this.#cancelLoad();
+      this.#request++;
+      if (this.#frame !== undefined) cancelAnimationFrame(this.#frame);
+      this.#frame = undefined;
+      delete this.dataset.dragging;
+      this.#size = "";
+      this.#tiles = undefined;
+      this.#basemap = undefined;
+      this.#buffer.width = 0;
+      this.#buffer.height = 0;
     }
 
     // World units of a point in the view.
@@ -194,10 +230,13 @@ const { pickable } = Astro.props;
       this.#cancelLoad();
       this.hidden = false;
       const { width, height } = this.getBoundingClientRect();
-      const world = points.flatMap(corners).map((p) => project(p.lat, p.lon, 0));
-      const xs = world.map(([x]) => x);
-      const ys = world.map(([, y]) => y);
-      const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+      const first = bounds(points[0], this.#centre[0]);
+      const reference = (first[0] + first[2]) / 2;
+      const world = points.map((point) => bounds(point, reference));
+      const x0 = Math.min(...world.map(([x]) => x));
+      const y0 = Math.min(...world.map(([, y]) => y));
+      const x1 = Math.max(...world.map(([, , x]) => x));
+      const y1 = Math.max(...world.map(([, , , y]) => y));
       const fit = Math.log2(Math.min((width - 2 * PAD) / ((x1 - x0) * 512), (height - 2 * PAD) / ((y1 - y0) * 512)));
       this.#zoom = clamp(fit, MIN_ZOOM, FIT_ZOOM);
       this.#centre = [(x0 + x1) / 2, (y0 + y1) / 2];
@@ -293,9 +332,11 @@ const { pickable } = Astro.props;
       }
 
       const scale = 512 * 2 ** this.#zoom;
+      const screen = (x: number, y: number): [number, number] =>
+        [anchor[0] + (x - this.#centre[0]) * scale, anchor[1] + (y - this.#centre[1]) * scale];
       const at = (lat: number, lon: number): [number, number] => {
         const [x, y] = project(lat, lon, 0);
-        return [anchor[0] + (x - this.#centre[0]) * scale, anchor[1] + (y - this.#centre[1]) * scale];
+        return screen(wrapX(x, this.#centre[0]), y);
       };
       const token = (name: string) => style.getPropertyValue(name).trim();
       const colour = {
@@ -315,8 +356,9 @@ const { pickable } = Astro.props;
       ctx.setLineDash([]);
       for (const p of this.#points) {
         if (p.kind !== "box") continue;
-        const [x0, y0] = at(p.bbox[3], p.bbox[0]);
-        const [x1, y1] = at(p.bbox[1], p.bbox[2]);
+        const [west, north, east, south] = bounds(p, this.#centre[0]);
+        const [x0, y0] = screen(west, north);
+        const [x1, y1] = screen(east, south);
         // A box smaller than its marker says nothing the marker doesn't.
         if (x1 - x0 < 24 && y1 - y0 < 24) continue;
         ctx.lineWidth = 4;
