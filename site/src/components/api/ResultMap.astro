@@ -1,0 +1,445 @@
+---
+import { CREDIT } from "../../lib/result-map-tiles";
+import Button from "../ui/Button.astro";
+
+interface Props {
+  // Reverse: a click on the map asks about the point clicked.
+  pickable?: boolean;
+}
+const { pickable } = Astro.props;
+---
+
+<og-result-map class="og-result-map" hidden data-pickable={pickable ? "" : undefined}>
+  <canvas aria-hidden="true"></canvas>
+  <div class="og-result-map-zoom">
+    <Button variant="outline" size="sm" data-zoom="1"><span aria-hidden="true">+</span><span class="sr-only">Zoom in</span></Button>
+    <Button variant="outline" size="sm" data-zoom="-1"><span aria-hidden="true">−</span><span class="sr-only">Zoom out</span></Button>
+  </div>
+  <p class="og-result-map-credit">{CREDIT}</p>
+</og-result-map>
+
+<script>
+  import { drawTiles, loadTiles, MAX_Z, project, type Palette, type Tile } from "../../lib/result-map-tiles";
+  import { after } from "../../lib/motion";
+
+  const TOKENS = {
+    water: "--og-map-water",
+    waterway: "--og-map-waterway",
+    park: "--og-map-park",
+    landcover: "--og-map-landcover",
+    building: "--og-map-building",
+    buildingEdge: "--og-map-building-edge",
+    path: "--og-map-path",
+    rail: "--og-map-rail",
+    roadMinor: "--og-map-road-minor",
+    roadMid: "--og-map-road-mid",
+    roadMajor: "--og-map-road-major",
+    label: "--og-map-label",
+    placeLabel: "--og-map-place-label",
+    labelHalo: "--og-map-label-halo",
+  } as const;
+
+  function paletteOf(element: Element): Palette {
+    const style = getComputedStyle(element);
+    return Object.fromEntries(
+      Object.entries(TOKENS).map(([key, token]) => [key, style.getPropertyValue(token).trim()]),
+    ) as Palette;
+  }
+
+  // A result is numbered by its place in the answer; a query point is the point a
+  // reverse lookup was asked about; an entrance is a door of a result; a box is the
+  // extent a result covers, [west, south, east, north].
+  type Point =
+    | { lat: number; lon: number; kind: "result" | "query" | "entrance" }
+    | { kind: "box"; bbox: [number, number, number, number] };
+
+  // Every corner a point puts on the map, for fitting the view to them.
+  const corners = (p: Point): { lat: number; lon: number }[] =>
+    p.kind === "box"
+      ? [
+          { lon: p.bbox[0], lat: p.bbox[1] },
+          { lon: p.bbox[2], lat: p.bbox[3] },
+        ]
+      : [p];
+
+  // Closest view: past the landing page's scale, for picking one house.
+  const MAX_ZOOM = MAX_Z + 3.5;
+  const MIN_ZOOM = 1;
+  // The view an answer opens at: one point is shown at the landing page's scale.
+  const FIT_ZOOM = MAX_Z + Math.log2(3200 / 512);
+  const PAD = 32;
+  // A press that moves less than this is a click, not a drag.
+  const SLOP = 4;
+
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+  // Every point an answer places, at the zoom that fits them all; the wheel, the
+  // buttons and dragging move the view from there.
+  class ResultMap extends HTMLElement {
+    #canvas!: HTMLCanvasElement;
+    #points: Point[] = [];
+    // The view: zoom level and centre, in world units (0 to 1 across the map).
+    #zoom = 0;
+    #centre: [number, number] = [0, 0];
+    // The newest tiles loaded, at their own zoom; drawn scaled until better ones land.
+    #tiles?: { z: number; tiles: Tile[] };
+    #buffer = document.createElement("canvas");
+    #basemap?: { centre: [number, number]; zoom: number; width: number; height: number };
+    #frame?: number;
+    #request = 0;
+    #size = "";
+    #cancelLoad = () => {};
+
+    connectedCallback() {
+      this.#canvas = this.querySelector("canvas")!;
+      new ResizeObserver(() => {
+        const { width, height } = this.getBoundingClientRect();
+        const size = `${width}x${height}`;
+        if (!width || size === this.#size) return;
+        this.#size = size;
+        if (this.#points.length) this.show(this.#points);
+      }).observe(this);
+      new MutationObserver(() => {
+        this.#renderBasemap();
+        this.#scheduleDraw();
+      }).observe(document.documentElement, { attributeFilter: ["data-theme"] });
+
+      for (const button of this.querySelectorAll<HTMLButtonElement>("[data-zoom]")) {
+        button.addEventListener("click", () => {
+          const { width, height } = this.getBoundingClientRect();
+          this.#zoomBy(Number(button.dataset.zoom), width / 2, height / 2);
+        });
+      }
+      this.#canvas.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+          const box = this.getBoundingClientRect();
+          // Pixels for most wheels and trackpads, lines for some.
+          const delta = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+          this.#zoomBy(-delta / 240, e.clientX - box.left, e.clientY - box.top);
+        },
+        { passive: false },
+      );
+      this.#canvas.addEventListener("dblclick", (e) => {
+        const box = this.getBoundingClientRect();
+        this.#zoomBy(1, e.clientX - box.left, e.clientY - box.top);
+      });
+
+      // Dragging pans; a press that stays put is a click, which picks on reverse.
+      this.#canvas.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0 || this.hidden) return;
+        const start = { x: e.clientX, y: e.clientY, centre: this.#centre };
+        let dragged = false;
+        this.#canvas.setPointerCapture(e.pointerId);
+        const move = (m: PointerEvent) => {
+          const dx = m.clientX - start.x;
+          const dy = m.clientY - start.y;
+          if (!dragged && Math.hypot(dx, dy) < SLOP) return;
+          dragged = true;
+          this.dataset.dragging = "";
+          const scale = 512 * 2 ** this.#zoom;
+          this.#centre = [start.centre[0] - dx / scale, clamp(start.centre[1] - dy / scale, 0, 1)];
+          this.#scheduleDraw();
+          this.#refresh();
+        };
+        const up = (u: PointerEvent) => {
+          this.#canvas.removeEventListener("pointermove", move);
+          this.#canvas.removeEventListener("pointerup", up);
+          this.#canvas.removeEventListener("pointercancel", up);
+          delete this.dataset.dragging;
+          if (!dragged && u.type === "pointerup" && "pickable" in this.dataset) this.#pick(u);
+        };
+        this.#canvas.addEventListener("pointermove", move);
+        this.#canvas.addEventListener("pointerup", up);
+        this.#canvas.addEventListener("pointercancel", up);
+      });
+    }
+
+    // World units of a point in the view.
+    #toWorld(px: number, py: number): [number, number] {
+      const { width, height } = this.getBoundingClientRect();
+      const scale = 512 * 2 ** this.#zoom;
+      return [this.#centre[0] + (px - width / 2) / scale, this.#centre[1] + (py - height / 2) / scale];
+    }
+
+    #zoomBy(by: number, px: number, py: number) {
+      if (this.hidden) return;
+      const zoom = clamp(this.#zoom + by, MIN_ZOOM, MAX_ZOOM);
+      if (zoom === this.#zoom) return;
+      // The point under the cursor stays under it.
+      const [wx, wy] = this.#toWorld(px, py);
+      const k = 2 ** (this.#zoom - zoom);
+      this.#centre = [wx - (wx - this.#centre[0]) * k, wy - (wy - this.#centre[1]) * k];
+      this.#zoom = zoom;
+      this.#scheduleDraw();
+      this.#refresh();
+    }
+
+    // The clicked point, in degrees, for the panel to look up.
+    #pick(e: MouseEvent) {
+      const box = this.getBoundingClientRect();
+      const [x, y] = this.#toWorld(e.clientX - box.left, e.clientY - box.top);
+      const lon = ((((x * 360) % 360) + 360) % 360) - 180;
+      const lat = (Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180) / Math.PI;
+      this.dispatchEvent(new CustomEvent("og-pick", { bubbles: true, detail: { lat, lon } }));
+    }
+
+    // `keep` holds the current view, so a point picked on it stays where it was clicked.
+    async show(points: Point[], keep = false) {
+      this.#points = points;
+      if (!points.length) return this.hide();
+      if (keep && !this.hidden) return this.#scheduleDraw();
+      // Fit and draw markers immediately, including when the tile server is unavailable.
+      this.#cancelLoad();
+      this.hidden = false;
+      const { width, height } = this.getBoundingClientRect();
+      const world = points.flatMap(corners).map((p) => project(p.lat, p.lon, 0));
+      const xs = world.map(([x]) => x);
+      const ys = world.map(([, y]) => y);
+      const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+      const fit = Math.log2(Math.min((width - 2 * PAD) / ((x1 - x0) * 512), (height - 2 * PAD) / ((y1 - y0) * 512)));
+      this.#zoom = clamp(fit, MIN_ZOOM, FIT_ZOOM);
+      this.#centre = [(x0 + x1) / 2, (y0 + y1) / 2];
+      this.#tiles = undefined;
+      this.#basemap = undefined;
+      this.#scheduleDraw();
+      await this.#loadView();
+    }
+
+    hide() {
+      this.#request++;
+      this.#tiles = undefined;
+      this.#basemap = undefined;
+      this.#cancelLoad();
+      this.hidden = true;
+    }
+
+    // After the view moves, its tiles load a moment after it settles.
+    #refresh() {
+      this.#cancelLoad();
+      this.#request++;
+      this.#cancelLoad = after("--duration-hover", () => this.#loadView());
+    }
+
+    async #loadView() {
+      const request = ++this.#request;
+      const { width, height } = this.getBoundingClientRect();
+      const z = Math.min(MAX_Z, Math.floor(this.#zoom));
+      const size = 512 * 2 ** (this.#zoom - z);
+      const centre: [number, number] = [this.#centre[0] * 2 ** z, this.#centre[1] * 2 ** z];
+      try {
+        const tiles = await loadTiles(z, centre, [width, height], width * 2, height * 2, size);
+        await document.fonts.ready;
+        if (request !== this.#request) return;
+        this.#tiles = { z, tiles };
+        this.#renderBasemap();
+        this.#scheduleDraw();
+      } catch {
+        // The current basemap and markers can still be used.
+      }
+    }
+
+    #scheduleDraw() {
+      if (this.#frame !== undefined) return;
+      this.#frame = requestAnimationFrame(() => {
+        this.#frame = undefined;
+        this.#draw();
+      });
+    }
+
+    // Paint the vector tiles and lay out labels once for the settled view. The
+    // extra area lets the map move without rebuilding the canvas on every event.
+    #renderBasemap() {
+      const loaded = this.#tiles;
+      if (!loaded || this.hidden) return;
+      const { width, height } = this.getBoundingClientRect();
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      this.#buffer.width = Math.round(width * 2 * dpr);
+      this.#buffer.height = Math.round(height * 2 * dpr);
+      const ctx = this.#buffer.getContext("2d")!;
+      ctx.scale(dpr, dpr);
+      const n = 2 ** loaded.z;
+      const size = 512 * 2 ** (this.#zoom - loaded.z);
+      drawTiles(
+        ctx, loaded.tiles, [this.#centre[0] * n, this.#centre[1] * n], [width, height],
+        size, paletteOf(this), getComputedStyle(this).fontFamily, width, height, [width / 2, height / 2],
+      );
+      this.#basemap = { centre: this.#centre, zoom: this.#zoom, width: width * 2, height: height * 2 };
+    }
+
+    #draw() {
+      if (this.hidden) return;
+      const { width, height } = this.getBoundingClientRect();
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      const pixelWidth = Math.round(width * dpr);
+      const pixelHeight = Math.round(height * dpr);
+      if (this.#canvas.width !== pixelWidth) this.#canvas.width = pixelWidth;
+      if (this.#canvas.height !== pixelHeight) this.#canvas.height = pixelHeight;
+      const ctx = this.#canvas.getContext("2d")!;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      const style = getComputedStyle(this);
+      const anchor: [number, number] = [width / 2, height / 2];
+      const basemap = this.#basemap;
+      if (basemap) {
+        const scale = 512 * 2 ** this.#zoom;
+        const ratio = 2 ** (this.#zoom - basemap.zoom);
+        const w = basemap.width * ratio;
+        const h = basemap.height * ratio;
+        const x = anchor[0] + (basemap.centre[0] - this.#centre[0]) * scale - w / 2;
+        const y = anchor[1] + (basemap.centre[1] - this.#centre[1]) * scale - h / 2;
+        ctx.drawImage(this.#buffer, x, y, w, h);
+      }
+
+      const scale = 512 * 2 ** this.#zoom;
+      const at = (lat: number, lon: number): [number, number] => {
+        const [x, y] = project(lat, lon, 0);
+        return [anchor[0] + (x - this.#centre[0]) * scale, anchor[1] + (y - this.#centre[1]) * scale];
+      };
+      const token = (name: string) => style.getPropertyValue(name).trim();
+      const colour = {
+        marker: token("--og-map-marker"),
+        markerInk: token("--og-map-marker-ink"),
+        halo: token("--og-map-halo"),
+        query: token("--og-map-query"),
+        queryInk: token("--og-map-query-ink"),
+        entrance: token("--og-map-entrance"),
+        bbox: token("--og-map-bbox"),
+      };
+
+      // Each kind has its own shape, so none is told apart by colour alone: a result's
+      // box is a dashed outline, an entrance a diamond, a result a numbered disc and the
+      // asked point a pin. All are ringed in the map's background, to stand off the
+      // streets under them.
+      ctx.setLineDash([]);
+      for (const p of this.#points) {
+        if (p.kind !== "box") continue;
+        const [x0, y0] = at(p.bbox[3], p.bbox[0]);
+        const [x1, y1] = at(p.bbox[1], p.bbox[2]);
+        // A box smaller than its marker says nothing the marker doesn't.
+        if (x1 - x0 < 24 && y1 - y0 < 24) continue;
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = colour.halo;
+        ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeStyle = colour.bbox;
+        ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+        ctx.setLineDash([]);
+      }
+
+      for (const p of this.#points) {
+        if (p.kind !== "entrance") continue;
+        const [x, y] = at(p.lat, p.lon);
+        const r = 6;
+        ctx.beginPath();
+        ctx.moveTo(x, y - r);
+        ctx.lineTo(x + r, y);
+        ctx.lineTo(x, y + r);
+        ctx.lineTo(x - r, y);
+        ctx.closePath();
+        ctx.fillStyle = colour.entrance;
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = colour.halo;
+        ctx.stroke();
+      }
+
+      // The asked point as a pin, under the results so a result on the same spot keeps
+      // its number in view: its tip on the point, the head above it.
+      for (const p of this.#points) {
+        if (p.kind !== "query") continue;
+        const [x, y] = at(p.lat, p.lon);
+        const r = 9;
+        const cy = y - 22;
+        // Where the head's sides meet the lines to the tip, at 35° below the centre.
+        const a = (35 * Math.PI) / 180;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - r * Math.cos(a), cy + r * Math.sin(a));
+        ctx.arc(x, cy, r, Math.PI - a, a);
+        ctx.closePath();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = colour.halo;
+        ctx.stroke();
+        ctx.fillStyle = colour.query;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x, cy, 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = colour.queryInk;
+        ctx.fill();
+      }
+
+      // Drawn last first, so the best answer sits on top where they overlap.
+      const results = this.#points.filter((p): p is Extract<Point, { lat: number }> => p.kind === "result");
+      ctx.font = `600 11px ${style.fontFamily}`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let i = results.length - 1; i >= 0; i--) {
+        const p = results[i];
+        const [x, y] = at(p.lat, p.lon);
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, 2 * Math.PI);
+        ctx.fillStyle = colour.marker;
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = colour.halo;
+        ctx.stroke();
+        ctx.fillStyle = colour.markerInk;
+        ctx.fillText(String(i + 1), x, y + 0.5);
+      }
+    }
+  }
+
+  customElements.define("og-result-map", ResultMap);
+</script>
+
+<style>
+  .og-result-map {
+    background-color: var(--color-background);
+    block-size: var(--container-sm);
+    display: block;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .og-result-map[hidden] {
+    display: none;
+  }
+
+  .og-result-map > canvas {
+    block-size: 100%;
+    cursor: grab;
+    display: block;
+    inline-size: 100%;
+    touch-action: none;
+  }
+
+  .og-result-map[data-pickable] > canvas {
+    cursor: crosshair;
+  }
+
+  .og-result-map-zoom {
+    background-color: var(--color-background);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    inset-block-end: var(--space-10);
+    inset-inline-end: var(--space-2);
+    position: absolute;
+  }
+
+  .og-result-map-credit {
+    background-color: var(--color-background);
+    color: var(--color-foreground-muted);
+    font: var(--type-code-sm);
+    inset-block-end: 0;
+    inset-inline-end: 0;
+    margin: 0;
+    padding-inline: var(--space-1);
+    pointer-events: none;
+    position: absolute;
+  }
+</style>

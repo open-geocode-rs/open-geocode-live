@@ -42,6 +42,16 @@ http://:8081 {
 		reverse_proxy 127.0.0.1:8090
 	}
 
+	# The API reference sends the reader's lookup parameters as entered.
+	@try_map {
+		method GET
+		path /api/try/geocode /api/try/places /api/try/reverse
+	}
+	handle @try_map {
+		uri strip_prefix /api/try
+		reverse_proxy 127.0.0.1:8090
+	}
+
 	@legacy_search {
 		method GET
 		path /api/search

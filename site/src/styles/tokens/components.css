@@ -16,6 +16,29 @@
   --map-label: var(--color-foreground-muted);
   --map-label-halo: var(--color-background);
 
+  /* API result map layers and markers. */
+  --og-map-water: color-mix(in srgb, var(--color-accent) var(--p-alpha-16), transparent);
+  --og-map-waterway: color-mix(in srgb, var(--color-accent) var(--p-alpha-64), transparent);
+  --og-map-park: color-mix(in srgb, var(--color-success) var(--p-alpha-24), transparent);
+  --og-map-landcover: color-mix(in srgb, var(--color-success) var(--p-alpha-8), transparent);
+  --og-map-building: color-mix(in srgb, var(--color-foreground) var(--p-alpha-16), transparent);
+  --og-map-building-edge: var(--color-border-strong);
+  --og-map-path: var(--color-border-strong);
+  --og-map-rail: var(--color-border-strong);
+  --og-map-road-minor: var(--color-border-control);
+  --og-map-road-mid: var(--color-border-strong);
+  --og-map-road-major: color-mix(in srgb, var(--color-warning) var(--p-alpha-64), transparent);
+  --og-map-label: var(--color-foreground);
+  --og-map-place-label: var(--color-foreground-muted);
+  --og-map-label-halo: var(--color-background);
+  --og-map-marker: var(--color-solid);
+  --og-map-marker-ink: var(--color-on-solid);
+  --og-map-halo: var(--color-background);
+  --og-map-query: var(--color-foreground);
+  --og-map-query-ink: var(--color-background);
+  --og-map-entrance: var(--color-warning);
+  --og-map-bbox: var(--color-solid);
+
   /* button-raised: the landing page's raised buttons, each a cap on a base it sinks into when pressed. The cap shades
      toward its foot, with a highlight along its top edge and a shade along its foot. The plain cap is the page's own
      background on a solid base. The solid cap is the solid fill, for the page's primary action, a hairline deeper on
