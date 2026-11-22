@@ -66,7 +66,7 @@ const optional = fields.filter((field) => !primary.includes(field));
 ---
 
 <div class="try-map" data-try-map>
-  <form class="try-form" action={`/api/try${operation.path}`} aria-label="Try it">
+  <form class="try-form" action={`/api${operation.path}`} aria-label="Try it">
     <div class="try-heading">
       <h3>Try it</h3>
       <Button type="submit">Send</Button>
@@ -175,12 +175,15 @@ const optional = fields.filter((field) => !primary.includes(field));
       status.textContent = "Sending…";
       try {
         const response = await fetch(url, { signal });
-        const answer = await response.json();
         if (current.signal.aborted) return;
         if (!response.ok) {
-          status.textContent = `${response.status} lookup failed. The previous result is still shown.`;
+          status.textContent = response.status === 429
+            ? "Too many lookups. Try again shortly."
+            : `${response.status} lookup failed. The previous result is still shown.`;
           return;
         }
+        const answer = await response.json();
+        if (current.signal.aborted) return;
         map.show(pointsOf(answer, queryPoint(params)), keep);
         renderJsonCode(output, JSON.stringify(answer, null, 2));
         details.hidden = false;

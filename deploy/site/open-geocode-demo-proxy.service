@@ -1,0 +1,20 @@
+[Unit]
+Description=Admission proxy for public OpenGeocode lookups
+After=network.target
+
+[Service]
+Environment=OG_DEMO_UPSTREAM_PORT=8088
+ExecStart=/usr/local/libexec/og-demo-proxy
+Restart=on-failure
+RestartSec=2
+DynamicUser=yes
+NoNewPrivileges=yes
+PrivateDevices=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+[Install]
+WantedBy=multi-user.target

@@ -21,7 +21,7 @@ export default defineConfig({
     optimizeDeps: { include: ["@mapbox/vector-tile", "pbf"] },
     server: {
       proxy: api ? {
-        "^/api/(autocomplete|geocode)(?:[?]|$)": { target: api, bypass: (request) => request.method === "GET" ? undefined : false, rewrite: (path) => path.replace(/^\/api/, "") },
+        "^/api/(autocomplete|geocode|places|reverse)(?:[?]|$)": { target: api, bypass: (request) => request.method === "GET" ? undefined : false, rewrite: (path) => path.replace(/^\/api/, "") },
         "^/api/try/(geocode|places|reverse)(?:[?]|$)": { target: api, bypass: (request) => request.method === "GET" ? undefined : false, rewrite: (path) => path.replace(/^\/api\/try/, "") },
       } : undefined,
     },
