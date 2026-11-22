@@ -85,13 +85,6 @@ body {
   text-align: start;
 }
 
-.code-frame {
-  background-color: var(--color-surface);
-  border: var(--border) solid var(--color-border-control);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-rim);
-}
-
 .prose blockquote {
   border-inline-start: var(--border) solid var(--color-border);
   color: var(--color-foreground-secondary);

@@ -66,7 +66,10 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
 
       const mark = () => {
         const line = Number.parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
-        const visible = headings.filter((heading): heading is HTMLElement => Boolean(heading?.getClientRects().length));
+        // Inactive tab panels keep their layout rectangles to prevent the page from shifting.
+        const visible = headings.filter((heading): heading is HTMLElement =>
+          Boolean(heading?.getClientRects().length && !heading.closest("[hidden], [inert]")),
+        );
         const reached = visible.findLast((heading) => heading.getBoundingClientRect().top <= line + 1);
         // A short final section can reach the end of the page before it reaches the reading line.
         const root = document.documentElement;
@@ -96,6 +99,8 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
       addEventListener("resize", queue);
       const observer = new ResizeObserver(moveIndicators);
       for (const track of tracks) observer.observe(track);
+      const main = document.querySelector("main");
+      if (main) new MutationObserver(queue).observe(main, { attributeFilter: ["hidden", "inert"], subtree: true });
       mark();
 
       if (!disclosure) return;

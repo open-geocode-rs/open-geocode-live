@@ -1,0 +1,2 @@
+probe {"rule":"og/token-kind","pass":true,"file":"src/components/ui/Badge.astro","after":"  .badge {\n"}
+    transform: translateY(var(--value));

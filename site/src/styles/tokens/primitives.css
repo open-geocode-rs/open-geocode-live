@@ -77,7 +77,6 @@
   --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.08), 0 4px 12px rgb(0 0 0 / 0.08);
   --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.16);
   --shadow-dialog: 0 24px 48px rgb(0 0 0 / 0.24);
-  --shadow-rim: inset 0 var(--border) 0 color-mix(in srgb, var(--p-white) var(--p-alpha-16), transparent);
 
   /* Duration. Feedback is read by scripts only, never by a transition. */
   --duration-press: 100ms;

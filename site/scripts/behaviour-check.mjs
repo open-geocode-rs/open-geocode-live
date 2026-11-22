@@ -239,16 +239,25 @@ const cases = {
         const copy = document.execCommand.bind(document);
         document.execCommand = (command, ...rest) => (command === "copy" ? works && copy(command, ...rest) : copy(command, ...rest));
       }, fallback);
-    const press = async (/** @type {Page} */ tab) => {
-      const block = tab.locator("[data-codeblock]").first();
-      await block.hover();
-      await block.locator("[data-copy]").click();
-      await tab.waitForTimeout(300);
-      return block.locator("[data-status]").textContent();
-    };
-    const copied = await visit("/docs/quickstart/", desktop, async (tab) => ((await press(tab)) === "Copied!" ? [] : ["the fallback copy did not say Copied!"]), (tab) => refuse(tab, true));
-    const failed = await visit("/docs/quickstart/", desktop, async (tab) => ((await press(tab)) === "" ? [] : ["said Copied! when no copy worked"]), (tab) => refuse(tab, false));
-    return [...copied, ...failed];
+    const cases = [
+      { path: "/docs/quickstart/", root: "[data-codeblock]", button: "[data-copy]", status: "[data-status]" },
+      { path: "/docs/api/operations/geocode/", root: "[data-request-example]", button: "[data-copy-request]", status: "[data-copy-status]" },
+    ];
+    const problems = [];
+    for (const test of cases) {
+      for (const fallback of [true, false]) {
+        const found = await visit(test.path, desktop, async (tab) => {
+          const root = tab.locator(test.root).first();
+          const button = root.locator(test.button);
+          await button.hover();
+          await button.click();
+          const status = await root.locator(test.status).textContent();
+          return status === (fallback ? "Copied!" : "") ? [] : [`${test.path} copy status for fallback=${fallback}: ${status}`];
+        }, (tab) => refuse(tab, fallback));
+        problems.push(...found);
+      }
+    }
+    return problems;
   },
 
   /** On a screen without hover, the copy button of a plain block shows without a hover. */
@@ -259,6 +268,27 @@ const cases = {
     }),
 
   // Tabs.
+
+  /** A tab can hide a heading without moving it or scrolling the page. */
+  "contents skip headings in inactive tabs": () =>
+    visit("/docs/benchmarks/", desktop, async (tab) => {
+      await tab.locator("#reading-the-results").evaluate((heading) => heading.scrollIntoView());
+      const current = tab.locator('.contents-column [aria-current="true"]');
+      await tab.waitForFunction(() => document.querySelector('.contents-column [aria-current="true"]')?.getAttribute("href") === "#reading-the-results");
+      await tab.getByRole("tab", { name: "National registers", exact: true }).evaluate((button) => (/** @type {HTMLElement} */ (button)).click());
+      await tab.waitForFunction(() => document.querySelector('.contents-column [aria-current="true"]')?.getAttribute("href") !== "#reading-the-results");
+      return (await current.getAttribute("href")) === "#accuracy" ? [] : ["the hidden benchmark heading did not yield to Accuracy"];
+    }),
+
+  "Markdown nests benchmark headings under their tab": async () => {
+    const markdown = await (await fetch(`${server.origin}/docs/benchmarks.md`)).text();
+    const headings = markdown.match(/^#+ .+$/gm) ?? [];
+    const start = headings.indexOf("### MESSY STREETS");
+    return start >= 0 && headings.at(start + 1) === "#### Reading the results" && headings.at(start + 2) === "### National registers"
+      ? []
+      : ["benchmark tab headings lost their hierarchy in the Markdown export"];
+  },
+
 
   /** Tabs inside a tab panel change only their own tabs and panels, and the outer tabs only theirs. */
   "nested tabs stay apart": () =>

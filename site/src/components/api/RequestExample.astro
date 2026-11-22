@@ -59,6 +59,7 @@ const languages: MenuItem[] = snippets.map(({ id, label, lang }) => ({
 </aside>
 
 <script>
+  import { copyText } from "../../lib/clipboard";
   import { after } from "../../lib/motion";
 
   const KEY = "og-snippet";
@@ -95,8 +96,7 @@ const languages: MenuItem[] = snippets.map(({ id, label, lang }) => ({
     button?.addEventListener("click", async () => {
       const shown = panel.querySelector<HTMLElement>(".request-snippet:not([hidden]) template[data-code]");
       if (!(shown instanceof HTMLTemplateElement)) return;
-      await navigator.clipboard.writeText(shown.content.textContent ?? "");
-      if (!status) return;
+      if (!(await copyText(shown.content.textContent ?? "", panel)) || !status) return;
       status.textContent = "Copied!";
       cancel();
       // The tag stays for the feedback duration, then clears.

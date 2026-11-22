@@ -143,7 +143,6 @@ const optional = fields.filter((field) => !primary.includes(field));
     const map = panel.querySelector<ResultMapElement>("og-result-map")!;
     const status = panel.querySelector<HTMLElement>("[data-try-status]")!;
     const output = panel.querySelector<HTMLElement>("[data-try-response] code")!;
-    const source = panel.querySelector<HTMLTemplateElement>("[data-try-response] template[data-code]")!;
     const details = output.closest("details")!;
     const seed = panel.querySelector<HTMLTemplateElement>("[data-try-seed]")?.content.textContent;
     let request: AbortController | undefined;
@@ -183,9 +182,7 @@ const optional = fields.filter((field) => !primary.includes(field));
           return;
         }
         map.show(pointsOf(answer, queryPoint(params)), keep);
-        const json = JSON.stringify(answer, null, 2);
-        renderJsonCode(output, json);
-        source.content.textContent = json;
+        renderJsonCode(output, JSON.stringify(answer, null, 2));
         details.hidden = false;
         status.textContent = `${response.status} live response`;
       } catch {

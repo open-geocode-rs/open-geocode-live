@@ -7,7 +7,7 @@ function plainMarkdown(body: string): string {
   if (root.type !== "root") return body;
 
   // Source ranges preserve fences, tables and links without reserializing Markdown.
-  function render(nodes: MdastNode[], start: number, end: number, depth: number): string {
+  function render(nodes: MdastNode[], start: number, end: number, depth: number, headingOffset = 0): string {
     let output = "";
     let cursor = start;
     for (const node of nodes) {
@@ -15,15 +15,23 @@ function plainMarkdown(body: string): string {
       const to = node.position?.end.offset;
       if (from === undefined || to === undefined) continue;
       output += body.slice(cursor, from);
-      if (node.type === "heading") depth = node.depth;
-      if (node.type === "mdxJsxFlowElement" && node.name === "Tabs") {
+      if (node.type === "heading") {
+        depth = Math.min(node.depth + headingOffset, 6);
+        const first = node.children[0]?.position?.start.offset;
+        const last = node.children.at(-1)?.position?.end.offset;
+        output += depth === node.depth || first === undefined || last === undefined
+          ? body.slice(from, to)
+          : `${"#".repeat(depth)} ${body.slice(first, last).replace(/\r?\n[ \t]*/g, " ")}`;
+      } else if (node.type === "mdxJsxFlowElement" && node.name === "Tabs") {
         const items = node.children.map((item) => {
           if (item.type !== "mdxJsxFlowElement" || item.name !== "TabItem") return "";
           const label = item.attributes.find((attribute) => attribute.type === "mdxJsxAttribute" && attribute.name === "label")?.value;
           const first = item.children[0]?.position?.start.offset;
           const last = item.children.at(-1)?.position?.end.offset;
           const level = Math.min(depth + 1, 6);
-          const content = first === undefined || last === undefined ? "" : render(item.children, first, last, level);
+          const shallowest = item.children.reduce((min, child) => child.type === "heading" ? Math.min(min, child.depth) : min, 6);
+          const offset = Math.max(0, level + 1 - shallowest);
+          const content = first === undefined || last === undefined ? "" : render(item.children, first, last, level, offset);
           return typeof label === "string" ? `${"#".repeat(level)} ${label}\n\n${content}` : content;
         });
         output += items.join("\n\n");
