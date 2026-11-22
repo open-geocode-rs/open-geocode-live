@@ -16,7 +16,7 @@ const content = operationContent(operation);
 
 {/* The example sits beside the reference on a wide screen and above it on a narrow one. */}
 <div class="operation prose">
-  <div class="operation-example">
+  <div class="operation-example" data-operation-example>
     <RequestExample {operation} />
   </div>
   <div class="operation-body prose-flow">
@@ -35,6 +35,42 @@ const content = operationContent(operation);
     {content.responses && <Section section={content.responses} />}
   </div>
 </div>
+
+<script>
+  for (const example of document.querySelectorAll<HTMLElement>("[data-operation-example]")) {
+    let released = false;
+    let waitingToRestick = false;
+
+    function updateSticky() {
+      const inset = Number.parseFloat(getComputedStyle(example).insetBlockStart);
+      const fits = example.offsetHeight + inset <= document.documentElement.clientHeight;
+      const wasSticky = example.hasAttribute("data-sticky");
+      if (fits === wasSticky) {
+        waitingToRestick = false;
+        return;
+      }
+
+      const before = example.getBoundingClientRect().top;
+      // A collapse below the sticky edge must wait for the page to scroll back before pinning again.
+      waitingToRestick = fits && released && before < inset - 1;
+      if (waitingToRestick) return;
+
+      example.toggleAttribute("data-sticky", fits);
+      released = wasSticky;
+      if (wasSticky) {
+        // Keep the panel's position while it returns to normal flow during expansion.
+        const shift = example.getBoundingClientRect().top - before;
+        if (shift < 0) window.scrollBy({ top: shift, behavior: "instant" });
+      }
+    }
+
+    new ResizeObserver(updateSticky).observe(example);
+    window.addEventListener("resize", updateSticky);
+    window.addEventListener("scroll", () => {
+      if (waitingToRestick) updateSticky();
+    }, { passive: true });
+  }
+</script>
 
 <style>
   .operation {
@@ -61,7 +97,14 @@ const content = operationContent(operation);
 
     .operation-example {
       inset-block-start: calc(var(--layout-nav-height) + var(--space-4));
+    }
+
+    .operation-example[data-sticky] {
       position: sticky;
+    }
+
+    .operation-example :global(summary) {
+      scroll-margin-block-start: calc(var(--layout-nav-height) + var(--space-4));
     }
   }
 </style>

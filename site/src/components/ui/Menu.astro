@@ -64,12 +64,15 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
   >
     {
       follows ? (
-        items.filter(shownItem).map((item) => (
-          <span class="menu-shown" data-value={item.value} hidden={item.value !== current}>
-            {iconOnly ? item.icon && <Icon name={item.icon} size="md" /> : triggerIcon && <Icon name={triggerIcon} size="md" />}
-            {!iconOnly && <span>{item.label}</span>}
-          </span>
-        ))
+        items.filter(shownItem).map((item) => {
+          const icon = iconOnly ? item.icon : triggerIcon ?? item.icon;
+          return (
+            <span class="menu-shown" data-value={item.value} hidden={item.value !== current}>
+              {icon && <Icon name={icon} size="md" />}
+              {!iconOnly && <span>{item.label}</span>}
+            </span>
+          );
+        })
       ) : (
         (triggerIcon || !iconOnly) && (
           <span class="menu-shown">
@@ -215,7 +218,7 @@ const shownItem = (item: MenuItem) => (iconOnly ? Boolean(item.icon) : true);
     align-items: center;
     anchor-name: --menu-trigger;
     block-size: var(--control-md);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     color: var(--color-foreground);
     cursor: pointer;
     display: inline-flex;

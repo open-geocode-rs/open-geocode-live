@@ -24,6 +24,7 @@ export type Props = (Shared & { variant?: "plain" | "terminal" | "command" | "nu
 
 const { code, lang = "plaintext", state = "rest", variant = "plain" } = Astro.props;
 const title = Astro.props.variant === "titled" ? Astro.props.title : undefined;
+const shell = ["bash", "sh", "shell", "shellscript", "zsh"].includes(lang);
 
 // The highlighter names each token's colour by a variable. Turn that into a data attribute our own style reads,
 // and drop the inline styles, so the block's look lives in this file and nowhere else.
@@ -39,8 +40,24 @@ const syntax: Record<string, string> = {
   "token-punctuation": "punctuation",
 };
 const owned: Transformer = {
+  preprocess(_, options) {
+    if (shell) options.includeExplanation = true;
+  },
+  tokens(lines) {
+    if (!shell) return;
+    for (const line of lines) {
+      for (const token of line) {
+        // The default shell theme groups command options with string arguments.
+        if (token.explanation?.some(({ scopes }) => scopes.some(({ scopeName }) => scopeName === "constant.other.option.dash.shell"))) {
+          token.color = "var(--astro-code-token-parameter)";
+        }
+      }
+    }
+  },
   pre(node) {
-    node.properties = { class: "codeblock-pre", tabindex: "0", "data-language": lang };
+    node.properties = { class: "codeblock-pre", "data-language": lang };
+    if (shell) node.properties["data-shell"] = "";
+    if (variant !== "numbered") node.properties.tabindex = "0";
   },
   code(node) {
     node.properties = { class: "codeblock-code" };
@@ -55,7 +72,7 @@ const owned: Transformer = {
 };
 ---
 
-<figure class="codeblock" data-codeblock data-variant={variant} data-state={state === "copied" ? "copied" : undefined}>
+<figure class:list={["codeblock", { "code-frame": variant === "plain" || variant === "terminal" || variant === "titled" }]} data-codeblock data-variant={variant} data-state={state === "copied" ? "copied" : undefined}>
   {
     title && (
       <figcaption class="codeblock-bar">
@@ -77,13 +94,7 @@ const owned: Transformer = {
   {variant === "command" && <span class="codeblock-prompt" aria-hidden="true">$</span>}
   <div class="codeblock-actions" data-codeblock-float={variant === "plain" || variant === "terminal" ? "" : undefined}>
     <span class="codeblock-status" role="status" data-status>{state === "copied" ? "Copied!" : ""}</span>
-    {
-      variant === "command" ? (
-        <Button variant="outline" size="sm" iconOnly icon="copy" label="Copy code" data-copy />
-      ) : (
-        <Button variant="outline" iconOnly icon="copy" label="Copy code" data-copy />
-      )
-    }
+    <Button variant={variant === "command" ? "outline" : "quiet"} size={variant === "command" ? "sm" : "md"} iconOnly icon="copy" label="Copy code" data-copy />
   </div>
   <div class="codeblock-body">
     <Code code={code} lang={lang} theme="css-variables" wrap={null} transformers={[owned]} />
@@ -92,34 +103,8 @@ const owned: Transformer = {
 </figure>
 
 <script>
+  import { copyText } from "../../lib/clipboard";
   import { after } from "../../lib/motion";
-
-  // Copies through the clipboard, or where the browser refuses it, through a selection of the text. True when either worked.
-  async function copy(text: string, near: HTMLElement): Promise<boolean> {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
-      const holder = document.createElement("pre");
-      holder.setAttribute("aria-hidden", "true");
-      holder.textContent = text;
-      near.append(holder);
-      const selection = getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(holder);
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-      try {
-        // The older command is the one way left to copy when the clipboard is refused.
-        return document.execCommand("copy");
-      } catch {
-        return false;
-      } finally {
-        selection?.removeAllRanges();
-        holder.remove();
-      }
-    }
-  }
 
   for (const block of document.querySelectorAll<HTMLElement>("[data-codeblock]")) {
     const button = block.querySelector<HTMLButtonElement>("[data-copy]");
@@ -128,7 +113,7 @@ const owned: Transformer = {
     if (!button || !source || !status) continue;
     let cancel = () => {};
     button.addEventListener("click", async () => {
-      if (!(await copy(source.content.textContent ?? "", block))) return;
+      if (!(await copyText(source.content.textContent ?? "", block))) return;
       cancel();
       block.dataset.state = "copied";
       status.textContent = "Copied!";
@@ -143,9 +128,6 @@ const owned: Transformer = {
 
 <style>
   .codeblock {
-    background-color: var(--color-surface);
-    border: var(--border) solid var(--color-border);
-    border-radius: var(--radius-md);
     color: var(--color-foreground);
     display: grid;
     grid-template-areas: "bar actions" "body body";
@@ -169,6 +151,7 @@ const owned: Transformer = {
     block-size: var(--space-8);
     border-start-end-radius: var(--radius-md);
     border-start-start-radius: var(--radius-md);
+    box-shadow: var(--shadow-rim);
     gap: var(--space-2);
   }
 
@@ -209,6 +192,16 @@ const owned: Transformer = {
 
   .codeblock[data-variant="numbered"] :global(.codeblock-code) {
     counter-reset: codeblock-line;
+    white-space: normal;
+  }
+
+  [data-variant="numbered"] :global(.codeblock-line) {
+    display: block;
+    min-block-size: 1lh;
+    overflow-wrap: anywhere;
+    padding-inline-start: var(--space-8);
+    position: relative;
+    white-space: pre-wrap;
   }
 
   /* Line numbers are a guide, not text to read, so they take the faint tint of a strong border. */
@@ -216,9 +209,9 @@ const owned: Transformer = {
     color: var(--color-border-strong);
     content: counter(codeblock-line);
     counter-increment: codeblock-line;
-    display: inline-block;
     inline-size: var(--space-4);
-    margin-inline-end: var(--space-4);
+    inset-inline-start: 0;
+    position: absolute;
     text-align: end;
     user-select: none;
   }
@@ -309,8 +302,21 @@ const owned: Transformer = {
   .codeblock :global(.codeblock-pre) {
     font: var(--type-code-block);
     margin: 0;
-    overflow-x: auto;
     padding: var(--space-3) var(--space-4);
+  }
+
+  .codeblock:not([data-variant="numbered"]) :global(.codeblock-pre) {
+    overflow-x: auto;
+  }
+
+  .codeblock[data-variant="plain"] :global(.codeblock-pre) {
+    font: var(--type-code-sm);
+  }
+
+  @media (min-width: 50rem) {
+    .codeblock[data-variant="plain"] :global(.codeblock-pre) {
+      font: var(--type-code-block);
+    }
   }
 
   .codeblock[data-variant="command"] :global(.codeblock-pre) {
@@ -367,5 +373,9 @@ const owned: Transformer = {
 
   .codeblock:not([data-variant="numbered"]) :global([data-syntax="constant"]) {
     color: var(--syntax-prose-constant);
+  }
+
+  .codeblock :global([data-shell] [data-syntax="string"]) {
+    color: var(--syntax-string);
   }
 </style>

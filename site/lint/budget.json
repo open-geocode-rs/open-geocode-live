@@ -8,7 +8,7 @@
     "icon": { "kind": "scale", "file": "primitives.css", "pattern": "^--icon-(sm|md|lg|xl|stroke-xl)$", "count": 5 },
     "container": { "kind": "scale", "file": "primitives.css", "pattern": "^--container-(2xs|xs|sm|md|lg)$", "count": 5 },
     "layout": { "kind": "scale", "file": "primitives.css", "pattern": "^--layout-[a-z-]+$", "count": 13 },
-    "shadow": { "kind": "scale", "file": "primitives.css", "pattern": "^--shadow-[a-z]+$", "count": 3 },
+    "shadow": { "kind": "scale", "file": "primitives.css", "pattern": "^--shadow-[a-z]+$", "count": 4 },
     "duration": { "kind": "scale", "file": "primitives.css", "pattern": "^--duration-[a-z]+$", "count": 5 },
     "blur": { "kind": "scale", "file": "primitives.css", "pattern": "^--blur-[a-z]+$", "count": 1 },
     "ease": { "kind": "scale", "file": "primitives.css", "pattern": "^--ease-[a-z-]+$", "count": 3 },

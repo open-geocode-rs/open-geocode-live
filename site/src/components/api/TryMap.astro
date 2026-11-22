@@ -3,8 +3,10 @@ import type { Example } from "../../lib/api";
 import { isNode, type ApiOperation } from "../../lib/openapi";
 import Button from "../ui/Button.astro";
 import CodeBlock from "../ui/CodeBlock.astro";
-import Input from "../ui/Input.astro";
+import Icon from "../ui/Icon.astro";
+import ResponseDetails from "./ResponseDetails.astro";
 import ResultMap from "./ResultMap.astro";
+import TryField, { type Props as TryFieldProps } from "./TryField.astro";
 
 interface Props {
   operation: ApiOperation;
@@ -14,38 +16,73 @@ interface Props {
 const { operation, example } = Astro.props;
 const { searchParams } = new URL(example.request, Astro.url);
 const pickable = operation.path === "/reverse";
+const placeSearch = operation.path === "/places";
+const labels: Record<string, string> = {
+  q: placeSearch ? "Place name" : "Full address",
+  lat: "Latitude",
+  lon: "Longitude",
+  limit: "Max results",
+  layer: "Result type",
+  ids: "Place IDs",
+  focus: "Search near",
+  bbox: "Bounding box",
+  address: "Street address",
+  locality: "City or town",
+  region: "State or region",
+  postcode: "Postal code",
+  country: "Country codes",
+};
+const hints: Record<string, string> = {
+  ids: "Clear Place name first. Paste one or more IDs from a previous response, separated by commas.",
+  address: "Clear Full address first to search using separate address fields.",
+  focus: "Longitude, latitude",
+  bbox: "West, south, east, north, in degrees",
+};
+const primaryOrder = pickable ? ["lat", "lon", "layer"] : placeSearch ? ["q", "limit"] : ["q", "limit", "layer"];
+const compact = new Set(["lat", "lon", "limit", "layer", "locality", "region", "postcode", "country"]);
 const parameters = Array.isArray(operation.node.parameters) ? operation.node.parameters : [];
-const fields = parameters.filter(isNode).flatMap((p) => {
+const fields = parameters.filter(isNode).flatMap((p): TryFieldProps[] => {
   if (p.in !== "query" || typeof p.name !== "string") return [];
-  return [{ name: p.name, value: searchParams.get(p.name) ?? "", required: p.required === true }];
+  const schema = isNode(p.schema) ? p.schema : {};
+  const numeric = schema.type === "integer" || schema.type === "number";
+  return [{
+    name: p.name,
+    label: labels[p.name] ?? p.name,
+    value: searchParams.get(p.name) ?? "",
+    required: p.required === true,
+    wide: !compact.has(p.name) && !(placeSearch && (p.name === "q" || p.name === "focus")),
+    type: numeric ? "number" : "text",
+    min: typeof schema.minimum === "number" ? schema.minimum : undefined,
+    max: typeof schema.maximum === "number" ? schema.maximum : undefined,
+    step: numeric ? schema.type === "integer" ? 1 : "any" : undefined,
+    hint: hints[p.name],
+  }];
 });
-const primary = fields.filter((p) => p.required || searchParams.has(p.name));
-const optional = fields.filter((p) => !primary.includes(p));
+const primary = primaryOrder.flatMap((name) => fields.filter((field) => field.name === name));
+for (const field of fields) {
+  if (!primary.includes(field) && (field.required || searchParams.has(field.name))) primary.push(field);
+}
+const optional = fields.filter((field) => !primary.includes(field));
 ---
 
 <div class="try-map" data-try-map>
   <form class="try-form" action={`/api/try${operation.path}`} aria-label="Try it">
     <div class="try-heading">
       <h3>Try it</h3>
-      <Button type="submit" size="sm">Send</Button>
+      <Button type="submit">Send</Button>
     </div>
-    <div class="try-fields">
-      {primary.map((field) => (
-        <label class="try-field">
-          <span>{field.name}</span>
-          <Input name={field.name} value={field.value} required={field.required} />
-        </label>
-      ))}
+    <div class="try-body">
+      <div class="try-fields" data-place-fields={placeSearch ? "" : undefined}>
+        {primary.map((field) => <TryField {...field} />)}
+      </div>
       {optional.length > 0 && (
-        <details>
-          <summary>More parameters</summary>
+        <details class="try-options">
+          <summary>
+            <span class="try-option-icon"><Icon name="chevron-down" size="sm" /></span>
+            More parameters
+          </summary>
           <div class="try-fields">
-            {optional.map((field) => (
-              <label class="try-field">
-                <span>{field.name}</span>
-                <Input name={field.name} value={field.value} />
-              </label>
-            ))}
+            {optional.map((field) => <TryField {...field} />)}
           </div>
         </details>
       )}
@@ -54,16 +91,17 @@ const optional = fields.filter((p) => !primary.includes(p));
   <p class="try-status" role="status" data-try-status>200 example</p>
   <ResultMap {pickable} />
   {pickable && <p class="try-status">Click the map to look up a point.</p>}
-  {example.response && (
-    <div class="try-response" data-try-example>
-      <CodeBlock variant="numbered" code={example.response} lang="json" />
+  <ResponseDetails hidden={!example.response}>
+    <div data-try-response>
+      <CodeBlock variant="numbered" code={example.response ?? ""} lang="json" />
     </div>
-  )}
-  <pre class="try-response try-live" data-try-response hidden><code></code></pre>
+  </ResponseDetails>
   <template data-try-seed>{example.response}</template>
 </div>
 
 <script>
+  import { renderJsonCode } from "../../lib/json-code";
+
   const LOOKUP_TIMEOUT = 8000;
 
   type Coordinates = { lat: number; lon: number };
@@ -104,8 +142,9 @@ const optional = fields.filter((p) => !primary.includes(p));
     const form = panel.querySelector("form")!;
     const map = panel.querySelector<ResultMapElement>("og-result-map")!;
     const status = panel.querySelector<HTMLElement>("[data-try-status]")!;
-    const sample = panel.querySelector<HTMLElement>("[data-try-example]");
-    const output = panel.querySelector<HTMLPreElement>("[data-try-response]")!;
+    const output = panel.querySelector<HTMLElement>("[data-try-response] code")!;
+    const source = panel.querySelector<HTMLTemplateElement>("[data-try-response] template[data-code]")!;
+    const details = output.closest("details")!;
     const seed = panel.querySelector<HTMLTemplateElement>("[data-try-seed]")?.content.textContent;
     let request: AbortController | undefined;
 
@@ -144,9 +183,10 @@ const optional = fields.filter((p) => !primary.includes(p));
           return;
         }
         map.show(pointsOf(answer, queryPoint(params)), keep);
-        output.querySelector("code")!.textContent = JSON.stringify(answer, null, 2);
-        if (sample) sample.hidden = true;
-        output.hidden = false;
+        const json = JSON.stringify(answer, null, 2);
+        renderJsonCode(output, json);
+        source.content.textContent = json;
+        details.hidden = false;
         status.textContent = `${response.status} live response`;
       } catch {
         if (current.signal.aborted) return;
@@ -178,17 +218,13 @@ const optional = fields.filter((p) => !primary.includes(p));
     margin-block-start: var(--space-1);
   }
 
-  .try-heading,
-  .try-field {
-    align-items: center;
-    display: grid;
-    gap: var(--space-2);
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-
   .try-heading {
+    align-items: center;
     border-block-end: var(--border) solid var(--color-border);
-    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+    display: flex;
+    gap: var(--space-3);
+    justify-content: space-between;
+    padding: var(--space-2) var(--space-3);
   }
 
   .try-heading > h3 {
@@ -196,37 +232,94 @@ const optional = fields.filter((p) => !primary.includes(p));
     margin: 0;
   }
 
+  .try-body {
+    padding: var(--space-3);
+  }
+
   .try-fields {
     display: grid;
-    gap: var(--space-2);
-    padding: var(--space-2);
+    gap: var(--space-3);
+    grid-template-columns: [start] minmax(0, 1fr) minmax(0, 1fr) [end];
   }
 
-  .try-field {
-    font: var(--type-ui);
-    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-    overflow-wrap: anywhere;
+  .try-fields[data-place-fields] {
+    align-items: end;
+    grid-template-columns: [start] minmax(0, 2fr) minmax(0, 1fr) [end];
   }
 
-  .try-fields summary {
+  .try-options {
+    border-block-start: var(--border) solid var(--color-border);
+    interpolate-size: allow-keywords;
+    margin-block-start: var(--space-3);
+    padding-block-start: var(--space-2);
+  }
+
+  .try-options > summary {
+    align-items: center;
+    border-radius: var(--radius-md);
+    color: var(--color-foreground-secondary);
     cursor: pointer;
+    display: flex;
     font: var(--type-ui);
+    gap: var(--space-2);
+    inline-size: fit-content;
+    list-style: none;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  .try-options > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .try-options > summary:hover {
+      background-color: var(--color-control);
+      color: var(--color-foreground);
+    }
+  }
+
+  .try-options > summary:focus-visible {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  .try-option-icon {
+    display: inline-flex;
+    rotate: -90deg;
+  }
+
+  .try-options[open] .try-option-icon {
+    rotate: 0deg;
+  }
+
+  .try-options > .try-fields {
+    margin-block-start: var(--space-3);
+  }
+
+  .try-options::details-content {
+    block-size: 0;
+    overflow: hidden;
+  }
+
+  .try-options[open]::details-content {
+    block-size: auto;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .try-option-icon {
+      transition: rotate var(--duration-enter) var(--ease-in-out);
+    }
+
+    .try-options::details-content {
+      transition:
+        block-size var(--duration-enter) var(--ease-out),
+        content-visibility var(--duration-enter) allow-discrete;
+    }
   }
 
   .try-status {
     font: var(--type-ui-strong);
     margin: 0;
     padding: var(--space-2) var(--space-3);
-  }
-
-  .try-response {
-    max-block-size: var(--container-sm);
-    overflow: auto;
-    padding: var(--space-2);
-  }
-
-  .try-live {
-    font: var(--type-code);
-    margin: 0;
   }
 </style>

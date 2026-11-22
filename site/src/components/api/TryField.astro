@@ -1,0 +1,62 @@
+---
+import Input from "../ui/Input.astro";
+
+export interface Props {
+  name: string;
+  label: string;
+  value: string;
+  required: boolean;
+  wide: boolean;
+  type: "number" | "text";
+  min?: number;
+  max?: number;
+  step?: number | "any";
+  hint?: string;
+}
+
+const { name, label, value, required, wide, type, min, max, step, hint } = Astro.props;
+const hintId = hint ? `try-${name}-hint` : undefined;
+---
+
+<div class="try-field" data-wide={wide ? "" : undefined}>
+  <label for={`try-${name}`} class="try-label">
+    {label}
+    <code aria-hidden="true">{name}</code>
+  </label>
+  <Input id={`try-${name}`} {name} {value} {required} {type} {min} {max} {step} aria-describedby={hintId} />
+  {hint && <span class="try-hint" id={hintId}>{hint}</span>}
+</div>
+
+<style>
+  .try-field {
+    display: grid;
+    gap: var(--space-1);
+    min-inline-size: 0;
+  }
+
+  .try-field[data-wide] {
+    grid-column: start / end;
+  }
+
+  .try-label {
+    align-items: baseline;
+    color: var(--color-foreground);
+    display: flex;
+    flex-wrap: wrap;
+    font: var(--type-ui-strong);
+    gap: var(--space-0-5) var(--space-1-5);
+  }
+
+  .try-label > code,
+  .try-hint {
+    color: var(--color-foreground-secondary);
+  }
+
+  .try-label > code {
+    font: var(--type-code-sm);
+  }
+
+  .try-hint {
+    font: var(--type-caption);
+  }
+</style>

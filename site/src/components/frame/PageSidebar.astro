@@ -8,7 +8,7 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
 
 {
   toc && (
-    <og-contents class="contents" data-min-h={toc.minHeadingLevel} data-max-h={toc.maxHeadingLevel}>
+    <og-contents class="contents">
       <nav class="contents-bar" aria-labelledby="og-contents-bar-title">
         <details class="contents-disclosure" data-contents-disclosure>
           <summary class="contents-toggle">
@@ -18,7 +18,10 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
             </span>
           </summary>
           <div class="contents-dropdown">
-            <TocList items={toc.items} />
+            <div class="contents-track" data-contents-track>
+              <span class="contents-indicator" data-contents-indicator aria-hidden="true"></span>
+              <TocList items={toc.items} />
+            </div>
           </div>
         </details>
         <span class="contents-current" data-contents-current />
@@ -27,7 +30,10 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
         <h2 class="contents-title" id="starlight__on-this-page">
           {title}
         </h2>
-        <TocList items={toc.items} />
+        <div class="contents-track" data-contents-track>
+          <span class="contents-indicator" data-contents-indicator aria-hidden="true"></span>
+          <TocList items={toc.items} />
+        </div>
       </nav>
     </og-contents>
   )
@@ -37,27 +43,44 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
   // Marks the section being read. A heading is current once it has scrolled up to where a jump to it lands.
   class Contents extends HTMLElement {
     connectedCallback() {
-      const min = Number(this.dataset.minH);
-      const max = Number(this.dataset.maxH);
-      const levels = Array.from({ length: max - min + 1 }, (_, i) => `h${min + i}`).join();
-      const headings = [...document.querySelectorAll<HTMLElement>(`main h1#_top, main :where(${levels})[id]`)];
+      const tracks = [...this.querySelectorAll<HTMLElement>("[data-contents-track]")];
       const links = [...this.querySelectorAll<HTMLAnchorElement>("a[href^='#']")];
+      const sectionOf = (link: HTMLAnchorElement) => decodeURIComponent(link.hash.slice(1));
+      const headings = [...new Set(links.map(sectionOf))].map((id) => document.getElementById(id));
       const current = this.querySelector<HTMLElement>("[data-contents-current]");
       const disclosure = this.querySelector<HTMLDetailsElement>("[data-contents-disclosure]");
       let shown = "";
 
+      const moveIndicators = () => {
+        for (const track of tracks) {
+          const indicator = track.querySelector<HTMLElement>("[data-contents-indicator]");
+          const active = track.querySelector<HTMLAnchorElement>('a[aria-current="true"]');
+          if (!indicator || !active || active.offsetHeight === 0) continue;
+          const row = active.getBoundingClientRect();
+          const offset = row.top - track.getBoundingClientRect().top + (row.height - indicator.offsetHeight) / 2;
+          const pixel = Math.round(offset * devicePixelRatio) / devicePixelRatio;
+          indicator.style.setProperty("--value", `${pixel}px`);
+          indicator.dataset.positioned = "";
+        }
+      };
+
       const mark = () => {
         const line = Number.parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
-        const reached = headings.filter((h) => h.getBoundingClientRect().top <= line + 1);
-        const heading = reached.at(-1) ?? headings[0];
+        const visible = headings.filter((heading): heading is HTMLElement => Boolean(heading?.getClientRects().length));
+        const reached = visible.findLast((heading) => heading.getBoundingClientRect().top <= line + 1);
+        // A short final section can reach the end of the page before it reaches the reading line.
+        const root = document.documentElement;
+        const atBottom = scrollY > 0 && scrollY + root.clientHeight >= root.scrollHeight - 1;
+        const heading = (atBottom ? visible.at(-1) : reached) ?? visible[0];
         if (!heading || heading.id === shown) return;
         shown = heading.id;
         for (const link of links) {
-          if (decodeURIComponent(link.hash.slice(1)) === heading.id) link.setAttribute("aria-current", "true");
+          if (sectionOf(link) === heading.id) link.setAttribute("aria-current", "true");
           else link.removeAttribute("aria-current");
         }
         const active = links.find((l) => l.hasAttribute("aria-current"));
         if (current && active) current.textContent = active.textContent?.trim() ?? "";
+        moveIndicators();
       };
 
       let queued = false;
@@ -71,9 +94,12 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
       };
       addEventListener("scroll", queue, { passive: true });
       addEventListener("resize", queue);
+      const observer = new ResizeObserver(moveIndicators);
+      for (const track of tracks) observer.observe(track);
       mark();
 
       if (!disclosure) return;
+      disclosure.addEventListener("toggle", moveIndicators);
       const close = () => {
         disclosure.open = false;
       };
@@ -122,7 +148,7 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
     background-color: var(--color-background);
     block-size: var(--control-md);
     border: var(--border) solid var(--color-border-control);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     color: var(--color-foreground);
     cursor: pointer;
     display: flex;
@@ -170,6 +196,8 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
   .contents-dropdown {
     background-color: var(--color-background);
     border-block: var(--border) solid var(--color-border);
+    border-end-end-radius: var(--radius-lg);
+    border-end-start-radius: var(--radius-lg);
     box-shadow: var(--shadow-overlay);
     inset-block-start: calc(var(--layout-nav-height) + var(--space-12));
     inset-inline: 0;
@@ -178,6 +206,37 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
     overscroll-behavior: contain;
     padding: var(--space-2) var(--space-4);
     position: fixed;
+  }
+
+  .contents-track {
+    position: relative;
+  }
+
+  .contents-track::before,
+  .contents-indicator {
+    border-radius: var(--radius-full);
+    inline-size: var(--space-0-5);
+    inset-inline-start: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .contents-track::before {
+    background-color: var(--color-border);
+    content: "";
+    inset-block: var(--space-1);
+  }
+
+  .contents-indicator {
+    background-color: var(--color-accent);
+    block-size: var(--space-5);
+    inset-block-start: 0;
+    transform: translateY(var(--value));
+    visibility: hidden;
+  }
+
+  .contents-indicator[data-positioned] {
+    visibility: visible;
   }
 
   .contents-column {
@@ -215,6 +274,10 @@ const title = Astro.locals.t("tableOfContents.onThisPage");
   }
 
   @media (prefers-reduced-motion: no-preference) {
+    .contents-indicator[data-positioned] {
+      transition: transform var(--duration-enter) var(--ease-out);
+    }
+
     .contents-caret {
       transition: rotate var(--duration-enter) var(--ease-in-out);
     }

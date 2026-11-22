@@ -154,7 +154,7 @@ const table = [
   [/^clip-path$/, space],
   [/^opacity$/, ["opacity"]],
   [/^scale$/, ["scale"]],
-  [/^transform$/, ["scale", "space", "layout"]],
+  [/^transform$/, ["scale", "space", "layout", "value"]],
 ];
 const forbidden = /^(font-size|line-height|font-weight|font-family)$/;
 
