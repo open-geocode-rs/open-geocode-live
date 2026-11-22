@@ -2,6 +2,7 @@ import { getCollection } from "astro:content";
 import type { StarlightRouteData } from "@astrojs/starlight/route-data";
 import { operationFor, SERVER, type ApiOperation } from "./openapi";
 import examplesJson from "../data/examples.json";
+import mapExamples from "../data/map-examples.json";
 
 // getEntry would warn on every generated API page, so look ids up in one set.
 let docIds: Promise<Set<string>> | undefined;
@@ -76,7 +77,7 @@ export type Example = {
   answer?: "json" | "text" | "none";
   response?: string;
 };
-const examples = examplesJson as Record<string, Example>;
+const examples: Record<string, Example> = { ...(examplesJson as Record<string, Example>), ...mapExamples };
 
 export function exampleFor(op: ApiOperation): Example {
   return examples[op.operationId] ?? { method: op.method, request: op.path };

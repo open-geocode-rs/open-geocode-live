@@ -65,8 +65,7 @@ const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split
     margin-block-start: var(--space-1);
   }
 
-  .nav-list[data-depth="1"],
-  .nav-list[data-depth="2"] {
+  .nav-list:not([data-depth="0"]) {
     border-inline-start: var(--border) solid var(--color-border);
   }
 
@@ -80,6 +79,7 @@ const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split
 
   .nav-summary {
     align-items: center;
+    border-radius: var(--radius-md);
     color: var(--color-foreground);
     cursor: pointer;
     display: flex;
@@ -103,21 +103,20 @@ const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split
     rotate: 0deg;
   }
 
-  /* A link, and a group inside a group, covers its list's hairline with a border that marks the current page. */
-  .nav-link,
   .nav-list:not([data-depth="0"]) .nav-summary {
-    border-inline-start: var(--border-strong) solid transparent;
-    margin-inline-start: calc(var(--space-0-5) * -1);
     padding-inline: var(--space-3);
   }
 
   .nav-link {
     align-items: flex-start;
+    border-radius: var(--radius-md);
     color: var(--color-foreground);
     display: flex;
     font: var(--type-ui);
     gap: var(--space-2);
+    margin-inline-start: var(--space-1);
     padding-block: var(--space-1-5);
+    padding-inline: var(--space-2) var(--space-3);
     text-decoration: none;
   }
 
@@ -129,7 +128,6 @@ const methodOf = (entry: Entry) => methods.find((m) => entry.badge?.class?.split
 
   .nav-link[aria-current="page"] {
     background-color: var(--color-selected);
-    border-inline-start-color: var(--color-accent);
     font: var(--type-ui-strong);
   }
 

@@ -1,0 +1,32 @@
+---
+interface Props {
+  hidden?: boolean;
+  status?: string;
+}
+
+const { hidden, status } = Astro.props;
+---
+
+<details class="response-details" hidden={hidden}>
+  <summary>JSON response{status && <span>{status}</span>}</summary>
+  <div class="response-body"><slot /></div>
+</details>
+
+<style>
+  .response-details > summary {
+    border-block-start: var(--border) solid var(--color-border);
+    cursor: pointer;
+    font: var(--type-ui-strong);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .response-details > summary > span {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui);
+    margin-inline-start: var(--space-2);
+  }
+
+  .response-body {
+    padding: var(--space-2);
+  }
+</style>

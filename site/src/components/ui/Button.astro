@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from "astro/types";
 import Icon, { type IconName } from "./Icon.astro";
 
-export const buttonVariants = ["solid", "outline", "ghost", "pill", "raised", "raised-solid"] as const;
+export const buttonVariants = ["solid", "outline", "ghost", "quiet", "pill", "raised", "raised-solid"] as const;
 export const buttonSizes = ["sm", "md", "lg", "xl"] as const;
 export const buttonStates = ["rest", "hover", "focus", "pressed", "disabled"] as const;
 
@@ -12,8 +12,8 @@ type Base = Omit<HTMLAttributes<"button">, "class" | "class:list" | "style" | "a
   /** Holds a state without a pointer, for the system page. */
   state?: (typeof buttonStates)[number];
   icon?: IconName;
-  /** Joins the button to the control after it, as the first half of a split button. */
-  join?: "start";
+  /** Joins a split button at the inline end or lets a vertical group own the outer corners. */
+  join?: "start" | "block";
 };
 
 /** A button, or a link that looks like the button, for an action that goes to another page. A link cannot be
@@ -42,8 +42,8 @@ const {
 
 // No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
 const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
-// An icon-only button's icon carries its whole meaning, so from the default size up it takes the large icon.
-const iconSize = size === "sm" ? "sm" : iconOnly ? "lg" : "md";
+// Standalone controls need more visual weight than quiet actions in a toolbar.
+const iconSize = size === "sm" ? "sm" : iconOnly && variant !== "quiet" ? "lg" : "md";
 const Tag = href ? "a" : "button";
 ---
 
@@ -75,7 +75,7 @@ const Tag = href ? "a" : "button";
     align-items: center;
     background-color: transparent;
     border: var(--border) solid transparent;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     color: var(--color-foreground);
     cursor: pointer;
     display: inline-flex;
@@ -186,12 +186,21 @@ const Tag = href ? "a" : "button";
     font: var(--type-ui-lg-strong);
   }
 
+  .button[data-variant="quiet"] {
+    border-radius: var(--radius-sm);
+    color: var(--color-foreground-muted);
+  }
+
   /* The first half of a split button. Its end edge is the next control's start border. It comes after the variants, so
      it wins over their borders and corners at the same specificity. */
   .button[data-join="start"] {
     border-end-end-radius: 0;
     border-inline-end-width: 0;
     border-start-end-radius: 0;
+  }
+
+  .button[data-join="block"] {
+    border-radius: 0;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -202,6 +211,10 @@ const Tag = href ? "a" : "button";
     .button[data-variant="outline"]:hover,
     .button[data-variant="ghost"]:hover {
       background-color: var(--color-control-hover);
+    }
+
+    .button[data-variant="quiet"]:hover {
+      color: var(--color-foreground);
     }
 
     .button[data-variant="pill"]:hover {
@@ -226,6 +239,10 @@ const Tag = href ? "a" : "button";
     background-color: var(--color-control-hover);
   }
 
+  .button[data-variant="quiet"][data-state="hover"] {
+    color: var(--color-foreground);
+  }
+
   .button[data-variant="pill"][data-state="hover"] {
     background-color: var(--color-control);
   }
@@ -242,6 +259,17 @@ const Tag = href ? "a" : "button";
   .button[data-state="focus"] {
     outline: var(--border-strong) solid var(--color-focus);
     outline-offset: var(--space-0-5);
+  }
+
+  .button[data-variant="quiet"]:focus-visible,
+  .button[data-variant="quiet"][data-state="focus"] {
+    color: var(--color-foreground);
+  }
+
+  .button[data-join="block"]:focus-visible,
+  .button[data-variant="quiet"]:focus-visible,
+  .button[data-variant="quiet"][data-state="focus"] {
+    outline-offset: calc(var(--space-0-5) * -1);
   }
 
   .button:disabled,

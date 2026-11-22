@@ -98,7 +98,8 @@ export function proseOf(html: string): ProseNode[] {
     const name = String(pre.properties.dataLanguage ?? "");
     const lang = languages[name];
     if (!lang) throw new Error(`The docs prose has a code block in "${name}". Add it to the languages in src/lib/prose.ts.`);
-    const lines = all(pre, (x) => hasClass(x, "ec-line")).map(textOf);
+    // Expressive Code puts a newline inside empty line elements.
+    const lines = all(pre, (x) => hasClass(x, "ec-line")).map((line) => textOf(line).replace(/\n$/, ""));
     return { kind: "code", code: lines.join("\n"), lang };
   };
 

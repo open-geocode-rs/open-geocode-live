@@ -76,6 +76,9 @@
   /* codeblock: a one-line command block, a step darker than the darkest neutral, as deep as a terminal's well. */
   --codeblock-command-fill: color-mix(in srgb, var(--p-neutral-900), var(--p-black));
 
+  /* An inset preserves the code frame edge against a similar page surface. */
+  --codeblock-rim: inset 0 var(--border) 0 color-mix(in srgb, var(--p-white) var(--p-alpha-16), transparent);
+
   /* codeblock: the copy feedback on a code block, a filled tag in the brand's green. */
   --codeblock-feedback-fill: var(--p-green-shade-32);
   --codeblock-feedback-ink: var(--p-white);

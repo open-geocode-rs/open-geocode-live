@@ -64,10 +64,10 @@ function selectAttrs({ variant, size, state, invalid, disabled, icon, options, v
     props.icon ? (
       <span class="input-field">
         <span class="input-icon"><Icon name={props.icon} size="md" /></span>
-        <input type="text" {...textAttrs(props)} {...shared} class="input" data-variant="text" data-icon />
+        <input {...textAttrs(props)} {...shared} class="input" data-variant="text" data-icon />
       </span>
     ) : (
-      <input type="text" {...textAttrs(props)} {...shared} class="input" data-variant="text" />
+      <input {...textAttrs(props)} {...shared} class="input" data-variant="text" />
     )
   )
 }

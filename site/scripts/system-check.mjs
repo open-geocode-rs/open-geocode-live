@@ -76,6 +76,13 @@ try {
   const [scroll, inner] = await tab.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
   console.log(`at 390 wide the page is ${scroll}px wide in a ${inner}px window`);
   if (scroll > inner) problems.push(`the page scrolls sideways at 390 wide, ${scroll}px in ${inner}px`);
+  const missingFrames = await tab.locator('[data-codeblock]:is([data-variant="plain"], [data-variant="terminal"], [data-variant="titled"])').evaluateAll((blocks) =>
+    blocks.filter((block) => {
+      const { borderTopStyle, boxShadow } = getComputedStyle(block);
+      return borderTopStyle !== "solid" || !boxShadow.includes("inset");
+    }).map((block) => block.getAttribute("data-variant")),
+  );
+  for (const variant of new Set(missingFrames)) problems.push(`code block frame missing from the ${variant} specimen`);
 } finally {
   await browser.close();
   await server.stop();

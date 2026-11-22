@@ -26,11 +26,9 @@ copyFileSync(join(contract, "openapi.json"), join(site, "public", "openapi.json"
 // no committed answer shows its request alone. Batches are sent as QUERY, which the
 // contract answers exactly as the POST its tests send.
 const JOB = "4f9c2a7e1b8d4c6fa3e5d7b9c1f2a4e6";
+// Map examples use captured live responses and stay outside the contract sync.
 const EXAMPLES = {
-  geocode: { request: "/geocode?q=10%20King%20Street", response: "geocode-text" },
-  places: { request: "/places?q=Queen%20Bakery", response: "places" },
   autocomplete: { request: "/autocomplete?q=Quee", response: "autocomplete" },
-  reverse: { request: "/reverse?lon=-79.0&lat=43.0", response: "reverse-address" },
   geocode_batch: {
     method: "query",
     request: "/geocode?country=CA",

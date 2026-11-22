@@ -26,41 +26,38 @@ const { items, nested = false } = Astro.props;
 
 <style>
   .toc-list {
-    border-inline-start: var(--border) solid var(--color-border-control);
     list-style: none;
     margin: 0;
     padding: 0;
+    padding-inline-start: var(--space-0-5);
   }
 
   .toc-list[data-nested] {
-    border-inline-start: 0;
     padding-inline-start: var(--space-4);
   }
 
-  /* Every link carries the current marker's border, clear until it is current, so the text never moves. */
   .toc-link {
-    border-inline-start: var(--border-strong) solid transparent;
-    color: var(--color-foreground);
+    border-radius: var(--radius-md);
+    color: var(--color-foreground-secondary);
     display: block;
     font: var(--type-ui-compact);
+    margin-inline-start: var(--space-1);
     overflow-wrap: anywhere;
-    padding: var(--space-1-5) var(--space-4);
+    padding: var(--space-1-5) var(--space-3);
     text-decoration: none;
   }
 
-  /* The top list's links cover its hairline, so the current marker replaces it. */
-  .toc-list:not([data-nested]) > * > .toc-link {
-    margin-inline-start: calc(var(--space-0-5) * -1);
+  .toc-list[data-nested] > :where(li) > .toc-link {
+    padding-inline-start: var(--space-3-5);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .toc-link:hover {
-      background-color: var(--color-control);
+      color: var(--color-foreground);
     }
   }
 
   .toc-link[aria-current="true"] {
-    border-inline-start-color: var(--color-accent);
     color: var(--color-accent);
   }
 

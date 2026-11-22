@@ -181,7 +181,11 @@ const kindRule = rule("token-kind", ({ root, file, say }) => {
     const allowed = table.find(([re]) => re.test(d.prop))?.[1];
     for (const n of names) {
       const fam = familyOf(n, file);
-      if (fam === "value" && allowed === size) continue;
+      if (fam === "value") {
+        if (allowed === size) continue;
+        // A measured offset can position an indicator without adding a spacing token.
+        if (d.prop === "transform" && /^translate[XY]\(\s*var\(\s*--value\s*\)\s*\)$/.test(d.value)) continue;
+      }
       if (!allowed) say(d, `${d.prop} takes no token, but reads ${n}`);
       else if (!allowed.includes(fam)) say(d, `${d.prop} takes ${allowed.map((a) => (a === "own" ? "its component's own group" : `--${a}-*`)).join(", ")}, not ${n}`);
     }

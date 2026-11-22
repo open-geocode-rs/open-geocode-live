@@ -11,9 +11,10 @@ const { pickable } = Astro.props;
 
 <og-result-map class="og-result-map" hidden data-pickable={pickable ? "" : undefined}>
   <canvas aria-hidden="true"></canvas>
-  <div class="og-result-map-zoom">
-    <Button variant="outline" size="sm" data-zoom="1"><span aria-hidden="true">+</span><span class="sr-only">Zoom in</span></Button>
-    <Button variant="outline" size="sm" data-zoom="-1"><span aria-hidden="true">−</span><span class="sr-only">Zoom out</span></Button>
+  <div class="og-result-map-zoom" role="group" aria-label="Map zoom">
+    <Button variant="ghost" join="block" iconOnly icon="plus" label="Zoom in" data-zoom="1" />
+    <span class="og-result-map-divider" aria-hidden="true"></span>
+    <Button variant="ghost" join="block" iconOnly icon="minus" label="Zoom out" data-zoom="-1" />
   </div>
   <p class="og-result-map-credit">{CREDIT}</p>
 </og-result-map>
@@ -464,13 +465,17 @@ const { pickable } = Astro.props;
 
   .og-result-map-zoom {
     background-color: var(--color-background);
+    border: var(--border) solid var(--color-border-control);
     border-radius: var(--radius-md);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+    display: grid;
     inset-block-end: var(--space-10);
     inset-inline-end: var(--space-2);
+    overflow: hidden;
     position: absolute;
+  }
+
+  .og-result-map-divider {
+    border-block-start: var(--border) solid var(--color-border);
   }
 
   .og-result-map-credit {
