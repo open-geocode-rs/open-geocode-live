@@ -1,0 +1,72 @@
+---
+import { getEntry } from "astro:content";
+import { mdxToMdast } from "satteri";
+import CodeTabs, { type ExamplePanel } from "../prose/CodeTabs.astro";
+import Link from "../ui/Link.astro";
+import Split from "./Split.astro";
+
+const adapters = [
+  { id: "google", label: "Google", api: "Geocoding API v4" },
+  { id: "mapbox", label: "Mapbox", api: "Geocoding v6" },
+  { id: "here", label: "HERE", api: "Geocoding and Search v7" },
+  { id: "precisely", label: "Precisely", api: "Geo Addressing v1" },
+];
+
+const vendors: (ExamplePanel & { api: string; responseHref: string })[] = await Promise.all(adapters.map(async (adapter) => {
+  const guide = `docs/compatibility/${adapter.id}`;
+  const entry = await getEntry("docs", guide);
+  const root = mdxToMdast(entry?.body ?? "");
+  const tabs = root.type === "root" && root.children.find((node) =>
+    node.type === "mdxJsxFlowElement" && node.name === "Tabs"
+  );
+  const example = tabs && tabs.type === "mdxJsxFlowElement" && tabs.children.find((node) =>
+    node.type === "mdxJsxFlowElement" && node.name === "TabItem" && node.attributes.some((attribute) =>
+      attribute.type === "mdxJsxAttribute" && attribute.name === "label" && attribute.value === "TypeScript"
+    )
+  );
+  const code = example && example.type === "mdxJsxFlowElement" && example.children.find((node) =>
+    node.type === "code" && node.lang === "typescript"
+  );
+  if (!code || code.type !== "code") throw new Error(`Missing TypeScript client example in ${guide}`);
+  return {
+    ...adapter,
+    responseHref: `/${guide}/#response`,
+    block: { kind: "code", code: code.value, lang: "typescript" },
+  };
+}));
+---
+
+<Split id="og-compat-title" eyebrow="Vendor compatibility" title="Client adapters and vendor response formats.">
+  <p>
+    Use the Google, Mapbox, HERE, or Precisely adapter in the TypeScript SDK to call your OpenGeocode server.
+    Supported endpoints return the vendor’s response format using data from your own Pack.
+  </p>
+  <Link variant="standalone" href="/docs/guides/typescript/#install-the-client">Set up the TypeScript SDK</Link>
+  <div class="og-compat-examples" slot="aside">
+    <CodeTabs id="og-compat" label="Compatible geocoding APIs" panels={vendors} fixedHeight>
+      {vendors.map(({ id, label, api, responseHref }) => (
+        <p class="og-compat-comment" slot={id}>
+          <span aria-hidden="true">// </span>{api} · <Link href={responseHref}>{label} response example</Link>
+        </p>
+      ))}
+    </CodeTabs>
+  </div>
+</Split>
+
+<style>
+  .og-compat-examples {
+    padding: var(--space-6) var(--space-3);
+  }
+
+  .og-compat-comment {
+    color: var(--color-foreground-muted);
+    font: var(--type-code-sm);
+    margin: 0;
+  }
+
+  @media (min-width: 72rem) {
+    .og-compat-examples {
+      padding-inline: var(--space-5);
+    }
+  }
+</style>

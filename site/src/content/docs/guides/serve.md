@@ -30,10 +30,10 @@ Responses are compressed with zstd or gzip when the client's `Accept-Encoding` a
 
 ## Health checks
 
-Use `/healthz` as a load balancer's liveness check, and `/readyz` as its readiness check.
-`/healthz` answers as soon as the server is listening.
-`/readyz` answers `503` until the Pack is open, then `200`.
-Both return an empty body.
+Use `/healthz` as a load balancer's liveness check and `/readyz` as its readiness check.
+The server opens the Pack before it starts listening. During startup, a probe may fail to connect or the connection may reset.
+Once the server is listening with the Pack open, `/readyz` returns HTTP `200`.
+Both endpoints return an empty body.
 
 ## Deploying
 

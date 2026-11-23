@@ -1,14 +1,12 @@
 ---
-import CodeBlock from "../ui/CodeBlock.astro";
+import CodeTabs from "../prose/CodeTabs.astro";
+import { installPanels, releaseLabel, releaseUrl } from "../../lib/install";
 import Link from "../ui/Link.astro";
 import Tabs from "../ui/Tabs.astro";
 import Split from "./Split.astro";
 
 // Steps of the replayed terminal. Screens are built in the script below; stage names
 // are og's own, from its build view.
-const REPO = "https://github.com/open-geocode-rs/open-geocode";
-const INSTALL = `cargo install --locked --git ${REPO} open-geocode --features tui`;
-
 const steps = [
   { id: "pick", label: "Pick", title: "Pick a region", cmd: "og", text: "The interactive interface: pick any region of the catalog." },
   {
@@ -31,9 +29,13 @@ const steps = [
 ---
 
 <Split id="og-walk-title" eyebrow="Quickstart" title="From an extract to answers in one binary.">
-  <span class="og-walk-pre" slot="top"><Link variant="standalone" href={REPO}>Pre-release, from main</Link></span>
-  <div class="og-walk-install" data-theme="dark">
-    <CodeBlock variant="command" code={INSTALL} lang="bash" />
+  <span class="og-walk-pre" slot="top"><Link variant="standalone" href={releaseUrl}>{releaseLabel}</Link></span>
+  <div class="og-walk-install">
+    <CodeTabs id="og-install" label="Install OpenGeocode" panels={installPanels} />
+    <p class="og-walk-install-links">
+      <span class="og-walk-unix-script"><Link variant="standalone" href="/install">View install script</Link></span>
+      <span class="og-walk-windows-script"><Link variant="standalone" href="/install.ps1">View install script</Link></span>
+    </p>
   </div>
   <Tabs id="og-walk" label="Quickstart steps" tabs={steps.map((s) => ({ id: s.id, label: s.label }))}>
     {
@@ -172,7 +174,7 @@ const steps = [
     connectedCallback() {
       this.#cmds = JSON.parse(this.dataset.steps ?? "[]");
       const section = this.closest("section")!;
-      const list = section.querySelector<HTMLElement>('[role="tablist"]')!;
+      const list = section.querySelector<HTMLElement>('[aria-label="Quickstart steps"]')!;
       this.#tabs = [...list.querySelectorAll<HTMLElement>('[role="tab"]')];
       this.#progress = [...section.querySelectorAll<HTMLElement>(".og-walk-progress")];
       // Whichever way a tab is chosen, by pointer, keys or the replay itself, its screen plays.
@@ -242,6 +244,25 @@ const steps = [
 
   .og-walk-install {
     margin-block-end: var(--space-5);
+  }
+
+  .og-walk-install-links {
+    display: flex;
+    font: var(--type-caption);
+    justify-content: end;
+    margin-block: var(--space-2) 0;
+  }
+
+  .og-walk-windows-script {
+    display: none;
+  }
+
+  .og-walk-install:has(:global(:where([aria-controls="og-install-panel-windows"][aria-selected="true"]))) .og-walk-unix-script {
+    display: none;
+  }
+
+  .og-walk-install:has(:global(:where([aria-controls="og-install-panel-windows"][aria-selected="true"]))) .og-walk-windows-script {
+    display: inline;
   }
 
   .og-walk-step {

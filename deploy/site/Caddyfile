@@ -55,6 +55,9 @@ http://:8081 {
 	redir /docs/api/operations/search/ /docs/api/operations/geocode/ permanent
 	redir /docs/api/operations/search.md /docs/api/operations/geocode.md permanent
 
+	@installer path /install /install.ps1
+	header @installer Content-Type "text/plain; charset=utf-8"
+
 	handle {
 		try_files {path} {path}/index.html {path}.html
 		file_server

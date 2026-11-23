@@ -6,6 +6,7 @@ import DitherGlobe from "../components/landing/DitherGlobe.astro";
 import HalftoneField from "../components/landing/HalftoneField.astro";
 import StreetMap from "../components/landing/StreetMap.astro";
 import Benchmarks from "../components/landing/Benchmarks.astro";
+import Compatibility from "../components/landing/Compatibility.astro";
 import Compare from "../components/landing/Compare.astro";
 import Faq from "../components/landing/Faq.astro";
 import Walkthrough from "../components/landing/Walkthrough.astro";
@@ -38,7 +39,7 @@ const features: { title: string; text: string; icon: IconName }[] = [
   },
   {
     title: "Fast",
-    text: "0.72\u00a0ms a query and 14,087 queries a second on the Netherlands: 6× Photon and Pelias.",
+    text: "On 16\u00a0vCPUs and 64\u00a0GiB, og reached 0.72\u00a0ms median forward latency and 14,087 forward requests per second on the Netherlands benchmark.",
     icon: "zap",
   },
   {
@@ -100,6 +101,7 @@ const description =
     </section>
     <Benchmarks />
     <Walkthrough />
+    <Compatibility />
     <Compare />
     <Faq />
   </main>

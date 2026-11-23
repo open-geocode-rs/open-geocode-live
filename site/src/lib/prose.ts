@@ -5,6 +5,7 @@ import type { Element, ElementContent, RootContent } from "hast";
 import { fromHtml } from "hast-util-from-html";
 import { toHtml } from "hast-util-to-html";
 import { find, html as schema } from "property-information";
+import type { IconName } from "../components/ui/Icon.astro";
 import type { Props as CodeBlockProps } from "../components/ui/CodeBlock.astro";
 
 type Language = NonNullable<CodeBlockProps["lang"]>;
@@ -15,6 +16,7 @@ export type Attributes = Record<string, string | true>;
 
 export type ProseNode =
   | { kind: "html"; html: string }
+  | { kind: "downloadCards"; items: { icon?: IconName; content: ProseNode[] }[] }
   | { kind: "element"; tag: string; attrs: Attributes; children: ProseNode[] }
   | { kind: "link"; href: string; attrs: Attributes; children: ProseNode[] }
   | { kind: "heading"; level: Level; id: string; label: string; children: ProseNode[] }
@@ -26,6 +28,7 @@ export type ProseNode =
 const languages: Record<string, Language> = {
   sh: "sh",
   bash: "bash",
+  powershell: "powershell",
   diff: "diff",
   json: "json",
   typescript: "typescript",
@@ -45,6 +48,12 @@ const classes = (el: Element) => {
   const c = el.properties.className;
   return Array.isArray(c) ? c.map(String) : [];
 };
+const platformIcons = new Map<string, IconName>([
+  ["Linux", "linux-logo"],
+  ["macOS", "apple-logo"],
+  ["Windows", "windows-logo"],
+]);
+
 const hasClass = (el: Element, name: string) => classes(el).includes(name);
 const isElement = (node: RootContent | ElementContent): node is Element => node.type === "element";
 
@@ -92,7 +101,7 @@ const special = (el: Element) =>
 
 const holdsSpecial = (el: Element): boolean => special(el) || el.children.some((c) => isElement(c) && holdsSpecial(c));
 
-export function proseOf(html: string, { stackTables = false } = {}): ProseNode[] {
+export function proseOf(html: string, { stackTables = false, downloadCards = false } = {}): ProseNode[] {
   let tabsSeen = 0;
 
   const code = (el: Element): ProseNode => {
@@ -152,7 +161,7 @@ export function proseOf(html: string, { stackTables = false } = {}): ProseNode[]
     return { kind: "aside", tone, title, children: convert(content.children) };
   };
 
-  const heading = (el: Element): { node: ProseNode; text: string } => {
+  const heading = (el: Element): { node: Extract<ProseNode, { kind: "heading" }>; text: string } => {
     const h = el.children.find(isElement);
     const level = levels.find((l) => h?.tagName === `h${l}`);
     if (!h || !level) throw new Error("The docs prose found a heading wrapper with no h2 to h6 in it.");
@@ -180,6 +189,7 @@ export function proseOf(html: string, { stackTables = false } = {}): ProseNode[]
     const out: ProseNode[] = [];
     // Tabs are named after the heading above them.
     let lastHeading = "";
+    let lastHeadingId = "";
     const push = (node: ProseNode) => {
       const last = out.at(-1);
       if (node.kind === "html" && last?.kind === "html") last.html += node.html;
@@ -196,7 +206,16 @@ export function proseOf(html: string, { stackTables = false } = {}): ProseNode[]
       } else if (hasClass(node, "sl-heading-wrapper")) {
         const h = heading(node);
         lastHeading = h.text;
+        lastHeadingId = h.node.id;
         push(h.node);
+      } else if (downloadCards && node.tagName === "ul" && lastHeadingId === "direct-downloads") {
+        push({
+          kind: "downloadCards",
+          items: node.children.filter(isElement).map((item) => {
+            const [platform] = textOf(item).trim().split(/\s+/u, 1);
+            return { icon: platformIcons.get(platform), content: convert(item.children) };
+          }),
+        });
       } else if (node.tagName === "starlight-tabs") {
         push(tabs(node, lastHeading));
       } else if (node.tagName === "a" && typeof node.properties.href === "string") {

@@ -110,7 +110,7 @@ export default defineConfig({
         }),
       ],
       sidebar: [
-        { label: "Start here", items: ["docs", "docs/quickstart"] },
+        { label: "Start here", items: ["docs", "docs/quickstart", "docs/installation"] },
         {
           label: "Guides",
           items: ["docs/guides/download-packs", "docs/guides/build-a-pack", "docs/guides/serve", "docs/guides/batch-csv", "docs/guides/typescript"],

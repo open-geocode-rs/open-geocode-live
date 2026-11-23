@@ -12,9 +12,10 @@ interface Props {
   id: string;
   label: string;
   panels: ExamplePanel[];
+  fixedHeight?: boolean;
 }
 
-const { id, label, panels } = Astro.props;
+const { id, label, panels, fixedHeight = false } = Astro.props;
 const jsonResponses = panels.every(({ block }) => block.lang === "json");
 const examples = await Promise.all(panels.map(async (panel) => ({
   ...panel,
@@ -22,7 +23,7 @@ const examples = await Promise.all(panels.map(async (panel) => ({
 })));
 ---
 
-<div data-code-tabs>
+<div data-code-tabs data-code-tabs-fixed={fixedHeight ? "" : undefined}>
   <Tabs variant="code" {id} {label} tabs={panels}>
     <div class="code-tabs-actions" slot="actions">
       <span class="code-tabs-status" role="status" data-code-tabs-status></span>
@@ -31,7 +32,7 @@ const examples = await Promise.all(panels.map(async (panel) => ({
     {examples.map(({ id, block, note }) => (
       <div slot={id}>
         {note && <div class="code-tabs-note" set:html={note} />}
-        <CodeBlock variant="embedded" code={block.code} lang={block.lang} scroll={jsonResponses} />
+        <CodeBlock variant="embedded" code={block.code} lang={block.lang} scroll={fixedHeight ? "fixed" : jsonResponses} />
       </div>
     ))}
   </Tabs>
@@ -57,6 +58,10 @@ const examples = await Promise.all(panels.map(async (panel) => ({
 </script>
 
 <style>
+  [data-code-tabs-fixed] :global(.tabs-panel[hidden]) {
+    display: block;
+  }
+
   .code-tabs-actions {
     position: relative;
   }
