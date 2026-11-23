@@ -1,41 +1,112 @@
 ---
 title: Responses
-description: Every OpenGeocode answer is a GeoJSON FeatureCollection. This page explains the feature properties, layers, accuracy tiers, score and confidence, and the RFC 9457 error format.
+description: Native forward and reverse lookups return GeoJSON FeatureCollections. This page explains the feature properties, layers, accuracy tiers, score and confidence, and the RFC 9457 error format.
 ---
 
-Every answer from og is one GeoJSON `FeatureCollection`. Forward and reverse answers have the same shape.
-The only differences: forward features carry a `score` (and a `confidence` once the Pack is calibrated), and reverse features carry a `distance_m`.
+The native forward and reverse endpoints return GeoJSON `FeatureCollection` objects. Forward results include a ranking score. Reverse results include the distance from the query point in metres.
+
+Look up the Empire State Building on the [USA Pack](/docs/guides/download-packs/).
+
+```sh
+curl --get 'http://127.0.0.1:8080/geocode' \
+  --data-urlencode 'q=350 Fifth Avenue, New York, NY 10118' \
+  --data 'layer=address' --data 'limit=1'
+```
 
 ```json
 {
   "type": "FeatureCollection",
+  "geocoding": {
+    "version": "1",
+    "query": "350 Fifth Avenue, New York, NY 10118",
+    "attribution": [
+      {
+        "text": "© OpenStreetMap contributors",
+        "licence": "ODbL 1.0",
+        "url": "https://www.openstreetmap.org/copyright"
+      },
+      {
+        "text": "Timezone boundaries © OpenStreetMap contributors",
+        "licence": "ODbL 1.0",
+        "url": "https://github.com/evansiroky/timezone-boundary-builder"
+      }
+    ]
+  },
   "features": [
     {
       "type": "Feature",
-      "geometry": { "type": "Point", "coordinates": [-79.0, 43.0] },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9850334,
+          40.7484288
+        ]
+      },
       "properties": {
-        "id": "osm:node:10",
+        "id": "osm:node:883234965",
         "layer": "address",
         "accuracy": "rooftop",
-        "name": "10 King Street",
-        "label": "10 King Street, M5V 1A1",
-        "address": { "housenumber": "10", "street": "King Street", "postcode": "M5V 1A1" },
-        "context": {
-          "locality": { "id": "osm:relation:3", "name": "Toronto" },
-          "region": { "id": "osm:relation:2", "name": "Ontario" },
-          "country": { "id": "osm:relation:1", "name": "Canada" }
+        "name": "350 5th Avenue",
+        "label": "350 5th Avenue, New York, NY, 10118",
+        "timezone": "America/New_York",
+        "address_lines": [
+          "350 5th Avenue",
+          "New York, NY 10118",
+          "United States"
+        ],
+        "address": {
+          "housenumber": "350",
+          "street": "5th Avenue",
+          "locality": "New York",
+          "region": "NY",
+          "postcode": "10118",
+          "street_parts": {
+            "name": "5th",
+            "type": "Avenue"
+          }
         },
-        "score": 5.459071,
-        "confidence": 0.9890131,
-        "source": { "dataset": "osm", "object_type": "node", "object_id": 10 }
+        "context": {
+          "neighbourhood": {
+            "id": "osm:relation:7340060",
+            "name": "Manhattan Community Board 5"
+          },
+          "sublocality": {
+            "id": "osm:relation:8398124",
+            "name": "Manhattan"
+          },
+          "locality": {
+            "id": "osm:relation:175905",
+            "name": "New York"
+          },
+          "region": {
+            "id": "osm:relation:61320",
+            "name": "New York",
+            "code": "US-NY"
+          },
+          "country": {
+            "id": "derived:country:US",
+            "name": "United States",
+            "code": "US"
+          },
+          "place": {
+            "id": "osm:relation:3954665",
+            "name": "Manhattan Island"
+          }
+        },
+        "source": {
+          "dataset": "osm"
+        },
+        "score": 0.0,
+        "match": {
+          "housenumber": "matched",
+          "street": "matched",
+          "locality": "matched",
+          "region": "matched",
+          "postcode": "matched"
+        }
       }
     }
-  ],
-  "geocoding": {
-    "version": "1",
-    "query": "10 king street, m5v 1a1",
-    "attribution": "© OpenStreetMap contributors, ODbL"
-  }
+  ]
 }
 ```
 

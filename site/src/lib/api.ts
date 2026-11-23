@@ -74,6 +74,7 @@ export type Example = {
   body?: unknown;
   upload?: { file: string; type: string };
   answer?: "json" | "text" | "none";
+  description?: string;
   response?: string;
 };
 const examples = examplesJson as Record<string, Example>;

@@ -1,10 +1,5 @@
-// Copy the engine's HTTP contract and its committed example answers into the site.
-// The copies are committed so the site builds without an engine checkout; rerun
-// after the contract changes.
-//
-//   ENGINE_DIR=../../open-geocode bun scripts/sync-engine.mjs
-
-import { copyFileSync, existsSync, readFileSync, writeFileSync } from "node:fs";
+// Site examples come from release Packs. Engine contract fixtures use synthetic records.
+import { copyFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,63 +16,4 @@ if (!existsSync(join(contract, "openapi.json"))) {
 
 copyFileSync(join(contract, "openapi.json"), join(site, "public", "openapi.json"));
 
-// Each answer is paired with the request src/contract_tests.rs sends to produce it,
-// so a page never shows a response its request would not return. An operation with
-// no committed answer shows its request alone. Batches are sent as QUERY, which the
-// contract answers exactly as the POST its tests send.
-const JOB = "4f9c2a7e1b8d4c6fa3e5d7b9c1f2a4e6";
-const EXAMPLES = {
-  geocode: { request: "/geocode?q=10%20King%20Street", response: "geocode-text" },
-  places: { request: "/places?q=Queen%20Bakery", response: "places" },
-  reverse: { request: "/reverse?lon=-79.0&lat=43.0", response: "reverse-address" },
-  geocode_batch: {
-    method: "query",
-    request: "/geocode?country=CA",
-    body: [
-      { id: "row-1", address: "10 King Street", postcode: "M5V 1A1" },
-      { id: "row-2", address: "" },
-    ],
-    response: "batch-geocode",
-  },
-  places_batch: {
-    method: "query",
-    request: "/places",
-    body: [
-      { id: "a", q: "Queen Bakery" },
-      { id: "b", ids: "osm:relation:3" },
-    ],
-  },
-  reverse_batch: {
-    method: "query",
-    request: "/reverse",
-    body: [
-      { id: "a", lon: -79.3832, lat: 43.6532 },
-      { id: "b", lon: -75.6972, lat: 45.4215 },
-    ],
-  },
-  version: { request: "/version" },
-  create: { method: "post", request: "/jobs?country=CA", upload: { file: "addresses.csv", type: "text/csv" }, answer: "text" },
-  status: { request: `/jobs/${JOB}` },
-  results: { request: `/jobs/${JOB}/results`, answer: "text" },
-  cancel: { method: "post", request: `/jobs/${JOB}/cancel` },
-  delete: { method: "delete", request: `/jobs/${JOB}`, answer: "none" },
-};
-
-const examples = Object.fromEntries(
-  Object.entries(EXAMPLES).map(([operationId, { response, ...example }]) => [
-    operationId,
-    response
-      ? // Kept as text: a JSON round trip turns the engine's -79.0 into -79.
-        { ...example, response: readFileSync(join(contract, "responses", `${response}.json`), "utf8").trimEnd() }
-      : example,
-  ]),
-);
-const examplesFile = join(site, "src", "data", "examples.json");
-// Interactive examples use real places from the demo Pack.
-const interactive = JSON.parse(readFileSync(examplesFile, "utf8"));
-for (const operation of ["autocomplete", "geocode", "places", "reverse"]) {
-  if (interactive[operation]) examples[operation] = interactive[operation];
-}
-writeFileSync(examplesFile, JSON.stringify(examples, null, 2) + "\n");
-
-console.log(`Synced the contract and ${Object.keys(examples).length} examples from ${contract}`);
+console.log(`Synced the OpenAPI contract from ${contract}`);

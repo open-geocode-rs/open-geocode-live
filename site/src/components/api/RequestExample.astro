@@ -41,6 +41,7 @@ const languages: MenuItem[] = snippets.map(({ id, label, lang }) => ({
         <span class="request-copied" role="status" data-copy-status></span>
       </div>
     </div>
+    {example.description && <p class="example-description">{example.description}</p>}
     {
       snippets.map((s, i) => (
         <div class="request-snippet" data-snippet={s.id} hidden={i > 0}>
@@ -146,6 +147,10 @@ const languages: MenuItem[] = snippets.map(({ id, label, lang }) => ({
     .request-card {
       flex-shrink: 0;
     }
+  }
+
+  .example-description {
+    padding: var(--space-2) var(--space-3);
   }
 
   .request-head {
