@@ -7,7 +7,7 @@ interface Props {
 const { hidden, status } = Astro.props;
 ---
 
-<details class="response-details" hidden={hidden}>
+<details class="response-details" hidden={hidden} data-example-disclosure>
   <summary>JSON response{status && <span>{status}</span>}</summary>
   <div class="response-body"><slot /></div>
 </details>

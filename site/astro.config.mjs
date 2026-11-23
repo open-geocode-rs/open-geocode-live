@@ -4,8 +4,7 @@ import { defineConfig, fontProviders } from "astro/config";
 import starlightLlmsTxt from "starlight-llms-txt";
 import { apiSidebarGroup } from "./src/lib/openapi.ts";
 
-// example.com, like every other placeholder in this repo, until the domain is picked.
-const site = process.env.SITE_URL ?? "https://example.com";
+const site = process.env.SITE_URL ?? "https://opengeocode.com";
 
 const description =
   "OpenGeocode is free, open-source, self-hosted address geocoding in pure Rust: forward, autocomplete, reverse and " +
@@ -114,7 +113,17 @@ export default defineConfig({
         { label: "Start here", items: ["docs", "docs/quickstart"] },
         {
           label: "Guides",
-          items: ["docs/guides/build-a-pack", "docs/guides/serve", "docs/guides/batch-csv"],
+          items: ["docs/guides/download-packs", "docs/guides/build-a-pack", "docs/guides/serve", "docs/guides/batch-csv", "docs/guides/typescript"],
+        },
+        {
+          label: "Compatibility",
+          items: [
+            { label: "Overview", slug: "docs/compatibility" },
+            "docs/compatibility/google",
+            "docs/compatibility/mapbox",
+            "docs/compatibility/here",
+            "docs/compatibility/precisely",
+          ],
         },
         { label: "Reference", items: ["docs/responses", "docs/benchmarks"] },
         // The API reference pages are our own, made from the OpenAPI document in public/.

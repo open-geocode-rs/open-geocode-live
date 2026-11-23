@@ -3,7 +3,7 @@ import SiteTitle from "@astrojs/starlight/components/SiteTitle.astro";
 import Button from "../ui/Button.astro";
 import Search from "./Search.astro";
 import ThemeSelect from "./ThemeSelect.astro";
-import { repository } from "./links";
+import { downloads, repository } from "./links";
 
 const id = Astro.locals.starlightRoute.id;
 
@@ -13,10 +13,13 @@ const sections = [
   { label: "API", href: "/docs/api/", match: "docs/api" },
   { label: "Benchmarks", href: "/docs/benchmarks/", match: "docs/benchmarks" },
 ];
+const downloadPage = `/${id}/` === downloads.href;
 const claimed = sections.find((s) => id.startsWith(s.match));
-const links = [{ label: "Docs", href: "/docs/", current: !claimed }].concat(
-  sections.map((s) => ({ label: s.label, href: s.href, current: s === claimed })),
-);
+const links = [
+  { label: "Docs", href: "/docs/", current: !claimed && !downloadPage },
+  ...sections.map((s) => ({ label: s.label, href: s.href, current: s === claimed && !downloadPage })),
+  { ...downloads, current: downloadPage },
+];
 ---
 
 <div class="header">
@@ -33,6 +36,9 @@ const links = [{ label: "Docs", href: "/docs/", current: !claimed }].concat(
   <div class="header-search print:hidden">
     <Search />
   </div>
+  <a class="header-link header-download" href={downloads.href} aria-current={downloadPage ? "page" : undefined}>
+    {downloads.label}
+  </a>
   <div class="header-actions print:hidden">
     <Button variant="ghost" iconOnly icon="github" label={repository.label} href={repository.href} />
     <ThemeSelect />
@@ -93,6 +99,10 @@ const links = [{ label: "Docs", href: "/docs/", current: !claimed }].concat(
   }
 
   @media (min-width: 50rem) {
+    .header-download {
+      display: none;
+    }
+
     .header-nav,
     .header-actions {
       display: flex;

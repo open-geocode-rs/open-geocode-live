@@ -3,21 +3,16 @@ title: Serve the API
 description: Run the OpenGeocode HTTP API from a Pack, choose the bind address, check health and readiness, and deploy it on a VM or a scale-to-zero platform.
 ---
 
-Use `og serve` to serve a Pack's HTTP API.
+Start the API with the name of a Pack in your og home directory, or pass a path to a Pack on disk.
 
 ```sh
 og serve canada-ontario
 ```
 
-```txt
-Serving <og home>/packs/canada-ontario at http://127.0.0.1:8080
-```
+When the server starts, it prints the Pack path and the address it’s listening on. By default, the API is available at [http://127.0.0.1:8080](http://127.0.0.1:8080) and accepts connections from this machine only.
 
-`og serve` takes a Pack in the og home by name, such as `canada-ontario`, or a path to a Pack anywhere on disk.
+## `--bind`
 
-### `--bind`
-
-og listens on `127.0.0.1:8080` by default, so only this machine can reach it.
 To listen on another address or port, use `--bind`.
 
 ```sh

@@ -1,9 +1,11 @@
 ---
 import type { ProseNode } from "../../lib/prose";
 import CodeBlock from "../ui/CodeBlock.astro";
+import type { IconName } from "../ui/Icon.astro";
 import Link from "../ui/Link.astro";
 import Tabs from "../ui/Tabs.astro";
 import Aside from "./Aside.astro";
+import CodeTabs from "./CodeTabs.astro";
 import Heading from "./Heading.astro";
 
 export interface Props {
@@ -13,6 +15,7 @@ export interface Props {
 const { nodes } = Astro.props;
 // Languages typed at a prompt. Their blocks take the terminal look.
 const shell = new Set(["sh", "bash", "shell", "shellscript", "zsh", "console", "shellsession", "powershell", "ps", "ps1", "bat", "batch", "cmd"]);
+const codeTabIcons = new Map<string, IconName>([["TypeScript", "typescript"], ["cURL", "terminal"]]);
 ---
 
 {
@@ -48,9 +51,25 @@ const shell = new Set(["sh", "bash", "shell", "shellscript", "zsh", "console", "
             <Astro.self nodes={node.children} />
           </Aside>
         );
-      case "tabs":
+      case "tabs": {
+        const panels = node.tabs.map(({ id, label, children }) => {
+          const content = children.filter((child) => child.kind !== "html" || child.html.trim());
+          const block = content.at(-1);
+          const notes = content.slice(0, -1);
+          if (block?.kind !== "code" || notes.some((child) => child.kind === "code" || child.kind === "tabs")) return undefined;
+          return { id, label, icon: codeTabIcons.get(label), block, notes };
+        });
+        if (panels.every((panel) => panel !== undefined)) {
+          return (
+            <CodeTabs id={node.id} label={node.label} {panels}>
+              {panels.filter((panel) => panel.notes.length > 0).map((panel) => (
+                <div slot={panel.id} class="prose-flow"><Astro.self nodes={panel.notes} /></div>
+              ))}
+            </CodeTabs>
+          );
+        }
         return (
-          <Tabs variant="underline" id={node.id} label={node.label} tabs={node.tabs.map((t) => ({ id: t.id, label: t.label }))}>
+          <Tabs variant="underline" id={node.id} label={node.label} tabs={node.tabs}>
             {node.tabs.map((t) => (
               <div slot={t.id} class="prose-flow">
                 <Astro.self nodes={t.children} />
@@ -58,6 +77,7 @@ const shell = new Set(["sh", "bash", "shell", "shellscript", "zsh", "console", "
             ))}
           </Tabs>
         );
+      }
     }
   })
 }

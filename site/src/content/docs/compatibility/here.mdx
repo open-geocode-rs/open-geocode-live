@@ -1,0 +1,174 @@
+---
+title: HERE
+description: Geocoding and Search v7 and Batch v7 on OpenGeocode.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+OpenGeocode serves HERE Geocoding and Search v7 and Batch v7. Search and lookup use `/v1` paths. File jobs use `/v7` paths.
+
+## Change the endpoint
+
+Send requests to `http://127.0.0.1:8080/compat/here` followed by the HERE path. Remove the HERE API key or bearer token.
+
+If you use `@open-geocode/client/here`, change the client configuration. Your existing method call stays the same.
+
+```diff
+-const client = here({ apiKey: hereKey });
++const client = here({ baseUrl: "http://127.0.0.1:8080" });
+```
+
+## Geocode an address
+
+Look up [the San Francisco Museum of Modern Art](https://www.sfmoma.org/about/contact-us/).
+
+Serve the [USA Pack](/docs/guides/download-packs/). For TypeScript, [build the SDK from source](/docs/guides/typescript/#install-the-client).
+
+<Tabs>
+<TabItem label="TypeScript">
+
+```typescript
+import { here } from "@open-geocode/client/here";
+
+const client = here({
+  baseUrl: "http://127.0.0.1:8080",
+});
+
+const { items } = await client.geocode({
+  q: "151 Third Street, San Francisco, CA 94103",
+  limit: 1,
+});
+
+console.log(items[0]?.title, items[0]?.position);
+```
+
+</TabItem>
+<TabItem label="cURL">
+
+```bash
+curl --get 'http://127.0.0.1:8080/compat/here/v1/geocode' \
+  --data-urlencode 'q=151 Third Street, San Francisco, CA 94103' \
+  --data-urlencode 'limit=1'
+```
+
+</TabItem>
+</Tabs>
+
+## Response
+
+The match includes a house-number location, mapped access points and per-field scores.
+
+<Tabs>
+<TabItem label="Match">
+
+HTTP 200
+
+```json
+{
+  "items": [
+    {
+      "title": "151 3rd St, San Francisco, CA 94103, United States",
+      "id": "og_b3NtOndheTo0MTY5MjgyNAphZGRyZXNzCjE1MSAzcmQgU3RyZWV0LCBTYW4gRnJhbmNpc2NvLCBDQSwgOTQxMDM",
+      "resultType": "houseNumber",
+      "houseNumberType": "PA",
+      "address": {
+        "label": "151 3rd St, San Francisco, CA 94103, United States",
+        "countryCode": "USA",
+        "countryName": "United States",
+        "stateCode": "CA",
+        "state": "California",
+        "city": "San Francisco",
+        "district": "South of Market",
+        "street": "3rd St",
+        "postalCode": "94103",
+        "houseNumber": "151"
+      },
+      "position": {
+        "lat": 37.7858953,
+        "lng": -122.4006603
+      },
+      "access": [
+        {
+          "lat": 37.7858059,
+          "lng": -122.400039
+        },
+        {
+          "lat": 37.7860437,
+          "lng": -122.4002984
+        },
+        {
+          "lat": 37.7863143,
+          "lng": -122.4005649
+        }
+      ],
+      "scoring": {
+        "queryScore": 1.0,
+        "fieldScore": {
+          "state": 1.0,
+          "city": 1.0,
+          "streets": [
+            1.0
+          ],
+          "houseNumber": 1.0,
+          "postalCode": 1.0
+        }
+      }
+    }
+  ]
+}
+```
+
+</TabItem>
+<TabItem label="No match">
+
+HTTP 200. A valid query with no geocoding match returns an empty `items` array.
+
+```json
+{
+  "items": []
+}
+```
+
+</TabItem>
+<TabItem label="Invalid request">
+
+Omitting both `q` and `qq` returns HTTP 400. This excerpt omits the request and correlation IDs.
+
+```json
+{
+  "action": "Provide 'q', 'qq' or both",
+  "status": 400,
+  "title": "Missing parameter 'q' or 'qq'"
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Supported endpoints
+
+Paths are relative to `/compat/here`.
+
+| Operation | Path | Behavior |
+| --- | --- | --- |
+| Forward and reverse geocoding | `GET /v1/geocode`, `GET /v1/revgeocode`, `POST /v1/multi-revgeocode` | `geocode()`, `revgeocode()`, and `multiRevgeocode()` |
+| Autocomplete and suggestions | `GET /v1/autocomplete`, `GET or POST /v1/autosuggest` | `autocomplete()` and `autosuggest()` |
+| Discovery, browse, and lookup | `GET or POST /v1/discover`, `GET or POST /v1/browse`, `GET /v1/lookup` | Browse uses the categories available in OpenGeocode. |
+| Batch jobs | `/v7/batch/jobs` | Create, list, start, stop, delete, poll, and download results and errors. |
+| Batch notifications | `/v7/batch/notifications` | Callbacks require an allowed host configured with `serve --hook-host`. |
+| Batch status endpoints | `GET /v7/version`, `GET /v7/health` | Version and health of the batch service. |
+
+Discover, Autosuggest and Browse can search along a HERE flexible polyline. Category and cuisine filters match the mappings and data available in the Pack.
+
+## Follow-up requests
+
+Send a result’s `id` to `lookup()`. If Autosuggest returns a suggested query instead of an ID, run that query first. Poll the server that created a batch job to get its status, results and errors.
+
+## What OpenGeocode leaves out
+
+| Feature | What happens on OpenGeocode |
+| --- | --- |
+| Routing and live traffic | Search can use a supplied polyline. Use a routing service to calculate it or get traffic data. |
+| Chain inclusion filters | Browse returns no matches for chain IDs. Browse by name or a supported category. |
+| Signals and Batch OpenAPI | `POST /v1/signals` and `GET /v7/openapi` return not-found errors. |
+| HERE-issued record IDs | Get an OpenGeocode ID from search or geocoding before calling Lookup. |

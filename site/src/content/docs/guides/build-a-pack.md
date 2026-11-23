@@ -1,6 +1,6 @@
 ---
 title: Build a Pack
-description: Build an OpenGeocode Pack from OpenStreetMap for one region or several, add OpenAddresses points, cap memory and disk use, and resume a stopped build.
+description: Build an OpenGeocode Pack from OpenStreetMap for one region or several, add OpenAddresses points or U.S. TIGER data, cap memory and disk use, and resume a stopped build.
 ---
 
 A Pack is the one file og answers from.
@@ -45,6 +45,16 @@ og build --region canada/ontario --openaddresses
 
 og adds the OpenAddresses points for the countries the Pack covers, leaving out addresses OpenStreetMap already has.
 It needs an OpenAddresses API token in `OA_TOKEN`.
+
+## Add U.S. TIGER data
+
+Add `--tiger` to include Census geography and street address ranges for the U.S. area your Pack covers. The ranges can estimate a coordinate when a house number has no mapped address point.
+
+```sh
+og build --region us/california --tiger
+```
+
+Use `--openaddresses --tiger` to include both sources, or [download the USA Pack](/docs/guides/download-packs/) with both already included.
 
 ## Memory and disk
 

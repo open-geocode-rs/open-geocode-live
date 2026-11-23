@@ -1,4 +1,5 @@
 ---
+import Icon from "../ui/Icon.astro";
 import Input from "../ui/Input.astro";
 
 export interface Props {
@@ -12,10 +13,13 @@ export interface Props {
   max?: number;
   step?: number | "any";
   hint?: string;
+  suggest?: boolean;
 }
 
-const { name, label, value, required, wide, type, min, max, step, hint } = Astro.props;
+const { name, label, value, required, wide, type, min, max, step, hint, suggest } = Astro.props;
 const hintId = hint ? `try-${name}-hint` : undefined;
+const input = { id: `try-${name}`, name, value, required, type, min, max, step, "aria-describedby": hintId };
+const listId = `try-${name}-suggestions`;
 ---
 
 <div class="try-field" data-wide={wide ? "" : undefined}>
@@ -23,7 +27,23 @@ const hintId = hint ? `try-${name}-hint` : undefined;
     {label}
     <code aria-hidden="true">{name}</code>
   </label>
-  <Input id={`try-${name}`} {name} {value} {required} {type} {min} {max} {step} aria-describedby={hintId} />
+  {
+    suggest ? (
+      <div class="try-search">
+        <Input {...input} icon="search" role="combobox" aria-autocomplete="list" aria-controls={listId} aria-expanded="false" autocomplete="off" spellcheck="false" />
+        <div id={listId} class="try-suggestions" role="listbox" aria-label="Suggestions" data-try-suggestions hidden></div>
+        <template data-suggestion-row>
+          <div class="try-suggestion" role="option" aria-selected="false">
+            <Icon name="map-pin" size="md" />
+            <span class="try-suggestion-label">
+              <span class="try-suggestion-name"></span>
+              <span class="try-suggestion-context" hidden></span>
+            </span>
+          </div>
+        </template>
+      </div>
+    ) : <Input {...input} />
+  }
   {hint && <span class="try-hint" id={hintId}>{hint}</span>}
 </div>
 
@@ -54,6 +74,72 @@ const hintId = hint ? `try-${name}-hint` : undefined;
 
   .try-label > code {
     font: var(--type-code-sm);
+  }
+
+  .try-search {
+    anchor-name: --try-query;
+  }
+
+  .try-suggestions {
+    background-color: var(--color-background);
+    border: var(--border) solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-raised);
+    box-sizing: border-box;
+    inline-size: anchor-size(width);
+    inset-block-start: anchor(bottom);
+    inset-inline-start: anchor(left);
+    margin-block: var(--space-1);
+    padding: var(--space-1);
+    position: fixed;
+    position-anchor: --try-query;
+    position-try-fallbacks: flip-block;
+    z-index: var(--z-overlay);
+  }
+
+  .try-suggestion {
+    align-items: center;
+    border-radius: var(--radius-md);
+    color: var(--color-foreground-secondary);
+    cursor: pointer;
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .try-suggestion-label {
+    min-inline-size: 0;
+  }
+
+  .try-suggestion-name,
+  .try-suggestion-context {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .try-suggestion-name {
+    color: var(--color-foreground);
+    font: var(--type-ui);
+  }
+
+  .try-suggestion-context {
+    font: var(--type-caption);
+  }
+
+  .try-suggestion-context[hidden] {
+    display: none;
+  }
+
+  .try-suggestion[aria-selected="true"] {
+    background-color: var(--color-control-hover);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .try-suggestion:hover {
+      background-color: var(--color-control-hover);
+    }
   }
 
   .try-hint {

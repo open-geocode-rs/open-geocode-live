@@ -26,9 +26,10 @@ copyFileSync(join(contract, "openapi.json"), join(site, "public", "openapi.json"
 // no committed answer shows its request alone. Batches are sent as QUERY, which the
 // contract answers exactly as the POST its tests send.
 const JOB = "4f9c2a7e1b8d4c6fa3e5d7b9c1f2a4e6";
-// Map examples use captured live responses and stay outside the contract sync.
 const EXAMPLES = {
-  autocomplete: { request: "/autocomplete?q=Quee", response: "autocomplete" },
+  geocode: { request: "/geocode?q=10%20King%20Street", response: "geocode-text" },
+  places: { request: "/places?q=Queen%20Bakery", response: "places" },
+  reverse: { request: "/reverse?lon=-79.0&lat=43.0", response: "reverse-address" },
   geocode_batch: {
     method: "query",
     request: "/geocode?country=CA",
@@ -71,6 +72,12 @@ const examples = Object.fromEntries(
       : example,
   ]),
 );
-writeFileSync(join(site, "src", "data", "examples.json"), JSON.stringify(examples, null, 2) + "\n");
+const examplesFile = join(site, "src", "data", "examples.json");
+// Interactive examples use real places from the demo Pack.
+const interactive = JSON.parse(readFileSync(examplesFile, "utf8"));
+for (const operation of ["autocomplete", "geocode", "places", "reverse"]) {
+  if (interactive[operation]) examples[operation] = interactive[operation];
+}
+writeFileSync(examplesFile, JSON.stringify(examples, null, 2) + "\n");
 
 console.log(`Synced the contract and ${Object.keys(examples).length} examples from ${contract}`);

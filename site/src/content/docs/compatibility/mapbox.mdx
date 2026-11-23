@@ -1,0 +1,239 @@
+---
+title: Mapbox
+description: Geocoding v6 and Search Box v1 on OpenGeocode.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+OpenGeocode serves Mapbox Geocoding v6 and Search Box v1. Use Geocoding for addresses and batch lookups, or Search Box for place search and suggestions.
+
+## Change the endpoint
+
+Replace `https://api.mapbox.com` with `http://127.0.0.1:8080/compat/mapbox`. Keep the versioned path and drop the `access_token` parameter.
+
+If you use `@open-geocode/client/mapbox`, change the client configuration. Your existing method call stays the same.
+
+```diff
+-const client = mapbox({ accessToken: mapboxToken });
++const client = mapbox({ baseUrl: "http://127.0.0.1:8080" });
+```
+
+## Geocode an address
+
+Look up [the Library of Congress Thomas Jefferson Building](https://www.loc.gov/visit/directions/).
+
+Serve the [USA Pack](/docs/guides/download-packs/). For TypeScript, [build the SDK from source](/docs/guides/typescript/#install-the-client).
+
+<Tabs>
+<TabItem label="TypeScript">
+
+```typescript
+import { mapbox } from "@open-geocode/client/mapbox";
+
+const client = mapbox({
+  baseUrl: "http://127.0.0.1:8080",
+});
+
+const { features } = await client.geocoding.forward({
+  address_number: "10",
+  street: "1st Street Southeast",
+  place: "Washington",
+  region: "DC",
+  postcode: "20540",
+  country: "US",
+  limit: 1,
+  autocomplete: false,
+});
+
+const match = features[0];
+console.log(
+  match?.properties.full_address,
+  match?.geometry.coordinates,
+);
+```
+
+</TabItem>
+<TabItem label="cURL">
+
+```bash
+curl --get 'http://127.0.0.1:8080/compat/mapbox/search/geocode/v6/forward' \
+  --data-urlencode 'address_number=10' \
+  --data-urlencode 'street=1st Street Southeast' \
+  --data-urlencode 'place=Washington' \
+  --data-urlencode 'region=DC' \
+  --data-urlencode 'postcode=20540' \
+  --data-urlencode 'country=US' \
+  --data-urlencode 'limit=1' \
+  --data-urlencode 'autocomplete=false'
+```
+
+</TabItem>
+</Tabs>
+
+## Response
+
+The match includes an exact `match_code`, address context and mapped access points.
+
+<Tabs>
+<TabItem label="Match">
+
+HTTP 200
+
+```json
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "og_b3NtOnJlbGF0aW9uOjEwMjkzNzQKYWRkcmVzcwoxMCAxc3QgU3RyZWV0IFNvdXRoZWFzdCwgV2FzaGluZ3RvbiwgREMsIDIwNTQwLCBVUw",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.004636,
+          38.8886831
+        ]
+      },
+      "properties": {
+        "mapbox_id": "og_b3NtOnJlbGF0aW9uOjEwMjkzNzQKYWRkcmVzcwoxMCAxc3QgU3RyZWV0IFNvdXRoZWFzdCwgV2FzaGluZ3RvbiwgREMsIDIwNTQwLCBVUw",
+        "feature_type": "address",
+        "full_address": "10 1st Street Southeast, Washington, District of Columbia 20540, United States",
+        "name": "10 1st Street Southeast",
+        "coordinates": {
+          "longitude": -77.004636,
+          "latitude": 38.8886831,
+          "accuracy": "rooftop",
+          "routable_points": [
+            {
+              "name": "entrance",
+              "longitude": -77.0038758,
+              "latitude": 38.8886493
+            },
+            {
+              "name": "entrance",
+              "longitude": -77.0053964,
+              "latitude": 38.8886586
+            },
+            {
+              "name": "entrance",
+              "longitude": -77.0053964,
+              "latitude": 38.8886889
+            },
+            {
+              "name": "entrance",
+              "longitude": -77.0053964,
+              "latitude": 38.8887173
+            },
+            {
+              "name": "entrance",
+              "longitude": -77.0044956,
+              "latitude": 38.8893018
+            }
+          ]
+        },
+        "place_formatted": "Washington, District of Columbia 20540, United States",
+        "match_code": {
+          "address_number": "matched",
+          "street": "matched",
+          "postcode": "matched",
+          "place": "matched",
+          "region": "matched",
+          "country": "matched",
+          "confidence": "exact"
+        },
+        "context": {
+          "address": {
+            "mapbox_id": "og_b3NtOnJlbGF0aW9uOjEwMjkzNzQKYWRkcmVzcwoxMCAxc3QgU3RyZWV0IFNvdXRoZWFzdCwgV2FzaGluZ3RvbiwgREMsIDIwNTQwLCBVUw",
+            "name": "10 1st Street Southeast",
+            "address_number": "10",
+            "street_name": "1st Street Southeast"
+          },
+          "street": {
+            "mapbox_id": "og_b3NtOnJlbGF0aW9uOjEwMjkzNzQKYWRkcmVzcwoxMCAxc3QgU3RyZWV0IFNvdXRoZWFzdCwgV2FzaGluZ3RvbiwgREMsIDIwNTQwLCBVUw",
+            "name": "1st Street Southeast"
+          },
+          "postcode": {
+            "mapbox_id": "og_ZGVyaXZlZDpvc206cG9zdGNvZGU6dXM6MjA1NDAKCjIwNTQw",
+            "name": "20540"
+          },
+          "locality": {
+            "mapbox_id": "og_b3NtOnJlbGF0aW9uOjE2Mzk0Mjgw",
+            "name": "Ward 6",
+            "wikidata_id": "Q122851833"
+          },
+          "place": {
+            "mapbox_id": "og_b3NtOnJlbGF0aW9uOjUzOTYxOTQ",
+            "name": "Washington",
+            "wikidata_id": "Q61"
+          },
+          "region": {
+            "mapbox_id": "og_b3NtOnJlbGF0aW9uOjE2MjA2OQ",
+            "name": "District of Columbia",
+            "region_code": "DC",
+            "region_code_full": "US-DC",
+            "wikidata_id": "Q3551781"
+          },
+          "country": {
+            "mapbox_id": "og_ZGVyaXZlZDpjb3VudHJ5OlVTCgpVbml0ZWQgU3RhdGVz",
+            "name": "United States",
+            "country_code": "US",
+            "country_code_alpha_3": "USA"
+          }
+        }
+      }
+    }
+  ],
+  "attribution": "© OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright); Timezone boundaries © OpenStreetMap contributors, ODbL 1.0 (https://github.com/evansiroky/timezone-boundary-builder)"
+}
+```
+
+</TabItem>
+<TabItem label="No match">
+
+HTTP 200. A successful geocoding request with no match returns an empty `features` array.
+
+```json
+{
+  "type": "FeatureCollection",
+  "features": [],
+  "attribution": "© OpenStreetMap contributors, ODbL 1.0 (https://www.openstreetmap.org/copyright)"
+}
+```
+
+</TabItem>
+<TabItem label="Invalid request">
+
+Passing `limit=0` to forward geocoding returns HTTP 422.
+
+```json
+{
+  "message": "limit must be a number between 1 and 10"
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Supported endpoints
+
+Paths are relative to `/compat/mapbox`.
+
+| Operation | Path | Behavior |
+| --- | --- | --- |
+| Forward and reverse geocoding | `GET /search/geocode/v6/forward`, `GET /search/geocode/v6/reverse` | `geocoding.forward()` and `geocoding.reverse()` |
+| Batch geocoding | `POST /search/geocode/v6/batch` | `geocoding.batch()` |
+| Suggest and retrieve | `GET /search/searchbox/v1/suggest`, `GET /search/searchbox/v1/retrieve/{id}` | Pass the suggestion's `mapbox_id` to `retrieve()` and reuse the session token. |
+| Search Box forward and reverse | `GET /search/searchbox/v1/forward`, `GET /search/searchbox/v1/reverse` | `searchbox.forward()` and `searchbox.reverse()` |
+| Categories | `GET /search/searchbox/v1/category/{id}`, `GET /search/searchbox/v1/list/category` | Category search uses the OpenGeocode category list. |
+
+## Follow-up requests
+
+Pass the suggestion’s `mapbox_id` to `retrieve()` and reuse the `session_token`. Read GeoJSON coordinates in longitude, latitude order.
+
+## What OpenGeocode leaves out
+
+| Feature | What happens on OpenGeocode |
+| --- | --- |
+| Geocoding v5 and Directions | Use Geocoding v6 for address lookups. Keep Directions on a routing service. |
+| Route and ETA options | Search Box rejects `route`, `eta_type` and `navigation_profile`. |
+| Mapbox’s POI catalog and category list | OpenGeocode searches places in your Pack and publishes its own list of category IDs in English. |
+| Mapbox-issued feature IDs | Search or suggest on OpenGeocode to get an ID you can retrieve. |

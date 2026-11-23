@@ -1,5 +1,6 @@
 ---
 import ThemeSelect from "../frame/ThemeSelect.astro";
+import { downloads } from "../frame/links";
 import Button from "../ui/Button.astro";
 import Icon, { type IconName } from "../ui/Icon.astro";
 import Link from "../ui/Link.astro";
@@ -74,7 +75,13 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     </div>
   </nav>
   <div class="og-actions">
-    <Button variant="pill" size="lg" icon="github" href={REPO}>GitHub</Button>
+    <Button variant="pill" size="lg" href={downloads.href}>{downloads.label}</Button>
+    <span class="og-github-compact">
+      <Button variant="ghost" iconOnly icon="github" label="GitHub" href={REPO} />
+    </span>
+    <span class="og-github-full">
+      <Button variant="pill" size="lg" icon="github" href={REPO}>GitHub</Button>
+    </span>
     <ThemeSelect />
   </div>
 </header>
@@ -101,8 +108,8 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     block-size: var(--layout-landing-nav-height);
     border-block-end: var(--border) dashed var(--color-border);
     display: flex;
-    gap: var(--space-8);
-    padding-inline: var(--layout-gutter);
+    gap: var(--space-3);
+    padding-inline: var(--space-4);
     position: relative;
     z-index: var(--z-sticky);
   }
@@ -118,9 +125,23 @@ const menus: { label: string; items: { label: string; href: string; icon: IconNa
     gap: var(--space-2);
   }
 
+  .og-github-full {
+    display: none;
+  }
+
   @media (min-width: 52rem) {
-    .og-nav {
+    .og-header {
+      gap: var(--space-8);
+      padding-inline: var(--layout-gutter);
+    }
+
+    .og-nav,
+    .og-github-full {
       display: flex;
+    }
+
+    .og-github-compact {
+      display: none;
     }
   }
 

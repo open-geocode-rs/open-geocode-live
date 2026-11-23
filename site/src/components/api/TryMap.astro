@@ -15,10 +15,13 @@ interface Props {
 
 const { operation, example } = Astro.props;
 const { searchParams } = new URL(example.request, Astro.url);
+const seedResponse = example.response;
 const pickable = operation.path === "/reverse";
+const autocomplete = operation.path === "/autocomplete";
+const action = `/api${operation.path}`;
 const placeSearch = operation.path === "/places";
 const labels: Record<string, string> = {
-  q: placeSearch ? "Place name" : "Full address",
+  q: autocomplete ? "Address or place" : placeSearch ? "Place name" : "Full address",
   lat: "Latitude",
   lon: "Longitude",
   limit: "Max results",
@@ -38,7 +41,9 @@ const hints: Record<string, string> = {
   focus: "Longitude, latitude",
   bbox: "West, south, east, north, in degrees",
 };
-const primaryOrder = pickable ? ["lat", "lon", "layer"] : placeSearch ? ["q", "limit"] : ["q", "limit", "layer"];
+const primaryOrder = pickable
+  ? ["lat", "lon", "layer"]
+  : autocomplete ? ["q", "focus", "limit"] : placeSearch ? ["q", "limit"] : ["q", "limit", "layer"];
 const compact = new Set(["lat", "lon", "limit", "layer", "locality", "region", "postcode", "country"]);
 const parameters = Array.isArray(operation.node.parameters) ? operation.node.parameters : [];
 const fields = parameters.filter(isNode).flatMap((p): TryFieldProps[] => {
@@ -47,10 +52,11 @@ const fields = parameters.filter(isNode).flatMap((p): TryFieldProps[] => {
   const numeric = schema.type === "integer" || schema.type === "number";
   return [{
     name: p.name,
+    suggest: autocomplete && p.name === "q",
     label: labels[p.name] ?? p.name,
     value: searchParams.get(p.name) ?? "",
     required: p.required === true,
-    wide: !compact.has(p.name) && !(placeSearch && (p.name === "q" || p.name === "focus")),
+    wide: !compact.has(p.name) && !(placeSearch && p.name === "q") && !((placeSearch || autocomplete) && p.name === "focus"),
     type: numeric ? "number" : "text",
     min: typeof schema.minimum === "number" ? schema.minimum : undefined,
     max: typeof schema.maximum === "number" ? schema.maximum : undefined,
@@ -65,44 +71,49 @@ for (const field of fields) {
 const optional = fields.filter((field) => !primary.includes(field));
 ---
 
-<div class="try-map" data-try-map>
-  <form class="try-form" action={`/api${operation.path}`} aria-label="Try it">
-    <div class="try-heading">
-      <h3>Try it</h3>
-      <Button type="submit">Send</Button>
-    </div>
-    <div class="try-body">
-      <div class="try-fields" data-place-fields={placeSearch ? "" : undefined}>
-        {primary.map((field) => <TryField {...field} />)}
-      </div>
-      {optional.length > 0 && (
-        <details class="try-options">
-          <summary>
-            <span class="try-option-icon"><Icon name="chevron-down" size="sm" /></span>
-            More parameters
-          </summary>
-          <div class="try-fields">
-            {optional.map((field) => <TryField {...field} />)}
+<div id="try-it" class="try-map" data-try-map>
+  <div data-example-fixed>
+    <form class="try-form" action={action} aria-label="Try it">
+      <div class="try-body">
+          <div class="try-fields" data-place-fields={placeSearch ? "" : undefined} data-live-fields={autocomplete ? "" : undefined}>
+            {primary.map((field) => <TryField {...field} />)}
           </div>
-        </details>
-      )}
-    </div>
-  </form>
-  <p class="try-status" role="status" data-try-status>200 example</p>
-  <ResultMap {pickable} />
-  {pickable && <p class="try-status">Click the map to look up a point.</p>}
-  <ResponseDetails hidden={!example.response}>
-    <div data-try-response>
-      <CodeBlock variant="numbered" code={example.response ?? ""} lang="json" />
-    </div>
-  </ResponseDetails>
-  <template data-try-seed>{example.response}</template>
+          {optional.length > 0 && (
+            <details class="try-options" data-example-disclosure>
+              <summary>
+                <span class="try-option-icon"><Icon name="chevron-down" size="sm" /></span>
+                More parameters
+              </summary>
+              <div class="try-fields">
+                {optional.map((field) => <TryField {...field} />)}
+              </div>
+            </details>
+          )}
+      </div>
+      {!autocomplete && <div class="try-send"><Button type="submit">Send</Button></div>}
+    </form>
+    <p class="try-status" role="status" data-try-status data-live-status={autocomplete ? "" : undefined}>{seedResponse ? "200 example" : autocomplete ? "Type an address to see suggestions." : "Send a request to see the response."}</p>
+  </div>
+  <ResultMap {pickable} keepVisible={autocomplete} />
+  <div data-example-fixed>
+    {pickable && <p class="try-status">Click the map to look up a point.</p>}
+    <ResponseDetails hidden={!seedResponse}>
+      {autocomplete && <p class="try-empty-response" data-empty-response hidden>Type a query to see its JSON response.</p>}
+      <div data-try-response>
+        <CodeBlock variant="numbered" code={seedResponse ?? ""} lang="json" copy />
+      </div>
+    </ResponseDetails>
+  </div>
+  <template data-try-seed>{seedResponse}</template>
 </div>
 
 <script>
   import { renderJsonCode } from "../../lib/json-code";
+  import { after } from "../../lib/motion";
+  import { splitPlaceLabel } from "../../lib/place-label";
 
   const LOOKUP_TIMEOUT = 8000;
+  const SUGGESTION_PREVIEW_LIMIT = 5;
 
   type Coordinates = { lat: number; lon: number };
   type MapPoint =
@@ -115,7 +126,7 @@ const optional = fields.filter((field) => !primary.includes(field));
     features?: {
       geometry?: { type?: string; coordinates?: [number, number] };
       bbox?: MapPointBox;
-      properties?: { bbox?: MapPointBox; access?: Coordinates[] };
+      properties?: { bbox?: MapPointBox; access?: Coordinates[]; label?: string; name?: string };
     }[];
   };
   type MapPointBox = [number, number, number, number];
@@ -142,10 +153,20 @@ const optional = fields.filter((field) => !primary.includes(field));
     const form = panel.querySelector("form")!;
     const map = panel.querySelector<ResultMapElement>("og-result-map")!;
     const status = panel.querySelector<HTMLElement>("[data-try-status]")!;
-    const output = panel.querySelector<HTMLElement>("[data-try-response] code")!;
+    const responseBody = panel.querySelector<HTMLElement>("[data-try-response]")!;
+    const emptyResponse = panel.querySelector<HTMLElement>("[data-empty-response]");
+    const output = responseBody.querySelector("code")!;
+    const source = panel.querySelector<HTMLTemplateElement>("[data-try-response] template[data-code]")!;
     const details = output.closest("details")!;
     const seed = panel.querySelector<HTMLTemplateElement>("[data-try-seed]")?.content.textContent;
+    const suggestions = panel.querySelector<HTMLElement>("[data-try-suggestions]");
+    const suggestionRow = panel.querySelector<HTMLTemplateElement>("[data-suggestion-row]");
+    const query = form.querySelector<HTMLInputElement>('[role="combobox"]');
+    let matches: NonNullable<Answer["features"]> = [];
+    let active = -1;
+    let dismissed = false;
     let request: AbortController | undefined;
+    let cancelSuggestion: (() => void) | undefined;
 
     function queryPoint(params: URLSearchParams): Coordinates | undefined {
       if (!map.hasAttribute("data-pickable") || !params.has("lat") || !params.has("lon")) return;
@@ -162,7 +183,55 @@ const optional = fields.filter((field) => !primary.includes(field));
       return params;
     }
 
-    if (seed) map.show(pointsOf(JSON.parse(seed), queryPoint(parameters())));
+    function setActive(index: number) {
+      if (!suggestions || !query) return;
+      suggestions.children[active]?.setAttribute("aria-selected", "false");
+      const row = suggestions.children[index];
+      if (row) {
+        row.setAttribute("aria-selected", "true");
+        query.setAttribute("aria-activedescendant", row.id);
+      } else {
+        query.removeAttribute("aria-activedescendant");
+      }
+      active = index;
+    }
+
+    function toggleSuggestions(open: boolean) {
+      if (!suggestions || !query) return;
+      suggestions.hidden = !open;
+      query.setAttribute("aria-expanded", String(open));
+      if (!open) setActive(-1);
+    }
+
+    function showSuggestions(answer: Answer): string {
+      if (!suggestions || !suggestionRow || !query) return "";
+      const features = answer.features ?? [];
+      matches = features.slice(0, SUGGESTION_PREVIEW_LIMIT);
+      setActive(-1);
+      suggestions.replaceChildren(...matches.map(({ properties }, index) => {
+        const row = suggestionRow.content.firstElementChild!.cloneNode(true) as HTMLElement;
+        const label = properties?.label ?? properties?.name ?? "Unnamed result";
+        row.id = `${suggestions.id}-${index}`;
+        row.title = label;
+        row.setAttribute("aria-label", label);
+        const { title, detail } = splitPlaceLabel(label, properties?.name);
+        const context = row.querySelector<HTMLElement>(".try-suggestion-context")!;
+        row.querySelector(".try-suggestion-name")!.textContent = title;
+        context.textContent = detail;
+        context.hidden = !detail;
+        return row;
+      }));
+      toggleSuggestions(matches.length > 0 && !dismissed && document.activeElement === query);
+      if (matches.length === 0) return " · No suggestions";
+      const count = matches.length < features.length ? `${matches.length} of ${features.length}` : String(matches.length);
+      return ` · ${count} ${features.length === 1 ? "suggestion" : "suggestions"}`;
+    }
+
+    if (seed) {
+      const answer: Answer = JSON.parse(seed);
+      map.show(pointsOf(answer, queryPoint(parameters())));
+      status.textContent += showSuggestions(answer);
+    }
 
     async function run(keep = false) {
       request?.abort();
@@ -172,7 +241,7 @@ const optional = fields.filter((field) => !primary.includes(field));
       const params = parameters();
       const url = new URL(form.action);
       url.search = params.toString();
-      status.textContent = "Sending…";
+      status.textContent = suggestions ? "Updating suggestions…" : "Sending…";
       try {
         const response = await fetch(url, { signal });
         if (current.signal.aborted) return;
@@ -182,12 +251,15 @@ const optional = fields.filter((field) => !primary.includes(field));
             : `${response.status} lookup failed. The previous result is still shown.`;
           return;
         }
-        const answer = await response.json();
+        const answer: Answer = await response.json();
         if (current.signal.aborted) return;
         map.show(pointsOf(answer, queryPoint(params)), keep);
-        renderJsonCode(output, JSON.stringify(answer, null, 2));
-        details.hidden = false;
-        status.textContent = `${response.status} live response`;
+        const json = JSON.stringify(answer, null, 2);
+        renderJsonCode(output, json);
+        source.content.textContent = json;
+        details.hidden = responseBody.hidden = false;
+        if (emptyResponse) emptyResponse.hidden = true;
+        status.textContent = `${response.status} live response${showSuggestions(answer)}`;
       } catch {
         if (current.signal.aborted) return;
         status.textContent = timeout.aborted
@@ -196,8 +268,86 @@ const optional = fields.filter((field) => !primary.includes(field));
       }
     }
 
+    if (suggestions && query) {
+      function dismissSuggestions() {
+        dismissed = true;
+        toggleSuggestions(false);
+      }
+
+      function select(index: number) {
+        const match = matches[index];
+        if (!match || !query) return;
+        query.value = match.properties?.label ?? match.properties?.name ?? query.value;
+        const points = pointsOf({ features: [match] });
+        if (points.length) map.show(points);
+        dismissSuggestions();
+      }
+
+      const resetSuggestions = () => {
+        cancelSuggestion?.();
+        request?.abort();
+        toggleSuggestions(false);
+        matches = [];
+      };
+      const schedule = () => {
+        resetSuggestions();
+        dismissed = false;
+        if (!query.value.trim()) {
+          map.show([]);
+          suggestions.replaceChildren();
+          responseBody.hidden = true;
+          if (emptyResponse) emptyResponse.hidden = false;
+          status.textContent = "Type an address or place name to see suggestions.";
+        } else if (form.checkValidity()) {
+          cancelSuggestion = after("--duration-panel", () => void run());
+        } else {
+          status.textContent = "Check the parameter values to update suggestions.";
+        }
+      };
+
+      form.addEventListener("input", (event) => {
+        if (event instanceof InputEvent && event.isComposing) return;
+        schedule();
+      });
+      form.addEventListener("compositionstart", resetSuggestions);
+      form.addEventListener("compositionend", schedule);
+      query.addEventListener("focus", () => {
+        if (matches.length && !dismissed) toggleSuggestions(true);
+      });
+      query.addEventListener("click", () => {
+        dismissed = false;
+        if (matches.length) toggleSuggestions(true);
+      });
+      query.addEventListener("blur", () => toggleSuggestions(false));
+      window.addEventListener("scroll", () => {
+        if (document.activeElement === query) dismissSuggestions();
+      }, { passive: true });
+      suggestions.addEventListener("mousedown", (event) => event.preventDefault());
+      suggestions.addEventListener("click", (event) => {
+        const row = (event.target as Element).closest('[role="option"]');
+        if (row) select([...suggestions.children].indexOf(row));
+      });
+      query.addEventListener("keydown", (event) => {
+        if (event.isComposing || event.key === "Process") return;
+        if (event.key === "Escape") {
+          if (!suggestions.hidden) event.preventDefault();
+          dismissSuggestions();
+        } else if (event.key === "Enter" && !suggestions.hidden && active >= 0) {
+          event.preventDefault();
+          select(active);
+        } else if (matches.length && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+          event.preventDefault();
+          dismissed = false;
+          const next = event.key === "ArrowDown" ? (active + 1) % matches.length : (active <= 0 ? matches.length - 1 : active - 1);
+          toggleSuggestions(true);
+          setActive(next);
+        }
+      });
+    }
+
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      cancelSuggestion?.();
       void run();
     });
 
@@ -207,6 +357,8 @@ const optional = fields.filter((field) => !primary.includes(field));
       form.querySelector<HTMLInputElement>("[name=lon]")!.value = point.lon.toFixed(5);
       void run(true);
     });
+
+    if (!seed) void run();
   }
 </script>
 
@@ -218,18 +370,10 @@ const optional = fields.filter((field) => !primary.includes(field));
     margin-block-start: var(--space-1);
   }
 
-  .try-heading {
-    align-items: center;
-    border-block-end: var(--border) solid var(--color-border);
+  .try-send {
     display: flex;
-    gap: var(--space-3);
-    justify-content: space-between;
-    padding: var(--space-2) var(--space-3);
-  }
-
-  .try-heading > h3 {
-    font: var(--type-ui-strong);
-    margin: 0;
+    justify-content: flex-end;
+    padding: 0 var(--space-3) var(--space-3);
   }
 
   .try-body {
@@ -245,6 +389,10 @@ const optional = fields.filter((field) => !primary.includes(field));
   .try-fields[data-place-fields] {
     align-items: end;
     grid-template-columns: [start] minmax(0, 2fr) minmax(0, 1fr) [end];
+  }
+
+  .try-fields[data-live-fields] {
+    align-items: start;
   }
 
   .try-options {
@@ -317,9 +465,37 @@ const optional = fields.filter((field) => !primary.includes(field));
     }
   }
 
+  .try-empty-response {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui);
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+  }
+
   .try-status {
     font: var(--type-ui-strong);
     margin: 0;
     padding: var(--space-2) var(--space-3);
+  }
+
+  .try-status[data-live-status] {
+    box-sizing: content-box;
+    min-block-size: 2lh;
+  }
+
+  @media (min-width: 72rem) {
+    .try-map {
+      display: flex;
+      flex-direction: column;
+      min-block-size: 0;
+    }
+
+    .try-map > [data-example-fixed] {
+      flex-shrink: 0;
+    }
+
+    .try-status[data-live-status] {
+      min-block-size: 1lh;
+    }
   }
 </style>

@@ -1,10 +1,13 @@
 ---
-const { toc } = Astro.locals.starlightRoute;
+import { downloads } from "./links";
+
+const { id, toc } = Astro.locals.starlightRoute;
+const downloadPage = `/${id}/` === downloads.href;
 ---
 
-<div class="panel" data-has-toc={toc ? "" : undefined}>
+<div class="panel" data-has-toc={toc ? "" : undefined} data-download-catalog={downloadPage ? "" : undefined}>
   {/* With no contents column, the content column takes the room the column would have used. */}
-  <div class="panel-content" data-wide={toc ? undefined : ""}>
+  <div class="panel-content" data-wide={toc || downloadPage ? undefined : ""} data-download-catalog={downloadPage ? "" : undefined}>
     <slot />
   </div>
 </div>
@@ -12,6 +15,14 @@ const { toc } = Astro.locals.starlightRoute;
 <style>
   .panel {
     padding: var(--space-6) var(--space-4);
+  }
+
+  .panel[data-download-catalog] {
+    padding-block: var(--space-3);
+  }
+
+  .panel:where([data-has-toc] + [data-has-toc]:has(> .panel-content > :global(.prose-flow))) {
+    padding-block-start: var(--space-2);
   }
 
   .panel-content {
@@ -38,7 +49,7 @@ const { toc } = Astro.locals.starlightRoute;
       padding-inline: var(--space-8);
     }
 
-    .panel-content {
+    .panel-content:not([data-download-catalog]) {
       margin-inline: auto;
     }
   }

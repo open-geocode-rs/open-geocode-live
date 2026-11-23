@@ -1,6 +1,6 @@
 ---
 title: What is OpenGeocode?
-description: OpenGeocode (open-geocode, or og) is a free, open-source, self-hosted address geocoder in pure Rust. It answers forward, autocomplete, reverse and batch queries from one file built from OpenStreetMap and OpenAddresses.
+description: OpenGeocode (open-geocode, or og) is a free, open-source, self-hosted address geocoder in pure Rust. It answers forward, autocomplete, reverse and batch queries from one file built from open data.
 ---
 
 OpenGeocode (open-geocode, or og for short) is a fast, free, open-source geocoder for addresses that you host yourself.
@@ -24,6 +24,7 @@ There is no PostgreSQL, Elasticsearch or other service to keep running, and an u
 - **Reverse geocoding**: find the nearest address to a point, with its locality, region and country, with [`/reverse`](/docs/api/operations/reverse/).
   Pass `layer=` to get only the nearest street, or only the town the point lies in.
 - **Batch geocoding**: send up to 1,000 lookups in one request to `/geocode`, `/places` or `/reverse`, upload a CSV to [`/jobs`](/docs/api/operations/create/), or geocode a whole CSV offline with [`open-geocode geocode batch`](/docs/guides/batch-csv/).
+- **Vendor compatibility**: serve supported Google, Mapbox, HERE and Precisely requests from your Pack. See [Compatibility](/docs/compatibility/).
 - **Interactive interface**: pick a region, build it, search it and geocode CSV files from the terminal with `og`.
 
 New to og?
@@ -38,7 +39,7 @@ A geocoder needs two things: data that says where every address is, and a search
 Commercial APIs such as Google Maps own both, and charge per lookup.
 Open-source geocoders such as Nominatim and Pelias use open data, but need a database or search cluster to run.
 
-og uses only open data, OpenStreetMap plus OpenAddresses if you add it, and needs nothing else to run.
+Build with OpenStreetMap, add OpenAddresses for more address points, and add U.S. TIGER data for address ranges and Census geography. The [USA Pack](/docs/guides/download-packs/) includes all three.
 See [Benchmarks](/docs/benchmarks/) for how it measures up against them.
 
 ## Design goals

@@ -13,10 +13,10 @@ interface Props {
 }
 
 const { operation } = Astro.props;
+const hasTryIt = operation.method === "get" && ["/autocomplete", "/geocode", "/places", "/reverse"].includes(operation.path);
 const example = exampleFor(operation);
 const snippets = snippetsFor(example);
 const { response } = example;
-const hasMap = operation.method === "get" && ["/geocode", "/places", "/reverse"].includes(operation.path);
 const languageIcons = { sh: "terminal", js: "javascript", python: "python" } as const;
 const languages: MenuItem[] = snippets.map(({ id, label, lang }) => ({
   value: id,
@@ -25,8 +25,8 @@ const languages: MenuItem[] = snippets.map(({ id, label, lang }) => ({
 }));
 ---
 
-<aside class="request-example" aria-label="Example request" data-request-example>
-  <div class="request-card">
+<aside class="request-example" aria-label="Example request" data-request-example data-interactive={hasTryIt ? "" : undefined}>
+  <div class="request-card" data-example-fixed>
     <div class="request-head">
       <div class="request-title">
         <Badge variant={operation.method} />
@@ -50,9 +50,9 @@ const languages: MenuItem[] = snippets.map(({ id, label, lang }) => ({
     }
   </div>
   {
-    hasMap ? <TryMap {operation} {example} /> : response && (
+    hasTryIt ? <TryMap {operation} {example} /> : response && (
       <ResponseDetails status="200 example">
-        <CodeBlock variant="numbered" code={response} lang="json" />
+        <CodeBlock variant="numbered" code={response} lang="json" copy />
       </ResponseDetails>
     )
   }
@@ -127,6 +127,25 @@ const languages: MenuItem[] = snippets.map(({ id, label, lang }) => ({
     border: var(--border) solid var(--color-border);
     border-radius: var(--radius-lg);
     overflow: hidden;
+  }
+
+  @media (min-width: 72rem) {
+    .request-example[data-interactive] {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .request-example[data-interactive]:where(:not(:has(:global([data-example-disclosure][open])))) {
+      max-block-size: calc(100dvh - var(--layout-nav-height) - var(--space-4) - var(--space-4));
+    }
+
+    :global([data-example-flow]) .request-example[data-interactive] {
+      max-block-size: none;
+    }
+
+    .request-card {
+      flex-shrink: 0;
+    }
   }
 
   .request-head {

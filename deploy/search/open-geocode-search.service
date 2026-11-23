@@ -1,5 +1,4 @@
-# The runtime behind the site's search box, separate from open-geocode.service. Caddy
-# forwards only GET /api/geocode to it (deploy/site/Caddyfile); nothing else reaches it.
+# The site proxy admits only GET lookups. The public API uses open-geocode.service.
 #
 #   sudo install -m 644 deploy/search/open-geocode-search.service /etc/systemd/system/
 #   sudo systemctl daemon-reload && sudo systemctl enable --now open-geocode-search
@@ -9,7 +8,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=/opt/open-geocode-search/bin/open-geocode serve --pack /var/lib/open-geocode-search/pack.ogp --bind 127.0.0.1:8090
+ExecStart=/opt/open-geocode-search/bin/open-geocode serve --pack /var/lib/open-geocode-search/pack.ogp --bind 127.0.0.1:8090 --lookup-timeout-ms 5000
 Restart=always
 RestartSec=2
 # Two cores, so a flood of searches slows search, not the rest of the VM.

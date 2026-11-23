@@ -18,7 +18,7 @@ Install og from source with Cargo.
 cargo install --locked --git https://github.com/open-geocode-rs/open-geocode open-geocode --features tui
 ```
 
-og is pre-release, so this builds the latest development version from main.
+This installs the current main branch, including the vendor compatibility routes.
 
 This installs two binaries:
 
@@ -31,13 +31,9 @@ To check that og was installed, run:
 og --version
 ```
 
-```txt
-og 0.x.y
-```
-
 ## 2. Build a Pack
 
-Build a Pack for Ontario with `og build`.
+Build a Pack for Ontario with `og build`. To skip the build, [download the USA Pack](/docs/guides/download-packs/) and follow its serve instructions.
 
 ```sh
 og build --region canada/ontario
