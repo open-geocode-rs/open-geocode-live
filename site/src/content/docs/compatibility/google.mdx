@@ -1,0 +1,245 @@
+---
+title: Google
+description: Geocoding API v4 and Places API (New) v1 on OpenGeocode.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+OpenGeocode serves Geocoding API v4 and Places API (New) v1. Geocoding returns addresses and coordinates. Places provides search, autocomplete and details.
+
+## Change the endpoint
+
+Send requests to `http://127.0.0.1:8080/compat/google` followed by the Google path, such as `/v4/geocode/address`. Keep your field mask and remove the Google API key.
+
+If you use `@open-geocode/client/google`, change the client configuration. Your existing method call stays the same.
+
+```diff
+-const client = google({ apiKey: googleKey });
++const client = google({ baseUrl: "http://127.0.0.1:8080" });
+```
+
+## Geocode an address
+
+Look up [the Empire State Building](https://portal.311.nyc.gov/article/?kanumber=KA-01441).
+
+Serve the [USA Pack](/docs/guides/download-packs/). For TypeScript, [build the SDK from source](/docs/guides/typescript/#install-the-client).
+
+<Tabs>
+<TabItem label="TypeScript">
+
+```typescript
+import { google } from "@open-geocode/client/google";
+
+const client = google({
+  baseUrl: "http://127.0.0.1:8080",
+});
+
+const { results = [] } = await client.geocode.address({
+  addressQuery: "350 Fifth Avenue, New York, NY 10118",
+  fieldMask: ["*"],
+});
+
+const match = results[0];
+console.log(match?.formattedAddress, match?.location);
+```
+
+</TabItem>
+<TabItem label="cURL">
+
+```bash
+curl --get 'http://127.0.0.1:8080/compat/google/v4/geocode/address' \
+  -H 'X-Goog-FieldMask: *' \
+  --data-urlencode 'addressQuery=350 Fifth Avenue, New York, NY 10118'
+```
+
+</TabItem>
+</Tabs>
+
+## Response
+
+The first match includes the building name, address components, Plus Codes and a viewport. The API can return multiple results.
+
+<Tabs>
+<TabItem label="Match">
+
+HTTP 200
+
+```json
+{
+  "results": [
+    {
+      "addressComponents": [
+        {
+          "languageCode": "en",
+          "longText": "Empire State Building",
+          "shortText": "Empire State Building",
+          "types": [
+            "premise"
+          ]
+        },
+        {
+          "longText": "350",
+          "shortText": "350",
+          "types": [
+            "street_number"
+          ]
+        },
+        {
+          "languageCode": "en",
+          "longText": "5th Avenue",
+          "shortText": "5th Ave",
+          "types": [
+            "route"
+          ]
+        },
+        {
+          "languageCode": "en",
+          "longText": "Manhattan Community Board 5",
+          "shortText": "Manhattan Community Board 5",
+          "types": [
+            "neighborhood",
+            "political"
+          ]
+        },
+        {
+          "languageCode": "en",
+          "longText": "Manhattan",
+          "shortText": "Manhattan",
+          "types": [
+            "sublocality",
+            "political"
+          ]
+        },
+        {
+          "languageCode": "en",
+          "longText": "New York",
+          "shortText": "New York",
+          "types": [
+            "locality",
+            "political"
+          ]
+        },
+        {
+          "languageCode": "en",
+          "longText": "New York",
+          "shortText": "NY",
+          "types": [
+            "administrative_area_level_1",
+            "political"
+          ]
+        },
+        {
+          "languageCode": "en",
+          "longText": "United States",
+          "shortText": "US",
+          "types": [
+            "country",
+            "political"
+          ]
+        },
+        {
+          "longText": "10118",
+          "shortText": "10118",
+          "types": [
+            "postal_code"
+          ]
+        }
+      ],
+      "formattedAddress": "350 5th Ave, New York, NY 10118, USA",
+      "granularity": "ROOFTOP",
+      "location": {
+        "latitude": 40.7484288,
+        "longitude": -73.9850334
+      },
+      "place": "places/og_b3NtOm5vZGU6ODgzMjM0OTY1CmFkZHJlc3MKMzUwIDV0aCBBdmVudWUsIE5ldyBZb3JrLCBOWSwgMTAxMTg",
+      "placeId": "og_b3NtOm5vZGU6ODgzMjM0OTY1CmFkZHJlc3MKMzUwIDV0aCBBdmVudWUsIE5ldyBZb3JrLCBOWSwgMTAxMTg",
+      "plusCode": {
+        "compoundCode": "P2X7+9X New York, NY, USA",
+        "globalCode": "87G8P2X7+9X"
+      },
+      "postalAddress": {
+        "addressLines": [
+          "350 5th Ave"
+        ],
+        "administrativeArea": "NY",
+        "languageCode": "en",
+        "locality": "New York",
+        "postalCode": "10118",
+        "regionCode": "US",
+        "sublocality": "Manhattan"
+      },
+      "types": [
+        "premise",
+        "street_address"
+      ],
+      "viewport": {
+        "high": {
+          "latitude": 40.7497788,
+          "longitude": -73.9836834
+        },
+        "low": {
+          "latitude": 40.7470788,
+          "longitude": -73.98638340000001
+        }
+      }
+    }
+  ]
+}
+```
+
+</TabItem>
+<TabItem label="No match">
+
+HTTP 200. The v4 result omits `results` when the query has no match. Default the field to an empty array when reading it.
+
+```json
+{}
+```
+
+</TabItem>
+<TabItem label="Invalid request">
+
+An address request without an address returns HTTP 400.
+
+```json
+{
+  "error": {
+    "code": 400,
+    "message": "addressQuery or address is required",
+    "status": "INVALID_ARGUMENT"
+  }
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Supported endpoints
+
+Paths are relative to `/compat/google`.
+
+| Operation | Path | Behavior |
+| --- | --- | --- |
+| Address geocoding | `GET /v4/geocode/address` | `geocode.address()` |
+| Reverse geocoding | `GET /v4/geocode/location` | `geocode.location()` |
+| Geocode by place ID | `GET /v4/geocode/places/{placeId}` | `geocode.place()` |
+| Destinations | `POST /v4/geocode/destinations` | `geocode.destinations()` returns entrances when the Pack has them. |
+| Text and nearby search | `POST /v1/places:searchText`, `POST /v1/places:searchNearby` | `places.searchText()` and `places.searchNearby()`. Nearby results are ranked by distance. |
+| Autocomplete | `POST /v1/places:autocomplete` | `places.autocomplete()` |
+| Place details | `GET /v1/places/{placeId}` | `places.get()` accepts a place ID returned by OpenGeocode. |
+
+Geocoding v4 also accepts the address and coordinates in the URL path. Use `fieldMask` in the SDK or `X-Goog-FieldMask` over HTTP to select fields.
+
+## Follow-up requests
+
+Use the `placeId` from an OpenGeocode geocode result for Geocoding place lookup. For Places, send the autocomplete result’s `placePrediction.placeId` to Place Details.
+
+## What OpenGeocode leaves out
+
+| Feature | What happens on OpenGeocode |
+| --- | --- |
+| Geocoding v3 and Places Legacy | Use Geocoding v4 or Places API (New) v1. |
+| Photos, reviews and ratings | Place responses omit this content. Photo media requests return an error. |
+| Opening status, rating, price and EV filters | `openNow` returns an input error. Minimum rating, price and EV filters return no matches. |
+| Google-issued place IDs | Lookups accept OpenGeocode-issued IDs. Search by address or coordinates to replace existing IDs. |
+| Popularity ranking and pagination | Nearby Search sorts by distance. Text Search returns one page without a continuation token. |

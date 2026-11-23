@@ -26,7 +26,9 @@ export type ProseNode =
 const languages: Record<string, Language> = {
   sh: "sh",
   bash: "bash",
+  diff: "diff",
   json: "json",
+  typescript: "typescript",
   txt: "plaintext",
   text: "plaintext",
 };
@@ -90,7 +92,7 @@ const special = (el: Element) =>
 
 const holdsSpecial = (el: Element): boolean => special(el) || el.children.some((c) => isElement(c) && holdsSpecial(c));
 
-export function proseOf(html: string): ProseNode[] {
+export function proseOf(html: string, { stackTables = false } = {}): ProseNode[] {
   let tabsSeen = 0;
 
   const code = (el: Element): ProseNode => {
@@ -98,10 +100,48 @@ export function proseOf(html: string): ProseNode[] {
     const name = String(pre.properties.dataLanguage ?? "");
     const lang = languages[name];
     if (!lang) throw new Error(`The docs prose has a code block in "${name}". Add it to the languages in src/lib/prose.ts.`);
-    // Expressive Code puts a newline inside empty line elements.
-    const lines = all(pre, (x) => hasClass(x, "ec-line")).map((line) => textOf(line).replace(/\n$/, ""));
+    // Expressive Code turns diff prefixes into line classes before we rebuild the block.
+    const lines = all(pre, (x) => hasClass(x, "ec-line")).map((line) => {
+      const text = textOf(line).replace(/\n$/, "");
+      if (lang !== "diff") return text;
+      if (hasClass(line, "ins")) return "+" + text;
+      if (hasClass(line, "del")) return "-" + text;
+      return text;
+    });
     return { kind: "code", code: lines.join("\n"), lang };
   };
+
+  function labelTable(table: Element) {
+    const section = table.children.find((node) => isElement(node) && node.tagName === "thead");
+    if (!section || !isElement(section)) return;
+    const headers = all(section, (node) => node.tagName === "th").map((node) => textOf(node).trim());
+    // Display changes on narrow screens can strip native table roles in Safari.
+    table.properties.role = "table";
+    table.properties["data-stack-table"] = "";
+    for (const group of table.children.filter(isElement)) {
+      if (group.tagName !== "thead" && group.tagName !== "tbody") continue;
+      group.properties.role = "rowgroup";
+      for (const row of group.children.filter(isElement)) {
+        if (row.tagName !== "tr") continue;
+        row.properties.role = "row";
+        row.children.filter(isElement).forEach((cell, index) => {
+          if (cell.tagName === "th") {
+            cell.properties.role = "columnheader";
+            cell.properties.scope = "col";
+          } else if (cell.tagName === "td") {
+            cell.properties.role = "cell";
+            if (index === 0 || !headers[index]) return;
+            cell.children.unshift({
+              type: "element",
+              tagName: "span",
+              properties: { "aria-hidden": "true", "data-column-label": "" },
+              children: [{ type: "text", value: headers[index] }],
+            });
+          }
+        });
+      }
+    }
+  }
 
   const aside = (el: Element): ProseNode => {
     const kind = classes(el).find((c) => c.startsWith("starlight-aside--"))?.slice("starlight-aside--".length) ?? "";
@@ -146,6 +186,7 @@ export function proseOf(html: string): ProseNode[] {
       else out.push(node);
     };
     for (const node of nodes) {
+      if (stackTables && isElement(node) && node.tagName === "table") labelTable(node);
       if (!isElement(node)) {
         push({ kind: "html", html: toHtml(node) });
       } else if (hasClass(node, "expressive-code")) {

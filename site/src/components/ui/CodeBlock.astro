@@ -3,7 +3,7 @@ import type { ComponentProps } from "astro/types";
 import { Code } from "astro:components";
 import Button from "./Button.astro";
 
-export const codeBlockVariants = ["plain", "terminal", "titled", "command", "numbered"] as const;
+export const codeBlockVariants = ["plain", "terminal", "titled", "command", "numbered", "embedded"] as const;
 export const codeBlockSizes = ["default"] as const;
 export const codeBlockStates = ["rest", "copied"] as const;
 
@@ -13,6 +13,8 @@ type Transformer = NonNullable<CodeProps["transformers"]>[number];
 type Shared = {
   code: string;
   lang?: Extract<CodeProps["lang"], string>;
+  scroll?: boolean;
+  copy?: boolean;
   /** Holds a state without a pointer, for the system page. */
   state?: (typeof codeBlockStates)[number];
 };
@@ -20,11 +22,13 @@ type Shared = {
 /** A terminal block is shell set under a bar with three dots, so a reader sees at once that it is typed at a prompt.
  * A command is one line of shell, set compactly after a prompt that is not copied with it. A numbered block numbers its
  * lines and has no box or copy button of its own, for a panel that frames it and owns the copy action. */
-export type Props = (Shared & { variant?: "plain" | "terminal" | "command" | "numbered" }) | (Shared & { variant: "titled"; title: string });
+export type Props = (Shared & { variant?: "plain" | "terminal" | "command" | "numbered" | "embedded" }) | (Shared & { variant: "titled"; title: string });
 
-const { code, lang = "plaintext", state = "rest", variant = "plain" } = Astro.props;
+const { code, lang = "plaintext", scroll = false, copy = false, state = "rest", variant = "plain" } = Astro.props;
+const showCopy = variant !== "embedded" && (variant !== "numbered" || copy || scroll);
 const title = Astro.props.variant === "titled" ? Astro.props.title : undefined;
 const shell = ["bash", "sh", "shell", "shellscript", "zsh"].includes(lang);
+const diffLines = lang === "diff" ? code.split("\n") : undefined;
 
 // The highlighter names each token's colour by a variable. Turn that into a data attribute our own style reads,
 // and drop the inline styles, so the block's look lives in this file and nowhere else.
@@ -57,13 +61,16 @@ const owned: Transformer = {
   pre(node) {
     node.properties = { class: "codeblock-pre", "data-language": lang };
     if (shell) node.properties["data-shell"] = "";
-    if (variant !== "numbered") node.properties.tabindex = "0";
+    if (scroll) node.properties["data-code-scroll"] = "";
+    if (scroll || copy || variant !== "numbered") node.properties.tabindex = "0";
   },
   code(node) {
     node.properties = { class: "codeblock-code" };
   },
-  line(node) {
+  line(node, number) {
     node.properties = { class: "codeblock-line" };
+    const marker = diffLines?.[number - 1]?.match(/^[+-](?![+-])/u)?.[0];
+    if (marker) node.properties["data-change"] = marker === "+" ? "added" : "removed";
   },
   span(node) {
     const kind = /--astro-code-([\w-]+)/.exec(String(node.properties.style ?? ""))?.[1];
@@ -72,7 +79,7 @@ const owned: Transformer = {
 };
 ---
 
-<figure class="codeblock" data-codeblock data-variant={variant} data-state={state === "copied" ? "copied" : undefined}>
+<figure class:list={["codeblock", { "code-frame": variant === "plain" || variant === "terminal" || variant === "titled" }]} data-codeblock data-variant={variant} data-state={state === "copied" ? "copied" : undefined}>
   {
     title && (
       <figcaption class="codeblock-bar">
@@ -92,10 +99,14 @@ const owned: Transformer = {
     )
   }
   {variant === "command" && <span class="codeblock-prompt" aria-hidden="true">$</span>}
-  <div class="codeblock-actions" data-codeblock-float={variant === "plain" || variant === "terminal" ? "" : undefined}>
-    <span class="codeblock-status" role="status" data-status>{state === "copied" ? "Copied!" : ""}</span>
-    <Button variant={variant === "command" ? "outline" : "quiet"} size={variant === "command" ? "sm" : "md"} iconOnly icon="copy" label="Copy code" data-copy />
-  </div>
+  {
+    showCopy && (
+      <div class="codeblock-actions" data-codeblock-float={variant === "plain" || variant === "terminal" ? "" : undefined}>
+        <span class="codeblock-status" role="status" data-status>{state === "copied" ? "Copied!" : ""}</span>
+        <Button variant={variant === "command" ? "outline" : "quiet"} size={variant === "command" ? "sm" : "md"} iconOnly icon="copy" label="Copy code" data-copy />
+      </div>
+    )
+  }
   <div class="codeblock-body">
     <Code code={code} lang={lang} theme="css-variables" wrap={null} transformers={[owned]} />
   </div>
@@ -132,15 +143,11 @@ const owned: Transformer = {
     display: grid;
     grid-template-areas: "bar actions" "body body";
     grid-template-columns: minmax(0, 1fr) auto;
-    margin: 0;
     position: relative;
   }
 
-  .codeblock:not([data-variant="command"], [data-variant="numbered"]) {
-    background-color: var(--color-surface);
-    border: var(--border) solid var(--color-border-control);
-    border-radius: var(--radius-md);
-    box-shadow: var(--codeblock-rim);
+  :where(.codeblock) {
+    margin: 0;
   }
 
   .codeblock[data-variant="plain"] {
@@ -158,7 +165,7 @@ const owned: Transformer = {
     block-size: var(--space-8);
     border-start-end-radius: var(--radius-md);
     border-start-start-radius: var(--radius-md);
-    box-shadow: var(--codeblock-rim);
+    box-shadow: var(--shadow-rim);
     gap: var(--space-2);
   }
 
@@ -179,7 +186,8 @@ const owned: Transformer = {
     grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
-  .codeblock[data-variant="numbered"] {
+  .codeblock[data-variant="numbered"],
+  .codeblock[data-variant="embedded"] {
     background-color: transparent;
     border: 0;
     border-radius: 0;
@@ -187,8 +195,13 @@ const owned: Transformer = {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  .codeblock[data-variant="numbered"]:has(> .codeblock-actions) {
+    grid-template-areas: "actions" "body";
+  }
+
   .codeblock[data-variant="numbered"] .codeblock-actions {
-    display: none;
+    justify-content: end;
+    padding-inline: 0;
   }
 
   /* A numbered block is an example in the API panel, set tighter than prose. The panel pads it. */
@@ -216,11 +229,12 @@ const owned: Transformer = {
     color: var(--color-border-strong);
     content: counter(codeblock-line);
     counter-increment: codeblock-line;
-    inline-size: var(--space-4);
+    inline-size: var(--space-6);
     inset-inline-start: 0;
     position: absolute;
     text-align: end;
     user-select: none;
+    white-space: nowrap;
   }
 
   .codeblock-prompt {
@@ -316,12 +330,29 @@ const owned: Transformer = {
     overflow-x: auto;
   }
 
-  .codeblock[data-variant="plain"] :global(.codeblock-pre) {
+  .codeblock[data-variant="embedded"] :global(.codeblock-pre) {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  .codeblock :global(.codeblock-pre[data-code-scroll]) {
+    box-sizing: border-box;
+    max-block-size: var(--container-sm);
+    overflow: auto;
+  }
+
+  @media (min-width: 50rem) {
+    .codeblock :global(.codeblock-pre[data-code-scroll]) {
+      max-block-size: var(--container-md);
+    }
+  }
+
+  .codeblock:is([data-variant="plain"], [data-variant="embedded"]) :global(.codeblock-pre) {
     font: var(--type-code-sm);
   }
 
   @media (min-width: 50rem) {
-    .codeblock[data-variant="plain"] :global(.codeblock-pre) {
+    .codeblock:is([data-variant="plain"], [data-variant="embedded"]) :global(.codeblock-pre) {
       font: var(--type-code-block);
     }
   }
@@ -334,6 +365,16 @@ const owned: Transformer = {
 
   .codeblock :global(.codeblock-code) {
     font: inherit;
+  }
+
+  .codeblock :global([data-change="added"]) {
+    background-color: var(--color-success-subtle);
+    color: var(--color-success);
+  }
+
+  .codeblock :global([data-change="removed"]) {
+    background-color: var(--color-danger-subtle);
+    color: var(--color-danger);
   }
 
   .codeblock :global([data-syntax="keyword"]) {

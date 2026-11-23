@@ -1,0 +1,82 @@
+---
+import Button from "../ui/Button.astro";
+import CodeBlock from "../ui/CodeBlock.astro";
+import Tabs, { type Tab } from "../ui/Tabs.astro";
+import type { ProseNode } from "../../lib/prose";
+
+export type ExamplePanel = Tab & {
+  block: Extract<ProseNode, { kind: "code" }>;
+};
+
+interface Props {
+  id: string;
+  label: string;
+  panels: ExamplePanel[];
+}
+
+const { id, label, panels } = Astro.props;
+const jsonResponses = panels.every(({ block }) => block.lang === "json");
+const examples = await Promise.all(panels.map(async (panel) => ({
+  ...panel,
+  note: await Astro.slots.render(panel.id),
+})));
+---
+
+<div data-code-tabs>
+  <Tabs variant="code" {id} {label} tabs={panels}>
+    <div class="code-tabs-actions" slot="actions">
+      <span class="code-tabs-status" role="status" data-code-tabs-status></span>
+      <Button variant="quiet" iconOnly icon="copy" label="Copy code" data-code-tabs-copy />
+    </div>
+    {examples.map(({ id, block, note }) => (
+      <div slot={id}>
+        {note && <div class="code-tabs-note" set:html={note} />}
+        <CodeBlock variant="embedded" code={block.code} lang={block.lang} scroll={jsonResponses} />
+      </div>
+    ))}
+  </Tabs>
+</div>
+
+<script>
+  import { copyText } from "../../lib/clipboard";
+  import { after } from "../../lib/motion";
+
+  for (const group of document.querySelectorAll<HTMLElement>("[data-code-tabs]")) {
+    const copy = group.querySelector<HTMLButtonElement>("[data-code-tabs-copy]");
+    const status = group.querySelector<HTMLElement>("[data-code-tabs-status]");
+    if (!copy || !status) continue;
+    let cancel = () => {};
+    copy.addEventListener("click", async () => {
+      const source = group.querySelector<HTMLTemplateElement>('[role="tabpanel"]:not([hidden]) template[data-code]');
+      if (!source || !(await copyText(source.content.textContent ?? "", group))) return;
+      cancel();
+      status.textContent = "Copied!";
+      cancel = after("--duration-feedback", () => { status.textContent = ""; });
+    });
+  }
+</script>
+
+<style>
+  .code-tabs-actions {
+    position: relative;
+  }
+
+  .code-tabs-status:not(:empty) {
+    background-color: var(--color-surface);
+    border: var(--border) solid var(--color-border-control);
+    border-radius: var(--radius-sm);
+    color: var(--color-foreground);
+    font: var(--type-caption);
+    inset-block-end: calc(100% + var(--space-1));
+    inset-inline-end: 0;
+    padding: var(--space-1) var(--space-2);
+    position: absolute;
+    z-index: var(--z-raised);
+  }
+
+  .code-tabs-note {
+    color: var(--color-foreground-secondary);
+    font: var(--type-ui);
+    padding: var(--space-2) var(--space-4) 0;
+  }
+</style>

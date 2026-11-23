@@ -4,15 +4,17 @@ import { operationFor } from "../../lib/openapi";
 import Badge from "../ui/Badge.astro";
 import Icon from "../ui/Icon.astro";
 import PageActions from "./PageActions.astro";
+import { downloads } from "./links";
 
 const route = Astro.locals.starlightRoute;
+const downloadPage = `/${route.id}/` === downloads.href;
 const crumbs = breadcrumbs(route.sidebar) ?? [];
 const markdown = await markdownPath(route.id);
 const operation = operationFor(route.id);
 ---
 
 {/* The breadcrumbs and actions repeat on every page, so search leaves them out. */}
-<div class="title-bar" data-has-toc={route.toc ? "" : undefined} data-pagefind-ignore>
+<div class="title-bar" data-has-toc={route.toc ? "" : undefined} data-download-catalog={downloadPage ? "" : undefined} data-pagefind-ignore>
   <nav aria-label="Breadcrumbs" class="crumbs">
     <ol class="crumbs-list">
       {
@@ -34,7 +36,7 @@ const operation = operationFor(route.id);
   {markdown && <PageActions {markdown} />}
 </div>
 {/* The frame's contents column and its scripts find the page title by this id. */}
-<h1 class="title" id="_top" data-has-toc={route.toc ? "" : undefined}>{route.entry.data.title}</h1>
+<h1 class="title" id="_top" data-has-toc={route.toc ? "" : undefined} data-download-catalog={downloadPage ? "" : undefined}>{route.entry.data.title}</h1>
 {
   operation && (
     <p class="endpoint">
@@ -105,6 +107,14 @@ const operation = operationFor(route.id);
     font: var(--type-h1);
     letter-spacing: var(--tracking-tight);
     margin-block-start: var(--space-10);
+  }
+
+  .title-bar[data-download-catalog] {
+    margin-block-start: 0;
+  }
+
+  .title[data-download-catalog] {
+    margin-block-start: var(--space-4);
   }
 
   /* An operation's method and path sit under its title. */

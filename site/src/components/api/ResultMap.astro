@@ -5,11 +5,12 @@ import Button from "../ui/Button.astro";
 interface Props {
   // Reverse: a click on the map asks about the point clicked.
   pickable?: boolean;
+  keepVisible?: boolean;
 }
-const { pickable } = Astro.props;
+const { pickable, keepVisible } = Astro.props;
 ---
 
-<og-result-map class="og-result-map" hidden data-pickable={pickable ? "" : undefined}>
+<og-result-map class="og-result-map" hidden data-pickable={pickable ? "" : undefined} data-keep-visible={keepVisible ? "" : undefined}>
   <canvas aria-hidden="true"></canvas>
   <div class="og-result-map-zoom" role="group" aria-label="Map zoom">
     <Button variant="ghost" join="block" iconOnly icon="plus" label="Zoom in" data-zoom="1" />
@@ -225,7 +226,10 @@ const { pickable } = Astro.props;
     // `keep` holds the current view, so a point picked on it stays where it was clicked.
     async show(points: Point[], keep = false) {
       this.#points = points;
-      if (!points.length) return this.hide();
+      if (!points.length) {
+        if (!this.hidden && this.hasAttribute("data-keep-visible")) return this.#scheduleDraw();
+        return this.hide();
+      }
       if (keep && !this.hidden) return this.#scheduleDraw();
       // Fit and draw markers immediately, including when the tile server is unavailable.
       this.#cancelLoad();
@@ -476,6 +480,17 @@ const { pickable } = Astro.props;
 
   .og-result-map-divider {
     border-block-start: var(--border) solid var(--color-border);
+  }
+
+  @media (min-width: 72rem) {
+    .og-result-map {
+      flex: 0 1 var(--container-sm);
+      min-block-size: var(--space-24);
+    }
+
+    .og-result-map > .og-result-map-zoom {
+      inset-block-end: var(--space-6);
+    }
   }
 
   .og-result-map-credit {

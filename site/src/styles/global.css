@@ -85,6 +85,113 @@ body {
   text-align: start;
 }
 
+.prose [data-stack-table] {
+  background-color: var(--color-surface);
+  border: var(--border) solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-rim);
+  overflow: clip;
+}
+
+.prose [data-stack-table] thead {
+  block-size: 0;
+  inline-size: 0;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+}
+
+.prose [data-stack-table] tbody {
+  display: block;
+}
+
+.prose [data-stack-table] tbody tr {
+  border-block-end: var(--border) solid var(--color-border);
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--space-3) var(--space-4);
+}
+
+.prose [data-stack-table] :where(tbody tr):last-child {
+  border-block-end: 0;
+}
+
+.prose [data-stack-table] tbody td {
+  border-block-end: 0;
+  overflow-wrap: anywhere;
+  padding: 0;
+}
+
+.prose [data-stack-table] :where(td):first-child {
+  font: var(--type-ui-strong);
+}
+
+[data-column-label] {
+  color: var(--color-foreground-secondary);
+  display: block;
+  font: var(--type-caption);
+  margin-block-end: var(--space-0-5);
+}
+
+.prose [data-stack-table] td code {
+  box-decoration-break: clone;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+@media (min-width: 50rem) {
+  .prose [data-stack-table] {
+    box-shadow: none;
+    display: table;
+    inline-size: 100%;
+    table-layout: fixed;
+  }
+
+  .prose [data-stack-table] thead {
+    block-size: auto;
+    inline-size: auto;
+    overflow: visible;
+    position: static;
+    white-space: normal;
+  }
+
+  .prose [data-stack-table] tbody {
+    display: table-row-group;
+  }
+
+  .prose [data-stack-table] tbody tr {
+    border-block-end: 0;
+    display: table-row;
+    padding: 0;
+  }
+
+  :where(.prose [data-stack-table]) th {
+    background-color: var(--color-control);
+    box-shadow: var(--shadow-rim);
+  }
+
+  .prose [data-stack-table] :is(thead, tbody) :is(th, td) {
+    border-block-end: var(--border) solid var(--color-border);
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .prose [data-stack-table] :where(tr):last-child :where(td) {
+    border-block-end: 0;
+  }
+
+  [data-column-label] {
+    display: none;
+  }
+}
+
+.code-frame {
+  background-color: var(--color-surface);
+  border: var(--border) solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-rim);
+}
+
 .prose blockquote {
   border-inline-start: var(--border) solid var(--color-border);
   color: var(--color-foreground-secondary);

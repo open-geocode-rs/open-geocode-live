@@ -3,6 +3,17 @@
 {
 	auto_https off
 	admin localhost:2019
+	log {
+		format filter {
+			wrap json
+			fields {
+				request>headers delete
+				request>remote_ip delete
+				request>client_ip delete
+				request>uri delete
+			}
+		}
+	}
 }
 
 # Crawlers ignore these; robots.txt and the sitemap govern indexing.
@@ -23,42 +34,21 @@ http://:8081 {
 	encode zstd gzip
 	import security
 
-	# The landing palette only exposes GET autocomplete and forward geocoding.
-	# Rebuild the query so callers can supply only the search text.
-	@address {
+	@lookups {
 		method GET
-		path /api/geocode /api/autocomplete
+		path /api/autocomplete /api/geocode /api/places /api/reverse /api/search /api/try/geocode /api/try/places /api/try/reverse
 	}
-	handle @address {
-		# Cloudflare's Add visitor location headers transform supplies the coarse
-		# coordinates. This listener only receives Cloudflare Tunnel traffic.
-		@visitor_location {
-			header_regexp latitude CF-IPLatitude ^(-?(?:[0-8]?[0-9](?:\.[0-9]+)?|90(?:\.0+)?))$
-			header_regexp longitude CF-IPLongitude ^(-?(?:(?:1[0-7][0-9]|[0-9]?[0-9])(?:\.[0-9]+)?|180(?:\.0+)?))$
+	handle @lookups {
+		reverse_proxy 127.0.0.1:8089 {
+			header_up X-Og-Demo-IP {http.request.header.CF-Connecting-IP}
+			transport http {
+				response_header_timeout 9s
+			}
 		}
-		rewrite @visitor_location {path}?q={query.q}&limit=5&focus={http.regexp.longitude.1},{http.regexp.latitude.1}
-		rewrite * {path}?q={query.q}&limit=5
-		uri strip_prefix /api
-		reverse_proxy 127.0.0.1:8090
 	}
 
-	# The API reference sends the reader's lookup parameters as entered.
-	@try_map {
-		method GET
-		path /api/try/geocode /api/try/places /api/try/reverse
-	}
-	handle @try_map {
-		uri strip_prefix /api/try
-		reverse_proxy 127.0.0.1:8090
-	}
-
-	@legacy_search {
-		method GET
-		path /api/search
-	}
-	handle @legacy_search {
-		rewrite * /geocode?q={query.q}&limit=1
-		reverse_proxy 127.0.0.1:8090
+	handle /api/* {
+		respond 404
 	}
 
 	# /search became /geocode and /places in the engine; keep old links working.

@@ -38,12 +38,18 @@ const content = operationContent(operation);
 
 <script>
   for (const example of document.querySelectorAll<HTMLElement>("[data-operation-example]")) {
+    const panel = example.firstElementChild as HTMLElement;
     let released = false;
     let waitingToRestick = false;
 
     function updateSticky() {
       const inset = Number.parseFloat(getComputedStyle(example).insetBlockStart);
-      const fits = example.offsetHeight + inset <= document.documentElement.clientHeight;
+      const available = document.documentElement.clientHeight - inset;
+      example.removeAttribute("data-example-flow");
+      // A panel that cannot shrink enough must contribute its full height to the page.
+      const overflow = panel.scrollHeight > panel.clientHeight + 1;
+      example.toggleAttribute("data-example-flow", overflow);
+      const fits = !overflow && example.getBoundingClientRect().height <= available;
       const wasSticky = example.hasAttribute("data-sticky");
       if (fits === wasSticky) {
         waitingToRestick = false;
@@ -64,7 +70,9 @@ const content = operationContent(operation);
       }
     }
 
-    new ResizeObserver(updateSticky).observe(example);
+    const resize = new ResizeObserver(() => requestAnimationFrame(updateSticky));
+    resize.observe(example);
+    for (const fixed of panel.querySelectorAll("[data-example-fixed]")) resize.observe(fixed);
     window.addEventListener("resize", updateSticky);
     window.addEventListener("scroll", () => {
       if (waitingToRestick) updateSticky();
@@ -97,6 +105,7 @@ const content = operationContent(operation);
 
     .operation-example {
       inset-block-start: calc(var(--layout-nav-height) + var(--space-4));
+      padding-block-end: var(--space-4);
     }
 
     .operation-example[data-sticky] {

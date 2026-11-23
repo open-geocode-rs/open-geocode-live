@@ -36,7 +36,10 @@ import Input from "../ui/Input.astro";
   <template>
     <div class="address-option" role="option" aria-selected="false">
       <Icon name="map-pin" size="lg" />
-      <span class="address-label" dir="auto"></span>
+      <span class="address-label">
+        <span class="address-name" dir="auto"></span>
+        <span class="address-context" dir="auto" hidden></span>
+      </span>
       <Icon name="arrow-right" size="lg" />
     </div>
   </template>
@@ -44,13 +47,14 @@ import Input from "../ui/Input.astro";
 
 <script>
   import { after } from "../../lib/motion";
+  import { splitPlaceLabel } from "../../lib/place-label";
 
   type GeocodeFeature = {
     geometry: { coordinates: [number, number] };
-    properties: { label: string; context?: Record<string, { name: string } | undefined> };
+    properties: { label: string; name?: string; context?: Record<string, { name: string } | undefined> };
   };
 
-  type AddressHit = { label: string; lat: number; lon: number };
+  type AddressHit = { label: string; name?: string; lat: number; lon: number };
   type Lookup = "autocomplete" | "geocode";
 
   async function lookup(kind: Lookup, query: string, signal: AbortSignal): Promise<AddressHit[]> {
@@ -60,11 +64,11 @@ import Input from "../ui/Input.astro";
     const { features }: { features: GeocodeFeature[] } = await response.json();
     return features.map(({ geometry, properties }) => {
       const [lon, lat] = geometry.coordinates;
-      const { label, context = {} } = properties;
+      const { label, name, context = {} } = properties;
       const places = [context.locality?.name, context.region?.name, context.country?.name].filter(
         (name): name is string => !!name && !label.toLowerCase().includes(name.toLowerCase()),
       );
-      return { label: [label, ...new Set(places)].join(", "), lat, lon };
+      return { label: [label, ...new Set(places)].join(", "), name, lat, lon };
     });
   }
 
@@ -142,10 +146,16 @@ import Input from "../ui/Input.astro";
 
   function showResults(matches: AddressHit[]) {
     heading.textContent = "Results";
-    const options = matches.map(({ label }, index) => {
+    const options = matches.map(({ label, name }, index) => {
       const option = template.content.firstElementChild!.cloneNode(true) as HTMLElement;
       option.id = `address-option-${index}`;
-      option.querySelector(".address-label")!.textContent = label;
+      option.setAttribute("aria-label", label);
+      option.title = label;
+      const { title, detail } = splitPlaceLabel(label, name);
+      const context = option.querySelector<HTMLElement>(".address-context")!;
+      option.querySelector(".address-name")!.textContent = title;
+      context.textContent = detail;
+      context.hidden = !detail;
       return option;
     });
     list.replaceChildren(...options);
@@ -161,7 +171,8 @@ import Input from "../ui/Input.astro";
   function select(index: number) {
     const hit = hits[index];
     if (!hit) return;
-    dialog.dispatchEvent(new CustomEvent("og-result", { bubbles: true, detail: hit }));
+    const { label, lat, lon } = hit;
+    dialog.dispatchEvent(new CustomEvent("og-result", { bubbles: true, detail: { label, lat, lon } }));
     dialog.close();
   }
 
@@ -309,10 +320,31 @@ import Input from "../ui/Input.astro";
     color: var(--color-foreground-secondary);
     cursor: pointer;
     display: grid;
-    font: var(--type-lead);
     gap: var(--space-3);
     grid-template-columns: auto minmax(0, 1fr) auto;
     padding: var(--space-2) var(--space-3);
+  }
+
+  .address-name,
+  .address-context {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .address-name {
+    color: var(--color-foreground);
+    font: var(--type-lead);
+  }
+
+  .address-context {
+    color: var(--color-foreground-secondary);
+    font: var(--type-caption);
+  }
+
+  .address-context[hidden] {
+    display: none;
   }
 
   .address-option[aria-selected="true"] {

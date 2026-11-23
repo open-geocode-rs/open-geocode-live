@@ -1,6 +1,6 @@
 // What each API reference page says, read from the OpenAPI document as a tree of parts our own components draw.
 // A schema becomes a list of blocks, and an object's properties become fields, each with its own blocks.
-// The parts the document does not use (one-of choices, negated and recursive schemas, extra properties and
+// The parts the document does not use (one-of choices, negated and recursive schemas, complex maps and
 // named example sets) stop the build with a message, so a new use is drawn on purpose, not by accident.
 import { capitalize, isNode, slug, type ApiOperation, type Node } from "./openapi";
 
@@ -63,11 +63,22 @@ function unsupported(what: string): never {
   throw new Error(`The OpenAPI document uses ${what}, which the API reference does not draw yet. Draw it in src/lib/reference.ts.`);
 }
 
+function dictionaryType(schema: Node): string | undefined {
+  const values = schema.additionalProperties;
+  if (schema.type !== "object" || has(schema, "properties") || has(schema, "allOf")) return undefined;
+  if (!isNode(values) || Object.keys(values).length !== 1) return undefined;
+  const valueType = str(values.type);
+  if (!valueType || !["string", "number", "integer", "boolean"].includes(valueType)) return undefined;
+  const keys = schema.propertyNames;
+  if (keys !== undefined && (!isNode(keys) || keys.type !== "string" || Object.keys(keys).length !== 1)) return undefined;
+  return `Record<string, ${valueType === "integer" ? "number" : valueType}>`;
+}
+
 function check(schema: Node) {
   if (nodes(schema.oneOf).length > 0) unsupported("oneOf");
   if (nodes(schema.anyOf).length > 0) unsupported("anyOf");
   if (has(schema, "not")) unsupported("not");
-  if (schema.additionalProperties !== undefined && schema.additionalProperties !== false) unsupported("additionalProperties");
+  if (schema.additionalProperties !== undefined && schema.additionalProperties !== false && !dictionaryType(schema)) unsupported("additionalProperties");
 }
 
 const isArrayType = (type: unknown) => type === "array" || (Array.isArray(type) && type.includes("array"));
@@ -153,7 +164,9 @@ function schemaBlocks(schema: Node, ctx: Context): Block[] {
   if (isNode(schema.externalDocs)) {
     out.push({ kind: "docs", href: String(schema.externalDocs.url), label: str(schema.externalDocs.description) ?? "More information" });
   }
-  if (isObjectSchema(schema)) out.push(objectBlock(schema, ctx));
+  const dictionary = dictionaryType(schema);
+  if (dictionary) out.push({ kind: "type", type: { text: dictionary } });
+  else if (isObjectSchema(schema)) out.push(objectBlock(schema, ctx));
   else if (nodes(schema.allOf).length > 0) {
     for (const part of nodes(schema.allOf)) out.push(...valueBlocks(part, { ...ctx, parents: [...ctx.parents, schema] }));
   } else out.push(...valueBlocks(schema, ctx));

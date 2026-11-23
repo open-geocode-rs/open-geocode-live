@@ -1,11 +1,14 @@
 ---
-export const tabsVariants = ["default", "underline"] as const;
+import Icon, { type IconName } from "./Icon.astro";
+
+export const tabsVariants = ["default", "underline", "code"] as const;
 export const tabsSizes = ["md"] as const;
 export const tabsStates = ["rest", "hover", "focus", "current"] as const;
 
 export interface Tab {
   id: string;
   label: string;
+  icon?: IconName;
   /** Holds a state without a pointer, for the system page. Current comes from the tabs' own `current`. */
   state?: "rest" | "hover" | "focus";
 }
@@ -18,16 +21,16 @@ export interface Props {
   tabs: Tab[];
   /** The id of the tab shown first. Defaults to the first tab. */
   current?: string;
-  /** The underline tabs sit in text, at body size on a heavier rule, with the current one marked in the accent. */
   variant?: (typeof tabsVariants)[number];
+  sharedPanel?: string;
 }
 
-const { id: uid, label, tabs, current = tabs[0]?.id, variant = "default" } = Astro.props;
-const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.render(t.id)] as const));
+const { id: uid, label, tabs, current = tabs[0]?.id, variant = "default", sharedPanel } = Astro.props;
+const panels = sharedPanel ? [] : await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.render(t.id)] as const));
 ---
 
-<div class="tabs" data-tabs data-variant={variant}>
-  {/* The list and each tab carry the variant too, so its styles reach only these tabs and never tabs nested in a panel. */}
+<div class:list={["tabs", { "code-frame": variant === "code" && !sharedPanel }]} data-tabs data-variant={variant} data-shared-panel={sharedPanel ? "" : undefined}>
+  {/* Variant stays on the list and tabs so styling does not reach nested tab sets. */}
   <div class="tabs-list" role="tablist" aria-label={label} data-variant={variant}>
     {
       tabs.map((t) => (
@@ -36,17 +39,20 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
           class="tabs-tab"
           role="tab"
           id={`${uid}-tab-${t.id}`}
-          aria-controls={`${uid}-panel-${t.id}`}
+          aria-controls={sharedPanel ?? `${uid}-panel-${t.id}`}
           aria-selected={t.id === current ? "true" : "false"}
           tabindex={t.id === current ? 0 : -1}
+          data-tab-value={sharedPanel ? t.id : undefined}
           data-state={t.state && t.state !== "rest" ? t.state : undefined}
           data-variant={variant}
         >
+          {t.icon && <Icon name={t.icon} size={variant === "code" ? "md" : "sm"} />}
           {t.label}
         </button>
       ))
     }
   </div>
+  {Astro.slots.has("actions") && <div class="tabs-actions"><slot name="actions" /></div>}
   {
     panels.map(([id, html]) => (
       <div
@@ -68,15 +74,21 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
   const tabsOf = (root: HTMLElement) => [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')].filter((t) => owns(root, t));
 
   function select(root: HTMLElement, tab: HTMLButtonElement, focus: boolean) {
+    const shared = root.hasAttribute("data-shared-panel");
+    const changed = tab.getAttribute("aria-selected") !== "true";
     for (const t of tabsOf(root)) {
       const on = t === tab;
       t.setAttribute("aria-selected", String(on));
       t.tabIndex = on ? 0 : -1;
       const panel = document.getElementById(t.getAttribute("aria-controls") ?? "");
-      if (panel) {
+      if (panel && !shared) {
         panel.hidden = !on;
         panel.inert = !on;
       }
+    }
+    if (shared) {
+      document.getElementById(tab.getAttribute("aria-controls") ?? "")?.setAttribute("aria-labelledby", tab.id);
+      if (changed) root.dispatchEvent(new Event("tab-change"));
     }
     if (focus) tab.focus();
   }
@@ -146,6 +158,7 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
     cursor: pointer;
     display: inline-flex;
     font: var(--type-ui-strong);
+    gap: var(--space-1);
     padding-inline: var(--space-3);
   }
 
@@ -189,5 +202,98 @@ const panels = await Promise.all(tabs.map(async (t) => [t.id, await Astro.slots.
   .tabs-tab[data-variant="underline"][aria-selected="true"] {
     border-block-end-color: var(--color-accent);
     font: var(--type-tab-current);
+  }
+
+  .tabs[data-variant="code"] {
+    gap: 0;
+    grid-template-areas: "list actions" "panel panel";
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .tabs[data-variant="code"]::before {
+    background-color: var(--color-control);
+    border-block-end: var(--border) solid var(--color-border);
+    border-start-end-radius: var(--radius-md);
+    border-start-start-radius: var(--radius-md);
+    box-shadow: var(--shadow-rim);
+    content: "";
+    grid-column: list-start / actions-end;
+    grid-row: list-start / list-end;
+    pointer-events: none;
+  }
+
+  .tabs-actions {
+    align-items: center;
+    display: flex;
+    grid-area: actions;
+    padding-inline: var(--space-1);
+  }
+
+  .tabs-list[data-variant="code"] {
+    border: 0;
+    min-inline-size: 0;
+    overflow-x: auto;
+    padding-inline-start: var(--space-1);
+    scrollbar-width: thin;
+  }
+
+  .tabs-tab[data-variant="code"] {
+    block-size: var(--control-md);
+    border-radius: 0;
+    flex-shrink: 0;
+    gap: var(--space-1-5);
+    padding-inline: var(--space-2);
+    white-space: nowrap;
+  }
+
+  .tabs[data-shared-panel] {
+    container-type: inline-size;
+    grid-template-areas: "list";
+  }
+
+  .tabs[data-shared-panel]::before {
+    display: none;
+  }
+
+  .tabs[data-shared-panel] > .tabs-list {
+    gap: 0;
+    padding-inline-start: var(--space-2);
+  }
+
+  .tabs[data-shared-panel] .tabs-tab {
+    padding-inline: var(--space-1);
+  }
+
+  @container (min-width: 20rem) {
+    .tabs[data-shared-panel] > .tabs-list {
+      gap: var(--space-1);
+      padding-inline-start: var(--space-1);
+    }
+
+    .tabs[data-shared-panel] .tabs-tab {
+      padding-inline: var(--space-2);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .tabs-tab[data-variant="code"]:hover {
+      background-color: transparent;
+    }
+  }
+
+  .tabs-tab[data-variant="code"][data-state="hover"] {
+    background-color: transparent;
+  }
+
+  .tabs-tab[data-variant="code"][aria-selected="true"] {
+    border-block-end-color: var(--color-accent);
+  }
+
+  .tabs-tab[data-variant="code"]:focus-visible {
+    outline-offset: calc(var(--space-0-5) * -1);
+  }
+
+  :where(.tabs[data-variant="code"]) > .tabs-panel[hidden] {
+    display: none;
   }
 </style>

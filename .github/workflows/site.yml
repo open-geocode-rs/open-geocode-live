@@ -19,6 +19,8 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.4
+      - run: bun test deploy/site/demo-proxy.test.ts
+        working-directory: .
       - run: bun install --frozen-lockfile
       # The system check opens the built system page in a browser to measure it at 390 wide.
       - run: bunx --bun playwright install --with-deps chromium

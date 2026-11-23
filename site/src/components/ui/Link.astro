@@ -17,6 +17,8 @@ const { variant = "inline", state = "rest", href, rel: callerRel, ...attrs } = A
 // No class from the caller reaches the element, not even the scope class the compiler passes, so no caller can restyle it.
 const own = (attrs: Record<string, unknown>) => Object.fromEntries(Object.entries(attrs).filter(([key]) => key !== "class"));
 const external = /^https?:\/\//.test(href);
+const download = typeof attrs.download === "string" || attrs.download === true;
+const appearance = download ? "standalone" : variant;
 // An external link also takes noopener, beside whatever relations the caller gave it.
 const relations = new Set(String(callerRel ?? "").split(/\s+/).filter(Boolean));
 if (external) relations.add("noopener");
@@ -27,10 +29,14 @@ const rel = relations.size > 0 ? [...relations].join(" ") : undefined;
   {...own(attrs)}
   class="link"
   href={href}
-  data-variant={variant}
+  data-variant={appearance}
   data-state={state === "rest" ? undefined : state}
   rel={rel}
-><slot />{variant === "standalone" && <Icon name={external ? "arrow-up-right" : "arrow-right"} size="sm" />}</a>
+>
+  {download && <Icon name="download" size="md" />}
+  <slot />
+  {!download && variant === "standalone" && <Icon name={external ? "arrow-up-right" : "arrow-right"} size="sm" />}
+</a>
 
 <style>
   /* A link reads in the text's own colour. Its underline, or a standalone link's arrow, marks it, so colour is not
@@ -52,6 +58,15 @@ const rel = relations.size > 0 ? [...relations].join(" ") : undefined;
     display: inline-flex;
     gap: var(--space-1);
     text-decoration-line: none;
+  }
+
+  .link[download] {
+    color: var(--color-success);
+    gap: var(--space-1-5);
+  }
+
+  .link[download]:focus-visible {
+    text-decoration-line: underline;
   }
 
   @media (hover: hover) and (pointer: fine) {

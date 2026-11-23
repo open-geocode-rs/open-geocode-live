@@ -1,0 +1,282 @@
+---
+title: Precisely
+description: Geo Addressing v1, Express Autocomplete v2, and Bulk Geo Addressing v2 on OpenGeocode.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+OpenGeocode serves Precisely Geo Addressing v1, Express Autocomplete v2 and Bulk Geo Addressing v2. Use the real-time API for a few addresses or submit a file as a bulk job.
+
+## Change the endpoint
+
+Send requests to `http://127.0.0.1:8080/compat/precisely` followed by the Precisely path. Keep the request body and skip the Precisely token exchange.
+
+If you use `@open-geocode/client/precisely`, change the client configuration. Your existing method call stays the same.
+
+```diff
+-const client = precisely({ apiKey: preciselyKey, apiSecret: preciselySecret });
++const client = precisely({ baseUrl: "http://127.0.0.1:8080" });
+```
+
+## Geocode an address
+
+Look up [the Space Needle](https://www.spaceneedle.com/contact).
+
+Serve the [USA Pack](/docs/guides/download-packs/). For TypeScript, [build the SDK from source](/docs/guides/typescript/#install-the-client).
+
+<Tabs>
+<TabItem label="TypeScript">
+
+```typescript
+import { precisely } from "@open-geocode/client/precisely";
+
+const client = precisely({
+  baseUrl: "http://127.0.0.1:8080",
+});
+
+const { responses } = await client.geocode({
+  addresses: [{
+    addressLines: ["400 Broad Street, Seattle, WA 98109"]
+  }],
+  preferences: { maxResults: 1 },
+});
+
+const first = responses[0];
+const point = first?.results?.[0]?.location?.feature?.geometry;
+console.log(first?.status, point?.coordinates);
+```
+
+</TabItem>
+<TabItem label="cURL">
+
+```bash
+curl 'http://127.0.0.1:8080/compat/precisely/v1/geocode' \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "addresses": [
+      {
+        "addressLines": ["400 Broad Street, Seattle, WA 98109"]
+      }
+    ],
+    "preferences": { "maxResults": 1 }
+  }'
+```
+
+</TabItem>
+</Tabs>
+
+## Response
+
+The match includes address and location explanations, plus Census block and county codes.
+
+<Tabs>
+<TabItem label="Match">
+
+HTTP 200
+
+```json
+{
+  "responses": [
+    {
+      "status": "OK",
+      "results": [
+        {
+          "address": {
+            "formattedAddress": "400 BROAD ST, SEATTLE WA 98109, United States",
+            "formattedStreetAddress": "400 BROAD ST",
+            "formattedLocationAddress": "SEATTLE, WA  98109",
+            "addressNumber": "400",
+            "street": "BROAD",
+            "city": {
+              "longName": "SEATTLE",
+              "shortName": "SEATTLE"
+            },
+            "admin2": {
+              "longName": "KING COUNTY",
+              "shortName": "KING COUNTY"
+            },
+            "admin1": {
+              "longName": "Washington",
+              "shortName": "WA"
+            },
+            "postalCode": "98109",
+            "country": {
+              "name": "United States",
+              "isoAlpha2Code": "US",
+              "isoAlpha3Code": "USA",
+              "isoNumericCode": "840"
+            }
+          },
+          "addressLines": [
+            "400 BROAD ST",
+            "SEATTLE WA 98109",
+            "United States"
+          ],
+          "location": {
+            "explanation": {
+              "type": "ADDRESS_POINT",
+              "designation": "CENTROID",
+              "description": "BUILDING",
+              "additionalMetadata": {
+                "SOURCE": "osm"
+              }
+            },
+            "feature": {
+              "type": "Feature",
+              "properties": {
+                "crsName": "epsg:4326"
+              },
+              "geometry": {
+                "type": "Point",
+                "coordinates": [
+                  -122.3493036,
+                  47.6205063
+                ]
+              }
+            }
+          },
+          "explanation": {
+            "addressMatch": {
+              "type": "ADDRESS",
+              "description": [
+                {
+                  "label": "placeName",
+                  "matchType": "NONE"
+                },
+                {
+                  "label": "addressNumber",
+                  "matchType": "EXACT"
+                },
+                {
+                  "label": "admin1",
+                  "matchType": "EXACT"
+                },
+                {
+                  "label": "admin2",
+                  "matchType": "NONE"
+                },
+                {
+                  "label": "city",
+                  "matchType": "EXACT"
+                },
+                {
+                  "label": "neighborhood",
+                  "matchType": "NONE"
+                },
+                {
+                  "label": "suburb",
+                  "matchType": "NONE"
+                },
+                {
+                  "label": "street",
+                  "matchType": "EXACT"
+                },
+                {
+                  "label": "postalCode",
+                  "matchType": "EXACT"
+                },
+                {
+                  "label": "streetType",
+                  "matchType": "EXACT"
+                },
+                {
+                  "label": "postalCodeExt",
+                  "matchType": "NONE"
+                },
+                {
+                  "label": "streetDirectional",
+                  "matchType": "EXACT"
+                },
+                {
+                  "label": "unitMatch",
+                  "matchType": "NONE"
+                }
+              ]
+            }
+          },
+          "customFields": {
+            "ADDRLINE_SHORT": "400 BROAD ST",
+            "BLOCK": "530330071012001",
+            "BLOCK_2010": "530330071002001",
+            "CITY_SHORT": "SEATTLE",
+            "COUNTY": "53033",
+            "COUNTY_FIPS": "53033",
+            "GEOHASH": "c22yzv5cw9fb",
+            "INTERSECTION": "F",
+            "LASTLINE_SHORT": "SEATTLE, WA  98109",
+            "MATCH_TYPE": "ADDRESS",
+            "NAME": "BROAD",
+            "NAME_SHORT": "BROAD",
+            "PB_KEY": "og_b3NtOndheToxMjkwMzEzMgphZGRyZXNzCjQwMCBCcm9hZCBTdHJlZXQsIFdBLCA5ODEwOQ",
+            "POST_THOROUGHFARE_TYPE": "ST",
+            "STATE_FIPS": "53",
+            "THOROUGHFARE_TYPE": "ST",
+            "TYPE_SHORT": "ST"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+</TabItem>
+<TabItem label="No match">
+
+HTTP 200. Check the `status` on each item in `responses`. A single address with no match can return `ZERO_RESULTS` inside HTTP 200.
+
+```json
+{
+  "responses": [
+    {
+      "status": "ZERO_RESULTS",
+      "results": []
+    }
+  ]
+}
+```
+
+</TabItem>
+<TabItem label="Invalid request">
+
+An empty `addresses` array returns HTTP 400 for the whole request.
+
+```json
+{
+  "errors": [
+    {
+      "errorMessage": "Request Body is not valid (DIS-LI-1018)",
+      "status": "INVALID_REQUEST"
+    }
+  ]
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Supported endpoints
+
+Paths are relative to `/compat/precisely`.
+
+| Operation | Path | Behavior |
+| --- | --- | --- |
+| Geocode and reverse geocode | `POST /v1/geocode`, `POST /v1/reverse-geocode` | Results have per-address status. |
+| Lookup and verification | `POST /v1/lookup`, `POST /v1/verify` | Use the OpenGeocode reference and the matching country for lookup. |
+| Autocomplete | `POST /v1/autocomplete`, `POST /v1/express-autocomplete`, `POST /v2/express-autocomplete`, `POST /v1/autocomplete/postal-city` | Autocomplete includes postal-city search. |
+| Proximity and match codes | `POST /v1/proximity-search`, `POST /v1/explain-addresscode` | Proximity Search returns nearby addresses. Explain Address Code reads Global Match Codes. |
+| Bulk files | `/v2/files` | Request an upload URL, upload content, list files, or delete a file. |
+| Bulk geocoding and verification | `POST /v2/bulk-geocode`, `POST /v2/bulk-verify`, `/v2/bulk/jobs` | List, poll, cancel, and download results from jobs. Jobs start on submission. |
+
+## Follow-up requests
+
+Send the candidate’s `PB_KEY` and country to Lookup. For a bulk job, request an upload URL, upload the file, then submit its `fileId`. Poll the status URL and download the results from the server that created the job.
+
+## What OpenGeocode leaves out
+
+| Feature | What happens on OpenGeocode |
+| --- | --- |
+| Precisely-issued keys and licensed identifier lookups | Lookup accepts the `PB_KEY` from an OpenGeocode result. Other key types such as `GNAF_PID`, `UDPRN`, `UPRN` and `EIR_CODE` are unsupported. |
+| Postal certification and delivery-point validation | Verify and Bulk Verify standardize and match against your Pack. Workflows that require CASS or delivery-point validation need a certified service. |
+| Bulk job email | OpenGeocode validates `notifyEmails` but sends no email. Poll the job status for completion. |
+| Bulk v1 paths | Use the v2 upload and job endpoints. |
