@@ -90,7 +90,10 @@ const panels = sharedPanel ? [] : await Promise.all(tabs.map(async (t) => [t.id,
       document.getElementById(tab.getAttribute("aria-controls") ?? "")?.setAttribute("aria-labelledby", tab.id);
       if (changed) root.dispatchEvent(new Event("tab-change"));
     }
-    if (focus) tab.focus();
+    if (focus) {
+      tab.focus({ preventScroll: true });
+      tab.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
   }
 
   for (const root of document.querySelectorAll<HTMLElement>("[data-tabs]")) {
@@ -146,6 +149,11 @@ const panels = sharedPanel ? [] : await Promise.all(tabs.map(async (t) => [t.id,
     gap: var(--space-1);
   }
 
+  .tabs-list:is([data-variant="default"], [data-variant="code"]) {
+    min-inline-size: 0;
+    overflow-x: auto;
+  }
+
   .tabs-tab {
     align-items: center;
     background-color: transparent;
@@ -160,6 +168,11 @@ const panels = sharedPanel ? [] : await Promise.all(tabs.map(async (t) => [t.id,
     font: var(--type-ui-strong);
     gap: var(--space-1);
     padding-inline: var(--space-3);
+  }
+
+  .tabs-tab:is([data-variant="default"], [data-variant="code"]) {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -178,6 +191,10 @@ const panels = sharedPanel ? [] : await Promise.all(tabs.map(async (t) => [t.id,
   .tabs-tab[data-state="focus"] {
     outline: var(--border-strong) solid var(--color-focus);
     outline-offset: var(--space-0-5);
+  }
+
+  .tabs-tab:is([data-variant="default"], [data-variant="code"]):focus-visible {
+    outline-offset: calc(var(--space-0-5) * -1);
   }
 
   .tabs-tab[aria-selected="true"] {
@@ -231,19 +248,14 @@ const panels = sharedPanel ? [] : await Promise.all(tabs.map(async (t) => [t.id,
 
   .tabs-list[data-variant="code"] {
     border: 0;
-    min-inline-size: 0;
-    overflow-x: auto;
     padding-inline-start: var(--space-1);
-    scrollbar-width: thin;
   }
 
   .tabs-tab[data-variant="code"] {
     block-size: var(--control-md);
     border-radius: 0;
-    flex-shrink: 0;
     gap: var(--space-1-5);
     padding-inline: var(--space-2);
-    white-space: nowrap;
   }
 
   .tabs[data-shared-panel] {
@@ -287,10 +299,6 @@ const panels = sharedPanel ? [] : await Promise.all(tabs.map(async (t) => [t.id,
 
   .tabs-tab[data-variant="code"][aria-selected="true"] {
     border-block-end-color: var(--color-accent);
-  }
-
-  .tabs-tab[data-variant="code"]:focus-visible {
-    outline-offset: calc(var(--space-0-5) * -1);
   }
 
   :where(.tabs[data-variant="code"]) > .tabs-panel[hidden] {

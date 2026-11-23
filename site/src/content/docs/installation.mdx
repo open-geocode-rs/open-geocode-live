@@ -1,0 +1,81 @@
+---
+title: Installation
+description: Install the OpenGeocode CLI on Linux, macOS or Windows, or download a release archive for your platform.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+The installers and release archives include both `og` and `open-geocode`. They run without Rust or Cargo.
+
+## Install a prebuilt binary
+
+On macOS and Linux, the [shell installer](/install) installs the latest stable release. It needs Bash, curl and tar with xz support.
+
+On Windows x64, the [PowerShell installer](/install.ps1) installs the latest stable release.
+
+<Tabs>
+<TabItem label="macOS & Linux">
+
+```bash
+curl -fsSL https://opengeocode.com/install | bash
+```
+
+</TabItem>
+<TabItem label="Windows">
+
+```powershell
+powershell -c "irm https://opengeocode.com/install.ps1|iex"
+```
+
+</TabItem>
+</Tabs>
+
+Open a new terminal if the installer updated your `PATH`, then run:
+
+```sh
+og --version
+```
+
+## Install a specific version
+
+On macOS or Linux, pass a release tag such as `v1.0.0`. The installer also accepts the `og-v1.0.0` spelling.
+
+```bash
+curl -fsSL https://opengeocode.com/install | bash -s -- og-v1.0.0
+```
+
+On Windows, run the PowerShell installer from the [GitHub release](https://github.com/open-geocode-rs/open-geocode/releases) for the version you want.
+
+## Direct downloads
+
+Download a v1.0.0 archive for your platform or browse the [GitHub release and its assets](https://github.com/open-geocode-rs/open-geocode/releases/tag/v1.0.0). The Linux archives use musl. Extract your archive and put the two executables in a directory on your `PATH`.
+
+- **[Linux x64](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-x86_64-unknown-linux-musl.tar.xz)**
+
+  `.tar.xz` · [SHA-256](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-x86_64-unknown-linux-musl.tar.xz.sha256 "SHA-256 for Linux x64")
+
+- **[Linux ARM64](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-aarch64-unknown-linux-musl.tar.xz)**
+
+  `.tar.xz` · [SHA-256](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-aarch64-unknown-linux-musl.tar.xz.sha256 "SHA-256 for Linux ARM64")
+
+- **[macOS Apple Silicon](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-aarch64-apple-darwin.tar.xz)**
+
+  `.tar.xz` · [SHA-256](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-aarch64-apple-darwin.tar.xz.sha256 "SHA-256 for macOS Apple Silicon")
+
+- **[macOS Intel](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-x86_64-apple-darwin.tar.xz)**
+
+  `.tar.xz` · [SHA-256](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-x86_64-apple-darwin.tar.xz.sha256 "SHA-256 for macOS Intel")
+
+- **[Windows x64](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-x86_64-pc-windows-msvc.zip)**
+
+  `.zip` · [SHA-256](https://github.com/open-geocode-rs/open-geocode/releases/download/v1.0.0/open-geocode-x86_64-pc-windows-msvc.zip.sha256 "SHA-256 for Windows x64")
+
+## Install with Cargo
+
+This option requires Rust 1.88 or newer and Cargo. Get both from [rustup.rs](https://rustup.rs).
+
+```sh
+cargo install --locked open-geocode --version 1.0.0 --features tui
+```
+
+Continue with the [Quickstart](/docs/quickstart/) to build and serve a Pack.

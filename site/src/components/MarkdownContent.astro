@@ -12,7 +12,7 @@ const stackTables = id.startsWith("docs/compatibility/") || [
   "docs/compatibility",
   "docs/guides/typescript",
 ].includes(id);
-const nodes = api ? [] : proseOf(await Astro.slots.render("default"), { stackTables });
+const nodes = api ? [] : proseOf(await Astro.slots.render("default"), { stackTables, downloadCards: id === "docs/installation" });
 ---
 
 {

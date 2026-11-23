@@ -6,19 +6,12 @@ description: Install OpenGeocode, build a Pack for Ontario in about a minute, se
 Build a Pack for Ontario, Canada, serve it, and send it your first forward and reverse queries.
 Any other region in the catalog works the same way.
 
-:::note[Prerequisites]
-Rust 1.88 or newer, with Cargo on your `PATH`. Get it from [rustup.rs](https://rustup.rs).
-:::
-
 ## 1. Install og
 
-Install og from crates.io with Cargo.
+[Install a prebuilt binary](/docs/installation/) for Linux, macOS or Windows. Prebuilt binaries run without Rust or Cargo.
+The [Cargo option](/docs/installation/#install-with-cargo) requires Rust 1.88 or newer and Cargo.
 
-```sh
-cargo install --locked open-geocode --version 1.0.0 --features tui
-```
-
-This installs two binaries:
+Both options install two binaries:
 
 - `og` builds and serves Packs, and opens the interactive interface.
 - `open-geocode` runs batch CSV geocoding, benchmarks and lower-level Pack tools.

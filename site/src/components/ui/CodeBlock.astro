@@ -13,7 +13,7 @@ type Transformer = NonNullable<CodeProps["transformers"]>[number];
 type Shared = {
   code: string;
   lang?: Extract<CodeProps["lang"], string>;
-  scroll?: boolean;
+  scroll?: boolean | "fixed";
   copy?: boolean;
   /** Holds a state without a pointer, for the system page. */
   state?: (typeof codeBlockStates)[number];
@@ -28,6 +28,7 @@ const { code, lang = "plaintext", scroll = false, copy = false, state = "rest", 
 const showCopy = variant !== "embedded" && (variant !== "numbered" || copy || scroll);
 const title = Astro.props.variant === "titled" ? Astro.props.title : undefined;
 const shell = ["bash", "sh", "shell", "shellscript", "zsh"].includes(lang);
+const singleCommand = variant === "embedded" && (shell || lang === "powershell") && !code.includes("\n");
 const diffLines = lang === "diff" ? code.split("\n") : undefined;
 
 // The highlighter names each token's colour by a variable. Turn that into a data attribute our own style reads,
@@ -61,7 +62,8 @@ const owned: Transformer = {
   pre(node) {
     node.properties = { class: "codeblock-pre", "data-language": lang };
     if (shell) node.properties["data-shell"] = "";
-    if (scroll) node.properties["data-code-scroll"] = "";
+    if (singleCommand) node.properties["data-single-command"] = "";
+    if (scroll) node.properties["data-code-scroll"] = scroll === "fixed" ? "fixed" : "";
     if (scroll || copy || variant !== "numbered") node.properties.tabindex = "0";
   },
   code(node) {
@@ -341,9 +343,17 @@ const owned: Transformer = {
     overflow: auto;
   }
 
+  .codeblock :global(.codeblock-pre[data-code-scroll="fixed"]) {
+    block-size: var(--container-sm);
+  }
+
   @media (min-width: 50rem) {
     .codeblock :global(.codeblock-pre[data-code-scroll]) {
       max-block-size: var(--container-md);
+    }
+
+    .codeblock :global(.codeblock-pre[data-code-scroll="fixed"]) {
+      block-size: var(--container-md);
     }
   }
 
@@ -355,6 +365,12 @@ const owned: Transformer = {
     .codeblock:is([data-variant="plain"], [data-variant="embedded"]) :global(.codeblock-pre) {
       font: var(--type-code-block);
     }
+  }
+
+  .codeblock :global(.codeblock-pre[data-single-command]) {
+    font: var(--type-code-sm);
+    overflow-wrap: normal;
+    white-space: pre;
   }
 
   .codeblock[data-variant="command"] :global(.codeblock-pre) {

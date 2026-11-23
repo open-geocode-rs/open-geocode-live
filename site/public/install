@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+install_og() {
+    local tag="${1-}" release installer
+    local releases="https://github.com/open-geocode-rs/open-geocode/releases"
+
+    if (( $# > 1 )); then
+        printf 'Usage: %s [vX.Y.Z | og-vX.Y.Z]\n' "${0##*/}" >&2
+        return 2
+    fi
+
+    release="$releases/latest/download"
+    if (( $# == 1 )); then
+        tag="${tag#og-}"
+        if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            printf 'Invalid release tag: %s. Use vX.Y.Z or og-vX.Y.Z.\n' "$1" >&2
+            return 2
+        fi
+        release="$releases/download/$tag"
+    fi
+
+    installer="$(curl -fsSL --proto '=https' "$release/open-geocode-installer.sh")" || return
+    if [[ -z "$installer" ]]; then
+        printf 'The release installer was empty.\n' >&2
+        return 1
+    fi
+    printf '%s\n' "$installer" | sh
+}
+
+install_og "$@"

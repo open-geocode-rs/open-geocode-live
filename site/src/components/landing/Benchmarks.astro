@@ -75,8 +75,9 @@ const share = (row: Row, rows: Row[]) => Math.max(0.015, row.bar / Math.max(...r
 <Split id="og-bench-title" eyebrow="Benchmarks" title="Paid-API accuracy. None of the weight.">
   <p>
     On real web addresses, og puts more answers in the right city than TomTom or OpenCage, and trails TomTom by 1.4
-    points at street level. Against open-source engines it isn't close: the whole Netherlands on 1&nbsp;vCPU and
-    1&nbsp;GiB, at 0.72&nbsp;ms a query and 6× the throughput of Photon and Pelias.
+    points at street level. On the Netherlands benchmark, og sustained 100 forward requests per second on
+    1&nbsp;vCPU and 1&nbsp;GiB. On 16&nbsp;vCPUs and 64&nbsp;GiB, median forward latency was 0.72&nbsp;ms and
+    peak forward throughput was about 6× that of Photon and Pelias.
   </p>
   <Link variant="standalone" href="/docs/benchmarks/">Read the full benchmarks</Link>
   <div class="og-bench-chart" slot="aside">

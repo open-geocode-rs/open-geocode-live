@@ -209,10 +209,11 @@ body {
   max-inline-size: 100%;
 }
 
-/* Every scroll area of the docs, the page and each panel in it, takes one thin scrollbar: a thumb in the control edge's
-   colour on no track, so it follows the theme. The landing page keeps the browser's own. */
+/* Docs scroll areas, code blocks, and tabs use the same thin, theme-aware scrollbar. */
 :root[data-has-sidebar],
-:root[data-has-sidebar] * {
-  scrollbar-color: var(--color-border-strong) transparent;
+:root[data-has-sidebar] *,
+.codeblock-pre,
+.tabs-list {
+  scrollbar-color: var(--color-foreground-muted) transparent;
   scrollbar-width: thin;
 }

@@ -1,7 +1,8 @@
 ---
 import type { ProseNode } from "../../lib/prose";
+import Card from "../ui/Card.astro";
 import CodeBlock from "../ui/CodeBlock.astro";
-import type { IconName } from "../ui/Icon.astro";
+import Icon, { type IconName } from "../ui/Icon.astro";
 import Link from "../ui/Link.astro";
 import Tabs from "../ui/Tabs.astro";
 import Aside from "./Aside.astro";
@@ -23,6 +24,22 @@ const codeTabIcons = new Map<string, IconName>([["TypeScript", "typescript"], ["
     switch (node.kind) {
       case "html":
         return <Fragment set:html={node.html} />;
+      case "downloadCards":
+        return (
+          <ul class="download-cards" role="list">
+            {node.items.map(({ icon, content }) => (
+              <li class="download-card">
+                <Card variant="framed">
+                  <div class="download-card-icons">
+                    <span class="download-icon">{icon && <Icon name={icon} size="xl" />}</span>
+                    <span class="download-arrow"><Icon name="arrow-up-right" size="md" /></span>
+                  </div>
+                  <Astro.self nodes={content} />
+                </Card>
+              </li>
+            ))}
+          </ul>
+        );
       case "element": {
         const Tag = node.tag;
         return (
@@ -81,3 +98,65 @@ const codeTabIcons = new Map<string, IconName>([["TypeScript", "typescript"], ["
     }
   })
 }
+
+<style>
+  .download-cards {
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--container-sm)), 1fr));
+    list-style: none;
+    padding-inline-start: 0;
+  }
+
+  .download-card {
+    border-radius: var(--radius-xl);
+    position: relative;
+  }
+
+  .download-card-icons {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .download-icon {
+    color: var(--color-accent);
+    display: flex;
+  }
+
+  .download-arrow {
+    color: var(--color-foreground-muted);
+    display: flex;
+  }
+
+  .download-card :global(strong > .link)::after {
+    border-radius: var(--radius-xl);
+    content: "";
+    inset: 0;
+    position: absolute;
+  }
+
+  .download-card :global(p > .link) {
+    position: relative;
+    z-index: var(--z-raised);
+  }
+
+  .download-card :global(strong > .link:where(:focus-visible))::after {
+    outline: var(--border-strong) solid var(--color-focus);
+    outline-offset: var(--space-0-5);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .download-card:hover {
+      outline: var(--border) solid var(--color-border-control);
+    }
+
+    .download-card:hover .download-arrow {
+      color: var(--color-accent);
+    }
+  }
+
+  .download-cards > .download-card + .download-card {
+    margin-block-start: 0;
+  }
+</style>
