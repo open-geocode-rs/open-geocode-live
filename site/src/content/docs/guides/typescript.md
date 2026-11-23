@@ -19,10 +19,10 @@ cargo build --locked --release --features tui --bin og
 
 ## Install the client
 
-Build the client from the SDK branch that contains the vendor adapters.
+Build the client from the SDK source using Bun.
 
 ```sh
-git clone --branch sdk-vendor-compat https://github.com/open-geocode-rs/og-sdk-js.git
+git clone https://github.com/open-geocode-rs/og-sdk-js.git
 cd og-sdk-js
 bun install --frozen-lockfile
 bun run --filter '@open-geocode/client' build
