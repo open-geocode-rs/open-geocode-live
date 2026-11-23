@@ -209,11 +209,11 @@ body {
   max-inline-size: 100%;
 }
 
-/* Docs scroll areas and shared code blocks use the same thin, theme-aware scrollbar. */
+/* Docs scroll areas, code blocks, and tabs use the same thin, theme-aware scrollbar. */
 :root[data-has-sidebar],
 :root[data-has-sidebar] *,
 .codeblock-pre,
-:where([data-code-tabs]) [role="tablist"] {
-  scrollbar-color: var(--color-border-strong) transparent;
+.tabs-list {
+  scrollbar-color: var(--color-foreground-muted) transparent;
   scrollbar-width: thin;
 }

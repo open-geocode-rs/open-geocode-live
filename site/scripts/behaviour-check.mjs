@@ -402,6 +402,26 @@ const cases = {
 
   // Landing.
 
+  "landing tabs scroll without widening the page": () =>
+    visit("/", { viewport: { width: 320, height: 844 }, reducedMotion: "reduce" }, async (tab) => {
+      const problems = [];
+      const width = await tab.evaluate(() => document.documentElement.scrollWidth);
+      if (width > 320) problems.push(`page is ${width}px wide at a 320px viewport`);
+
+      for (const name of ["Benchmark", "Quickstart steps", "Compatible geocoding APIs"]) {
+        const list = tab.getByRole("tablist", { name, exact: true });
+        await list.getByRole("tab").first().press("End");
+        const visible = await list.getByRole("tab").last().evaluate((control) => {
+          const bounds = control.getBoundingClientRect();
+          const clip = control.parentElement?.getBoundingClientRect();
+          return control.getAttribute("aria-selected") === "true" && clip !== undefined &&
+            bounds.left >= clip.left - 1 && bounds.right <= clip.right + 1;
+        });
+        if (!visible) problems.push(`${name} does not scroll the last selected tab into view`);
+      }
+      return problems;
+    }),
+
   "address palette searches and pins coordinates to the headline": async () => {
     const problems = [];
     for (const viewport of [desktop.viewport, { width: 390, height: 844 }]) {
